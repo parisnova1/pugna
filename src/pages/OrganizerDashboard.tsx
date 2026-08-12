@@ -1,0 +1,388 @@
+import { useState } from 'react'
+import type { NavFn } from '../App'
+
+const RED = '#e5172b'
+const CARD = '#0f0f0f'
+const BORDER = '#1c1c1c'
+const MUTED = '#888888'
+const DISPLAY = "'Barlow Condensed', sans-serif"
+
+type DashView = 'overview' | 'events' | 'fighters' | 'matchmaking' | 'results' | 'analytics'
+
+export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
+  const [view, setView] = useState<DashView>('overview')
+
+  const navItems: Array<[DashView, string, string]> = [
+    ['overview', 'Overview', 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'],
+    ['events', 'Events', 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z'],
+    ['fighters', 'Fighters', 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'],
+    ['matchmaking', 'Matchmaking', 'M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z'],
+    ['results', 'Results', 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4'],
+    ['analytics', 'Analytics', 'M18 20V10M12 20V4M6 20v-6'],
+  ]
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', minHeight: 'calc(100vh - 64px)' }}>
+      {/* Sidebar */}
+      <aside style={{ backgroundColor: '#060606', borderRight: `1px solid ${BORDER}`, padding: '32px 0', position: 'sticky', top: '64px', height: 'calc(100vh - 64px)', overflowY: 'auto' }}>
+        <div style={{ padding: '0 24px', marginBottom: '32px' }}>
+          <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', marginBottom: '4px' }}>Organizer Dashboard</div>
+          <div style={{ fontFamily: DISPLAY, fontSize: '18px', fontWeight: 900, textTransform: 'uppercase' }}>Elite Boxing GmbH</div>
+        </div>
+
+        <nav style={{ display: 'flex', flexDirection: 'column' }}>
+          {navItems.map(([v, label, icon]) => (
+            <button key={v} onClick={() => setView(v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 24px',
+                backgroundColor: view === v ? '#0f0f0f' : 'transparent',
+                borderLeft: view === v ? `2px solid ${RED}` : '2px solid transparent',
+                color: view === v ? '#fff' : MUTED, transition: 'all 0.15s', textAlign: 'left',
+              }}
+              onMouseEnter={e => { if (view !== v) { e.currentTarget.style.color = '#ddd'; e.currentTarget.style.backgroundColor = '#0a0a0a' } }}
+              onMouseLeave={e => { if (view !== v) { e.currentTarget.style.color = MUTED; e.currentTarget.style.backgroundColor = 'transparent' } }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={icon} /></svg>
+              <span style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div style={{ margin: '32px 24px 0', borderTop: `1px solid ${BORDER}`, paddingTop: '24px' }}>
+          <button
+            style={{ width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px', transition: 'background-color 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
+          >
+            + Create Event
+          </button>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <main style={{ padding: '40px 48px', backgroundColor: '#080808' }}>
+        {view === 'overview' && <OverviewView nav={nav} />}
+        {view === 'events' && <EventsView nav={nav} />}
+        {view === 'fighters' && <FightersView nav={nav} />}
+        {view === 'matchmaking' && <MatchmakingView />}
+        {view === 'results' && <ResultsView />}
+        {view === 'analytics' && <AnalyticsView />}
+      </main>
+    </div>
+  )
+}
+
+function StatCard({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
+  return (
+    <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px`, borderTop: accent ? `2px solid ${RED}` : `1px solid ${BORDER}` }}>
+      <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.18em', color: MUTED, textTransform: 'uppercase', marginBottom: '8px' }}>{label}</div>
+      <div style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, lineHeight: 1, color: accent ? RED : '#fff' }}>{value}</div>
+      {sub && <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>{sub}</div>}
+    </div>
+  )
+}
+
+function OverviewView({ nav }: { nav: NavFn }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+        <div>
+          <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '4px' }}>Dashboard</div>
+          <h1 style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, textTransform: 'uppercase' }}>Overview</h1>
+        </div>
+        <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          August 2026
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2px', marginBottom: '48px' }}>
+        <StatCard label="Upcoming Events" value="3" accent />
+        <StatCard label="Registered Fighters" value="47" sub="Across all events" />
+        <StatCard label="Unmatched Fighters" value="8" sub="Need opponents" />
+        <StatCard label="Total Event Views" value="2,840" sub="Last 30 days" />
+      </div>
+
+      {/* Recent events */}
+      <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '16px' }}>Upcoming Events</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER, marginBottom: '48px' }}>
+        {[
+          { name: 'Fight Night Nürnberg', date: '23 Aug 2026', fights: 8, fighters: 16, status: 'Active' },
+          { name: 'Nürnberg Amateur Cup', date: '18 Oct 2026', fights: 0, fighters: 4, status: 'Draft' },
+          { name: 'Club Championship 2026', date: '12 Dec 2026', fights: 0, fighters: 0, status: 'Draft' },
+        ].map((e, i) => (
+          <div key={i} style={{ backgroundColor: CARD, padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 120px 120px 100px 80px', alignItems: 'center', gap: '16px' }}>
+            <div>
+              <div style={{ fontFamily: DISPLAY, fontSize: '20px', fontWeight: 800, textTransform: 'uppercase' }}>{e.name}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{e.date}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: '20px', fontWeight: 800 }}>{e.fights}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fights</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: '20px', fontWeight: 800 }}>{e.fighters}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fighters</div>
+            </div>
+            <div>
+              <span style={{ fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '4px 10px', border: `1px solid ${e.status === 'Active' ? '#4caf50' : BORDER}`, color: e.status === 'Active' ? '#4caf50' : MUTED }}>
+                {e.status}
+              </span>
+            </div>
+            <button style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: RED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Edit →</button>
+          </div>
+        ))}
+      </div>
+
+      {/* Messages preview */}
+      <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '16px' }}>Recent Activity</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER }}>
+        {[
+          { msg: 'Boxclub Nürnberg registered 4 fighters for Fight Night Nürnberg', time: '2h ago' },
+          { msg: 'FC Ring Fürth requested fighter slot — David Okafor, 74 KG', time: '5h ago' },
+          { msg: 'Fight card updated: Braun vs. Wisniewski confirmed as Main Event', time: '1d ago' },
+          { msg: 'New ticket sale: 48 tickets sold this week', time: '2d ago' },
+        ].map((a, i) => (
+          <div key={i} style={{ backgroundColor: CARD, padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '24px' }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 500, color: '#ccc', letterSpacing: '0.02em' }}>{a.msg}</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>{a.time}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function EventsView({ nav }: { nav: NavFn }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <h1 style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, textTransform: 'uppercase' }}>My Events</h1>
+        <button style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px 24px' }}>
+          + Create Event
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        {[
+          { name: 'Fight Night Nürnberg', date: '23 Aug 2026', location: 'Nürnberg', discipline: 'Boxing', fights: 8, fighters: 16, status: 'Active', views: 840 },
+          { name: 'Championship Night Berlin', date: '14 Sep 2026', location: 'Berlin', discipline: 'Boxing', fights: 5, fighters: 10, status: 'Active', views: 2000 },
+          { name: 'Nürnberg Amateur Cup', date: '18 Oct 2026', location: 'Nürnberg', discipline: 'Boxing', fights: 0, fighters: 4, status: 'Draft', views: 120 },
+        ].map((e, i) => (
+          <div key={i} style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 100px) 80px', alignItems: 'center', gap: '16px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900, textTransform: 'uppercase' }}>{e.name}</div>
+                  <span style={{ fontFamily: DISPLAY, fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '3px 8px', border: `1px solid ${e.status === 'Active' ? '#4caf50' : BORDER}`, color: e.status === 'Active' ? '#4caf50' : MUTED }}>
+                    {e.status}
+                  </span>
+                </div>
+                <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{e.date} · {e.location} · {e.discipline}</div>
+              </div>
+              {[['Fights', e.fights], ['Fighters', e.fighters], ['Views', e.views]].map(([l, v]) => (
+                <div key={l as string} style={{ textAlign: 'center' }}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '24px', fontWeight: 900 }}>{v}</div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{l}</div>
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                <button style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: RED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Edit</button>
+                <button style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>View</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FightersView({ nav }: { nav: NavFn }) {
+  const imgs = [
+    'https://images.unsplash.com/photo-1607702713064-0143212236ae?w=80&h=80&fit=crop',
+    'https://images.unsplash.com/photo-1602827113876-839bcf3ccb3a?w=80&h=80&fit=crop',
+  ]
+  const fighters = [
+    { name: 'Marcus Müller', club: 'Boxclub Nürnberg', weight: '75 KG', record: '8–2', status: 'Matched' },
+    { name: 'David Okafor', club: 'FC Ring Fürth', weight: '74 KG', record: '6–3', status: 'Unmatched' },
+    { name: 'Julian Reiter', club: 'Kampfsport Berlin', weight: '70 KG', record: '11–1', status: 'Matched' },
+    { name: 'Tobias Lang', club: 'Boxclub Nürnberg', weight: '76 KG', record: '7–1', status: 'Unmatched' },
+    { name: 'Nico Schmidt', club: 'Fight Academy München', weight: '63 KG', record: '3–0', status: 'Matched' },
+    { name: 'Leon Braun', club: 'ABC Boxing Nürnberg', weight: '60 KG', record: '5–2', status: 'Matched' },
+  ]
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <h1 style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, textTransform: 'uppercase' }}>Registered Fighters</h1>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 20px', border: `1px solid ${BORDER}`, color: '#fff' }}>
+            Filter: All
+          </button>
+          <button style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 20px' }}>
+            Add Fighter
+          </button>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER }}>
+        <div style={{ backgroundColor: '#060606', padding: '10px 20px', display: 'grid', gridTemplateColumns: '1fr 160px 80px 100px 100px 80px', gap: '16px', alignItems: 'center' }}>
+          {['Fighter', 'Club', 'Weight', 'Record', 'Status', ''].map(h => (
+            <div key={h} style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase' }}>{h}</div>
+          ))}
+        </div>
+        {fighters.map((f, i) => (
+          <div key={i} style={{ backgroundColor: CARD, padding: '14px 20px', display: 'grid', gridTemplateColumns: '1fr 160px 80px 100px 100px 80px', gap: '16px', alignItems: 'center' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '36px', height: '36px', overflow: 'hidden', flexShrink: 0, backgroundColor: '#1a1a1a' }}>
+                <img src={imgs[i % 2]} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', filter: 'grayscale(30%)' }} />
+              </div>
+              <div style={{ fontFamily: DISPLAY, fontSize: '17px', fontWeight: 800, textTransform: 'uppercase' }}>{f.name}</div>
+            </div>
+            <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{f.club}</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700 }}>{f.weight}</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700 }}>{f.record}</div>
+            <span style={{ fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 10px', border: `1px solid ${f.status === 'Matched' ? '#4caf50' : '#c9a227'}`, color: f.status === 'Matched' ? '#4caf50' : '#c9a227', display: 'inline-block' }}>
+              {f.status}
+            </span>
+            <button style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: RED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>View →</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function MatchmakingView() {
+  const [matched, setMatched] = useState<number | null>(null)
+
+  return (
+    <div>
+      <h1 style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>Matchmaking</h1>
+      <p style={{ fontSize: '14px', color: MUTED, lineHeight: 1.6, marginBottom: '40px' }}>
+        Enter fighter requirements to find suitable opponents from across the PUGNA network.
+      </p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px', alignItems: 'start' }}>
+        {/* Requirements */}
+        <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}` }}>
+          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}` }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase' }}>Requirements</div>
+          </div>
+          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {[['Sport', 'Boxing'], ['Weight', '75 KG'], ['Level', 'Amateur'], ['Fights', '5–10'], ['Distance', '≤ 150 km'], ['Availability', '23 Aug 2026']].map(([k, v]) => (
+              <div key={k} style={{ backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, padding: '10px 14px', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{k}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700 }}>{v}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: '0 20px 20px' }}>
+            <button style={{ width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px' }}>
+              Find Matches
+            </button>
+          </div>
+        </div>
+
+        {/* Results */}
+        <div>
+          <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '16px' }}>Top Matches</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER }}>
+            {[
+              { match: 92, name: 'Marcus Müller', club: 'Boxclub Nürnberg', weight: '75 KG', record: '8–2', location: 'Nürnberg', fights: 10, age: 26 },
+              { match: 88, name: 'David Okafor', club: 'FC Ring Fürth', weight: '74 KG', record: '6–3', location: 'Fürth', fights: 9, age: 24 },
+              { match: 81, name: 'Tobias Lang', club: 'Boxclub Nürnberg', weight: '76 KG', record: '7–1', location: 'Erlangen', fights: 8, age: 28 },
+              { match: 76, name: 'Nico Schmidt', club: 'Fight Academy München', weight: '75 KG', record: '3–0', location: 'München', fights: 3, age: 22 },
+            ].map((m, i) => (
+              <div key={i} style={{ backgroundColor: CARD, padding: '20px', display: 'grid', gridTemplateColumns: '80px 1fr auto', gap: '20px', alignItems: 'center' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '32px', fontWeight: 900, color: i === 0 ? RED : '#fff', lineHeight: 1 }}>{m.match}%</div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Match</div>
+                  {/* Bar */}
+                  <div style={{ height: '3px', backgroundColor: '#1a1a1a', marginTop: '6px' }}>
+                    <div style={{ height: '100%', width: `${m.match}%`, backgroundColor: i === 0 ? RED : MUTED }} />
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '2px' }}>{m.name}</div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+                    {m.club} · {m.weight} · {m.record} · {m.location}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {[`${m.fights} fights`, `Age ${m.age}`].map(t => (
+                      <span key={t} style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, padding: '2px 8px', border: `1px solid #2a2a2a`, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button
+                    onClick={() => setMatched(i)}
+                    style={{ backgroundColor: matched === i ? '#4caf50' : RED, color: '#fff', fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 20px', transition: 'background-color 0.15s', whiteSpace: 'nowrap' }}
+                  >
+                    {matched === i ? 'Selected ✓' : 'Select Fighter'}
+                  </button>
+                  <button style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', color: MUTED, textTransform: 'uppercase' }}>View Profile</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ResultsView() {
+  return (
+    <div>
+      <h1 style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '32px' }}>Results</h1>
+      <div style={{ fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}>No past events. Results will appear here after events conclude.</div>
+    </div>
+  )
+}
+
+function AnalyticsView() {
+  const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
+  const views = [320, 580, 440, 820, 1100, 840]
+  const maxViews = Math.max(...views)
+
+  return (
+    <div>
+      <h1 style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '32px' }}>Analytics</h1>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px', marginBottom: '48px' }}>
+        {[
+          { label: 'Total Event Views', value: '2,840', change: '+18%' },
+          { label: 'Fighter Profile Views', value: '1,204', change: '+32%' },
+          { label: 'Tickets Sold', value: '186', change: '+11%' },
+        ].map((s, i) => (
+          <div key={i} style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px', borderTop: i === 0 ? `2px solid ${RED}` : `1px solid ${BORDER}` }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase', marginBottom: '8px' }}>{s.label}</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, lineHeight: 1, color: i === 0 ? RED : '#fff' }}>{s.value}</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: '#4caf50', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>{s.change} vs last period</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Bar chart */}
+      <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px' }}>
+        <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '24px' }}>Event Views — Last 6 Months</div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', height: '160px' }}>
+          {months.map((m, i) => (
+            <div key={m} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', flex: 1 }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED }}>{views[i]}</div>
+              <div style={{ width: '100%', backgroundColor: i === 5 ? RED : '#1c1c1c', height: `${(views[i] / maxViews) * 120}px`, transition: 'height 0.3s' }}
+                onMouseEnter={e => { if (i !== 5) (e.currentTarget.style.backgroundColor = '#2a2a2a') }}
+                onMouseLeave={e => { if (i !== 5) (e.currentTarget.style.backgroundColor = '#1c1c1c') }}
+              />
+              <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase' }}>{m}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}

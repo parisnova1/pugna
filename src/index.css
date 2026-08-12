@@ -1,1 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import 'tailwindcss';
+
+@theme {
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --color-pugna-dark: #080808;
+  --color-pugna-card: #0f0f0f;
+  --color-pugna-card2: #161616;
+  --color-pugna-border: #1c1c1c;
+  --color-pugna-border2: #282828;
+  --color-pugna-red: #e5172b;
+  --color-pugna-red-dim: #8b0e19;
+  --color-pugna-muted: #555555;
+  --color-pugna-subtle: #888888;
+  --color-pugna-silver: #aaaaaa;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1c1c1c transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #080808;
+  color: #ffffff;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
