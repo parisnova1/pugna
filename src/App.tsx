@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import Home from './pages/Home'
 import EventDetail from './pages/EventDetail'
-import FighterProfile from './pages/FighterProfile'
 import ClubProfile from './pages/ClubProfile'
 import OrganizerDashboard from './pages/OrganizerDashboard'
-import Marketplace from './pages/Marketplace'
 
-export type Page = 'home' | 'event' | 'fighter' | 'club' | 'organizer' | 'marketplace' | 'sparring'
+export type Page = 'home' | 'event' | 'club' | 'organizer' | 'sparring'
 export type NavFn = (p: Page) => void
 
 export default function App() {
@@ -19,10 +17,8 @@ export default function App() {
       <Header page={page} nav={nav} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
       {page === 'home' && <Home nav={nav} />}
       {page === 'event' && <EventDetail nav={nav} />}
-      {page === 'fighter' && <FighterProfile nav={nav} />}
       {page === 'club' && <ClubProfile nav={nav} />}
       {page === 'organizer' && <OrganizerDashboard nav={nav} />}
-      {page === 'marketplace' && <Marketplace nav={nav} />}
     </div>
   )
 }
@@ -51,10 +47,8 @@ function Header({ page, nav, menuOpen, setMenuOpen }: { page: Page; nav: NavFn; 
         {/* Primary nav */}
         <nav className="hidden md:flex items-center gap-8">
           {link('Events', 'event')}
-          {link('Fighters', 'fighter')}
           {link('Clubs', 'club')}
           {link('Sparring', 'sparring')}
-          {link('Marketplace', 'marketplace')}
         </nav>
 
         <div style={{ flex: 1 }} />
@@ -113,8 +107,8 @@ function Header({ page, nav, menuOpen, setMenuOpen }: { page: Page; nav: NavFn; 
       {/* Mobile menu */}
       {menuOpen && (
         <div style={{ borderTop: '1px solid #1c1c1c', padding: '20px 32px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#080808' }}>
-          {(['Events', 'Fighters', 'Clubs', 'Sparring', 'Marketplace'] as const).map((label, i) => {
-            const targets: Page[] = ['event', 'fighter', 'club', 'sparring', 'marketplace']
+          {(['Events', 'Clubs', 'Sparring'] as const).map((label, i) => {
+            const targets: Page[] = ['event', 'club', 'sparring']
             return (
               <button key={label} onClick={() => nav(targets[i])}
                 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '18px', fontWeight: 700, letterSpacing: '0.1em', color: '#fff', textTransform: 'uppercase', textAlign: 'left' }}

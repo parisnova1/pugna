@@ -333,7 +333,7 @@ function FighterDiscovery({ nav }: { nav: NavFn }) {
                 </div>
               ))}
               <button
-                onClick={() => nav('fighter')}
+                onClick={() => nav('club')}
                 style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px', marginTop: '8px', transition: 'background-color 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
@@ -369,7 +369,7 @@ function FighterDiscovery({ nav }: { nav: NavFn }) {
                 </div>
                 <div style={{ padding: '0 16px 16px' }}>
                   <button
-                    onClick={() => nav('fighter')}
+                    onClick={() => nav('club')}
                     style={{ width: '100%', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = RED)}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
@@ -679,7 +679,7 @@ function MarketplacePreview({ nav }: { nav: NavFn }) {
         {/* Category pills */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '40px' }}>
           {['Boxing Gloves', 'Hand Wraps', 'Headgear', 'Shoes', 'Apparel', 'Training Equipment', 'Club Merchandise'].map(cat => (
-            <button key={cat} onClick={() => nav('marketplace')}
+            <button key={cat} onClick={() => nav('event')}
               style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '6px 14px', border: `1px solid ${BORDER}`, color: MUTED, backgroundColor: 'transparent', transition: 'all 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.color = '#fff' }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = MUTED }}
@@ -690,7 +690,7 @@ function MarketplacePreview({ nav }: { nav: NavFn }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1px', backgroundColor: BORDER, marginBottom: '40px' }}>
           {PRODUCTS.map((p, i) => (
             <div key={i} style={{ backgroundColor: CARD, overflow: 'hidden', cursor: 'pointer' }}
-              onClick={() => nav('marketplace')}
+              onClick={() => nav('event')}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
             >
@@ -713,7 +713,7 @@ function MarketplacePreview({ nav }: { nav: NavFn }) {
 
         <div style={{ textAlign: 'center' }}>
           <button
-            onClick={() => nav('marketplace')}
+            onClick={() => nav('event')}
             style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 40px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
             onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
             onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
@@ -947,7 +947,7 @@ function Footer({ nav }: { nav: NavFn }) {
               ))}
             </div>
           </div>
-          {col('Discover', [['Events', 'event'], ['Fighters', 'fighter'], ['Clubs', 'club'], ['Sparring', 'sparring'], ['Marketplace', 'marketplace']])}
+          {col('Discover', [['Events', 'event'], ['Clubs', 'club'], ['Sparring', 'sparring']])}
           {col('For Clubs', [['Create Club', 'club'], ['Promote Fighters', 'club'], ['Host Sparring', 'sparring']])}
           {col('For Organizers', [['Create Event', 'organizer'], ['Matchmaking', 'organizer'], ['Tournaments', 'organizer']])}
           {col('Company', [['About'], ['Contact'], ['Careers'], ['Privacy'], ['Terms']])}
