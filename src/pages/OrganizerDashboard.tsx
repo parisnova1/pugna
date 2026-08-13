@@ -74,7 +74,7 @@ export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
 
 function StatCard({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
   return (
-    <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px`, borderTop: accent ? `2px solid ${RED}` : `1px solid ${BORDER}` }}>
+    <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px', borderTop: accent ? `2px solid ${RED}` : `1px solid ${BORDER}` }}>
       <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.18em', color: MUTED, textTransform: 'uppercase', marginBottom: '8px' }}>{label}</div>
       <div style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, lineHeight: 1, color: accent ? RED : '#fff' }}>{value}</div>
       {sub && <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>{sub}</div>}
