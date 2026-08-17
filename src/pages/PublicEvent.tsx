@@ -4,11 +4,11 @@ import { formatDisplayDate } from '../lib/date'
 import { subscribeToEvent } from '../lib/ws'
 import BracketView, { type Bout } from '../components/Bracket'
 
-const RED = '#e5172b'
+const RED = '#0070f3'
 const CARD = '#0f0f0f'
-const BORDER = '#1c1c1c'
+const BORDER = '#333333'
 const MUTED = '#888888'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const DISPLAY = "'Geist Sans', sans-serif"
 
 type PublicEventDetail = {
   id: number
@@ -55,7 +55,7 @@ function Header() {
 
 function CenteredMessage({ title, body }: { title: string; body: string }) {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#080808', color: '#fff', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#fff', fontFamily: "'Geist Sans', sans-serif" }}>
       <Header />
       <div style={{ maxWidth: '480px', margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
         <div style={{ fontFamily: DISPLAY, fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '12px' }}>{title}</div>
@@ -135,7 +135,7 @@ export default function PublicEvent({ token }: { token: string }) {
   // events — a simple ordered fight card has its own page at /events/:id.
   if (event.format === 'card') {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#080808', color: '#fff', fontFamily: "'Inter', sans-serif" }}>
+      <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#fff', fontFamily: "'Geist Sans', sans-serif" }}>
         <Header />
         <div style={{ maxWidth: '480px', margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
           <div style={{ fontFamily: DISPLAY, fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '12px' }}>{event.name}</div>
@@ -151,7 +151,7 @@ export default function PublicEvent({ token }: { token: string }) {
   const currentClass = weightClasses.find(wc => wc.id === selected)
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#080808', color: '#fff', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#fff', fontFamily: "'Geist Sans', sans-serif" }}>
       <Header />
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 24px 80px' }}>
@@ -174,7 +174,7 @@ export default function PublicEvent({ token }: { token: string }) {
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', margin: '28px 0' }}>
               {weightClasses.map(wc => (
                 <button key={wc.id} onClick={() => setSelected(wc.id)}
-                  style={{ padding: '10px 16px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${selected === wc.id ? RED : BORDER}`, backgroundColor: selected === wc.id ? '#1a0507' : 'transparent', color: selected === wc.id ? '#fff' : MUTED }}
+                  style={{ padding: '10px 16px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${selected === wc.id ? RED : BORDER}`, backgroundColor: selected === wc.id ? '#071a30' : 'transparent', color: selected === wc.id ? '#fff' : MUTED }}
                 >
                   {wc.name}
                 </button>

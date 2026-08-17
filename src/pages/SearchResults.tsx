@@ -3,12 +3,13 @@ import { useSearchParams } from 'react-router-dom'
 import type { NavFn } from '../App'
 import { apiFetch } from '../lib/api'
 import { formatDisplayDate } from '../lib/date'
+import BackButton from '../components/BackButton'
 
-const RED = '#e5172b'
+const RED = '#0070f3'
 const CARD = '#0f0f0f'
-const BORDER = '#1c1c1c'
+const BORDER = '#333333'
 const MUTED = '#888888'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const DISPLAY = "'Geist Sans', sans-serif"
 
 type EventResult = { id: number; name: string; date: string; location: string; discipline: string; organizer_name: string }
 type FighterResult = { id: number; name: string; club: string; weight: string; record: string; discipline: string; location: string }
@@ -51,6 +52,9 @@ export default function SearchResults({ nav }: { nav: NavFn }) {
 
   return (
     <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '48px 32px 80px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <BackButton />
+      </div>
       <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '8px' }}>Search</div>
       <h1 style={{ fontFamily: DISPLAY, fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '32px' }}>
         {query ? `Results for "${query}"` : 'Search Pugna'}

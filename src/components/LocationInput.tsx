@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { apiFetch } from '../lib/api'
 
-const BORDER = '#1c1c1c'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const BORDER = '#333333'
+const DISPLAY = "'Geist Sans', sans-serif"
 
 type GeoResult = { label: string; lat: string; lon: string }
 

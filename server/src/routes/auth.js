@@ -6,18 +6,18 @@ import { signToken, requireAuth } from '../auth.js'
 const router = Router()
 
 const getUserByEmail = db.prepare('SELECT * FROM users WHERE email = ?')
-const getUserById = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?')
-const insertUser = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)')
+const getUserById = db.prepare('SELECT id, name, email, role, home_location FROM users WHERE id = ?')
+const insertUser = db.prepare('INSERT INTO users (name, email, password_hash, role, home_location) VALUES (?, ?, ?, ?, ?)')
 const insertClub = db.prepare('INSERT INTO clubs (owner_id, name) VALUES (?, ?)')
 
 const ROLES = new Set(['organizer', 'club', 'viewer'])
 
 function publicUser(row) {
-  return { id: row.id, name: row.name, email: row.email, role: row.role }
+  return { id: row.id, name: row.name, email: row.email, role: row.role, home_location: row.home_location || '' }
 }
 
 router.post('/signup', (req, res) => {
-  const { name, email, password, role } = req.body || {}
+  const { name, email, password, role, homeLocation } = req.body || {}
 
   if (!name?.trim() || !email?.trim() || !password) {
     return res.status(400).json({ error: 'Name, email and password are required.' })
@@ -38,7 +38,7 @@ router.post('/signup', (req, res) => {
   }
 
   const passwordHash = bcrypt.hashSync(password, 10)
-  const info = insertUser.run(name.trim(), normalizedEmail, passwordHash, role || 'viewer')
+  const info = insertUser.run(name.trim(), normalizedEmail, passwordHash, role || 'viewer', (homeLocation || '').trim())
   const user = publicUser(getUserById.get(info.lastInsertRowid))
 
   if (user.role === 'club') {

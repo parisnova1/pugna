@@ -10,6 +10,7 @@
     "format": "oxfmt"
   },
   "dependencies": {
+    "geist": "^1.7.2",
     "html5-qrcode": "^2.3.8",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",

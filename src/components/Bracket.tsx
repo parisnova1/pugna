@@ -1,9 +1,9 @@
-const RED = '#e5172b'
+const RED = '#0070f3'
 const CARD = '#0f0f0f'
-const BORDER = '#1c1c1c'
+const BORDER = '#333333'
 const BORDER2 = '#2a2a2a'
 const MUTED = '#888888'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const DISPLAY = "'Geist Sans', sans-serif"
 
 export type Bout = {
   id: number
@@ -93,7 +93,7 @@ export default function Bracket({ bouts, fighters, onBoutClick }: { bouts: Bout[
                 <div
                   key={m.id}
                   onClick={isClickable ? () => onBoutClick!(m) : undefined}
-                  onMouseEnter={isClickable ? e => { e.currentTarget.style.borderColor = RED; e.currentTarget.style.backgroundColor = '#1a0507' } : undefined}
+                  onMouseEnter={isClickable ? e => { e.currentTarget.style.borderColor = RED; e.currentTarget.style.backgroundColor = '#071a30' } : undefined}
                   onMouseLeave={isClickable ? e => { e.currentTarget.style.borderColor = BORDER2; e.currentTarget.style.backgroundColor = CARD } : undefined}
                   title={isClickable ? 'Click to record a result' : undefined}
                   style={{

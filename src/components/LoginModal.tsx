@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { useAuth, type Role } from '../auth/AuthContext'
 import { useLanguage } from '../i18n/LanguageContext'
 
-const RED = '#e5172b'
+const RED = '#0070f3'
 const CARD = '#0f0f0f'
-const BORDER = '#1c1c1c'
+const BORDER = '#333333'
 const MUTED = '#888888'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const DISPLAY = "'Geist Sans', sans-serif"
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -14,7 +14,7 @@ const inputStyle: React.CSSProperties = {
   border: `1px solid ${BORDER}`,
   color: '#fff',
   padding: '12px 14px',
-  fontFamily: "'Inter', sans-serif",
+  fontFamily: "'Geist Sans', sans-serif",
   fontSize: '14px',
   outline: 'none',
 }
@@ -27,6 +27,7 @@ export default function LoginModal({ initialMode = 'login', initialRole = 'viewe
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [homeLocation, setHomeLocation] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -50,7 +51,7 @@ export default function LoginModal({ initialMode = 'login', initialRole = 'viewe
     setLoading(true)
     try {
       if (mode === 'login') await login(email, password)
-      else await signup(name, email, password, role)
+      else await signup(name, email, password, role, homeLocation)
       // Don't call onClose() here — it also clears pendingPage (used to redirect
       // after a gated login). The parent closes the modal reactively once its
       // `user` state updates, via the effect in App.tsx.
@@ -91,6 +92,12 @@ export default function LoginModal({ initialMode = 'login', initialRole = 'viewe
               <input style={inputStyle} type="text" value={name} onChange={e => setName(e.target.value)} placeholder={role === 'club' ? t('login.clubNamePlaceholder') : t('login.namePlaceholder')} autoComplete="name" />
             </div>
           )}
+          {mode === 'signup' && role === 'viewer' && (
+            <div>
+              <label style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>{t('login.homeLocation')}</label>
+              <input style={inputStyle} type="text" value={homeLocation} onChange={e => setHomeLocation(e.target.value)} placeholder={t('login.homeLocationPlaceholder')} autoComplete="address-level2" />
+            </div>
+          )}
           <div>
             <label style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>{t('login.email')}</label>
             <input style={inputStyle} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" />
@@ -108,7 +115,7 @@ export default function LoginModal({ initialMode = 'login', initialRole = 'viewe
             type="submit"
             disabled={loading}
             style={{ marginTop: '8px', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '14px', opacity: loading ? 0.6 : 1, transition: 'background-color 0.15s' }}
-            onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = '#c9112a' }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = '#0058cc' }}
             onMouseLeave={e => { if (!loading) e.currentTarget.style.backgroundColor = RED }}
           >
             {loading ? t('login.pleaseWait') : mode === 'login' ? t('login.logIn') : t('login.createAccount')}

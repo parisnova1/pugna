@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { db } from '../db.js'
+import { requireAuth } from '../auth.js'
 
 const router = Router()
 
@@ -28,12 +29,74 @@ const getPublicFighterById = db.prepare(`
   WHERE fighters.id = ?
 `)
 
+const listSavedEvents = db.prepare(`
+  SELECT events.id, events.name, events.date, events.location, events.discipline,
+         events.fights, events.fighters, events.views, users.name AS organizer_name
+  FROM event_saves
+  JOIN events ON events.id = event_saves.event_id
+  JOIN users ON users.id = events.organizer_id
+  WHERE event_saves.user_id = ?
+  ORDER BY event_saves.created_at DESC
+`)
+const getEventForSave = db.prepare('SELECT id FROM events WHERE id = ?')
+const insertEventSave = db.prepare('INSERT OR IGNORE INTO event_saves (user_id, event_id) VALUES (?, ?)')
+const deleteEventSave = db.prepare('DELETE FROM event_saves WHERE user_id = ? AND event_id = ?')
+
 router.get('/events', (_req, res) => {
   res.json({ events: listPublicEvents.all() })
 })
 
+// Keep before `/events/:idOrToken` — otherwise Express matches "saved" as the
+// :idOrToken param (same ordering hazard noted in clubs.js above its `/:id`).
+router.get('/events/saved', requireAuth, (req, res) => {
+  res.json({ events: listSavedEvents.all(req.userId) })
+})
+
+router.post('/events/:id/save', requireAuth, (req, res) => {
+  const event = getEventForSave.get(req.params.id)
+  if (!event) return res.status(404).json({ error: 'Event not found.' })
+  insertEventSave.run(req.userId, event.id)
+  res.status(204).end()
+})
+
+router.delete('/events/:id/save', requireAuth, (req, res) => {
+  deleteEventSave.run(req.userId, req.params.id)
+  res.status(204).end()
+})
+
+const listFollowedFighters = db.prepare(`
+  SELECT fighters.id, fighters.name, fighters.club, fighters.weight, fighters.record,
+         fighters.discipline, fighters.location, users.name AS organizer_name
+  FROM fighter_follows
+  JOIN fighters ON fighters.id = fighter_follows.fighter_id
+  JOIN users ON users.id = fighters.organizer_id
+  WHERE fighter_follows.user_id = ?
+  ORDER BY fighter_follows.created_at DESC
+`)
+const getFighterForFollow = db.prepare('SELECT id FROM fighters WHERE id = ?')
+const insertFighterFollow = db.prepare('INSERT OR IGNORE INTO fighter_follows (user_id, fighter_id) VALUES (?, ?)')
+const deleteFighterFollow = db.prepare('DELETE FROM fighter_follows WHERE user_id = ? AND fighter_id = ?')
+
 router.get('/fighters', (_req, res) => {
   res.json({ fighters: listPublicFighters.all() })
+})
+
+// Keep before `/fighters/:id` — otherwise Express matches "following" as the
+// :id param (same ordering hazard noted in clubs.js above its `/:id`).
+router.get('/fighters/following', requireAuth, (req, res) => {
+  res.json({ fighters: listFollowedFighters.all(req.userId) })
+})
+
+router.post('/fighters/:id/follow', requireAuth, (req, res) => {
+  const fighter = getFighterForFollow.get(req.params.id)
+  if (!fighter) return res.status(404).json({ error: 'Fighter not found.' })
+  insertFighterFollow.run(req.userId, fighter.id)
+  res.status(204).end()
+})
+
+router.delete('/fighters/:id/follow', requireAuth, (req, res) => {
+  deleteFighterFollow.run(req.userId, req.params.id)
+  res.status(204).end()
 })
 
 router.get('/fighters/:id', (req, res) => {

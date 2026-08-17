@@ -2,13 +2,13 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { apiFetch, getToken, setToken } from '../lib/api'
 
 export type Role = 'organizer' | 'club' | 'viewer'
-export type User = { id: number; name: string; email: string; role: Role }
+export type User = { id: number; name: string; email: string; role: Role; home_location: string }
 
 type AuthContextValue = {
   user: User | null
   ready: boolean
   login: (email: string, password: string) => Promise<void>
-  signup: (name: string, email: string, password: string, role?: Role) => Promise<void>
+  signup: (name: string, email: string, password: string, role?: Role, homeLocation?: string) => Promise<void>
   logout: () => void
 }
 
@@ -38,10 +38,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(user)
   }
 
-  const signup: AuthContextValue['signup'] = async (name, email, password, role) => {
+  const signup: AuthContextValue['signup'] = async (name, email, password, role, homeLocation) => {
     const { token, user } = await apiFetch<{ token: string; user: User }>('/api/auth/signup', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify({ name, email, password, role, homeLocation }),
     })
     setToken(token)
     setUser(user)

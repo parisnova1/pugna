@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLanguage } from '../i18n/LanguageContext'
 
-const RED = '#e5172b'
+const RED = '#0070f3'
 const CARD = '#0f0f0f'
-const BORDER = '#1c1c1c'
+const BORDER = '#333333'
 const MUTED = '#888888'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const DISPLAY = "'Geist Sans', sans-serif"
 
 const SCANNER_ELEMENT_ID = 'pugna-qr-scanner-region'
 
@@ -87,7 +87,7 @@ export default function QrScanner({ onDecode, onClose }: { onDecode: (text: stri
                   value={manualValue}
                   onChange={e => setManualValue(e.target.value)}
                   placeholder="pugna.app/events/14 or event code"
-                  style={{ width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff', padding: '12px 14px', fontFamily: "'Inter', sans-serif", fontSize: '14px', outline: 'none' }}
+                  style={{ width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff', padding: '12px 14px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none' }}
                 />
               </div>
               <button type="submit" style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px' }}>

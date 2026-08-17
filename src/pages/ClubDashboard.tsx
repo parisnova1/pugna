@@ -4,18 +4,19 @@ import { useAuth } from '../auth/AuthContext'
 import { apiFetch } from '../lib/api'
 import { formatDisplayDate } from '../lib/date'
 import LocationInput from '../components/LocationInput'
+import { FighterDiscovery } from './Home'
 
-const RED = '#e5172b'
+const RED = '#0070f3'
 const CARD = '#0f0f0f'
-const BORDER = '#1c1c1c'
+const BORDER = '#333333'
 const MUTED = '#888888'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const DISPLAY = "'Geist Sans', sans-serif"
 const DISCIPLINES = ['Boxing', 'Kickboxing', 'Muay Thai', 'MMA', 'BJJ', 'Wrestling']
 const LEVELS = ['Amateur', 'Intermediate', 'Advanced', 'All Levels'] as const
 
 const inputStyle: React.CSSProperties = {
   width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff',
-  padding: '11px 14px', fontFamily: "'Inter', sans-serif", fontSize: '14px', outline: 'none',
+  padding: '11px 14px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none',
 }
 const labelStyle: React.CSSProperties = {
   fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px',
@@ -75,48 +76,89 @@ type SparringSessionRow = {
 
 type Participant = { id: number; club_id: number; club_name: string; fighter_count: number; weight_category: string }
 
-type Tab = 'details' | 'sparring'
+type Tab = 'details' | 'sparring' | 'fighters'
+
+const CLUB_NAV_ITEMS: Array<[Tab, string, string]> = [
+  ['details', 'Club Details', 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21v-1a8 8 0 0 1 16 0v1'],
+  ['sparring', 'Sparring', 'M3 5h18M3 5v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5M8 3v4M16 3v4M8 13h8M8 17h5'],
+  ['fighters', 'Find Fighters', 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'],
+]
 
 export default function ClubDashboard({ nav }: { nav: NavFn }) {
   const { user, logout } = useAuth()
   const [tab, setTab] = useState<Tab>('details')
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', minHeight: 'calc(100vh - 64px)' }}>
-      <aside style={{ backgroundColor: '#060606', borderRight: `1px solid ${BORDER}`, padding: '32px 0', position: 'sticky', top: '64px', height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '0 24px', marginBottom: '32px' }}>
-          <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', marginBottom: '4px' }}>Club Dashboard</div>
-          <div style={{ fontFamily: DISPLAY, fontSize: '18px', fontWeight: 900, textTransform: 'uppercase' }}>{user?.name || 'Club'}</div>
-          {user?.email && <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, letterSpacing: '0.04em', marginTop: '2px' }}>{user.email}</div>}
+    <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
+      <aside style={{
+        width: collapsed ? '76px' : '240px', flexShrink: 0, backgroundColor: '#060606', borderRight: `1px solid ${BORDER}`,
+        padding: '20px 0', position: 'sticky', top: '64px', height: 'calc(100vh - 64px)', overflowY: 'auto', overflowX: 'hidden',
+        display: 'flex', flexDirection: 'column', transition: 'width 0.2s ease',
+      }}>
+        <div style={{ display: 'flex', justifyContent: collapsed ? 'center' : 'flex-end', padding: '0 12px', marginBottom: '12px' }}>
+          <button
+            onClick={() => setCollapsed(v => !v)}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            style={{ color: MUTED, padding: '8px', transition: 'color 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+            onMouseLeave={e => (e.currentTarget.style.color = MUTED)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+              <path d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
+            </svg>
+          </button>
         </div>
 
+        {!collapsed && (
+          <div style={{ padding: '0 24px', marginBottom: '32px' }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', marginBottom: '4px' }}>Club Dashboard</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: '18px', fontWeight: 900, textTransform: 'uppercase' }}>{user?.name || 'Club'}</div>
+            {user?.email && <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, letterSpacing: '0.04em', marginTop: '2px' }}>{user.email}</div>}
+          </div>
+        )}
+
         <nav style={{ display: 'flex', flexDirection: 'column' }}>
-          {([['details', 'Club Details'], ['sparring', 'Sparring']] as const).map(([v, label]) => (
+          {CLUB_NAV_ITEMS.map(([v, label, icon]) => (
             <button key={v} onClick={() => setTab(v)}
-              style={{ textAlign: 'left', padding: '12px 24px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: tab === v ? '#fff' : MUTED, borderLeft: tab === v ? `2px solid ${RED}` : '2px solid transparent', backgroundColor: tab === v ? '#0f0f0f' : 'transparent' }}
+              title={collapsed ? label : undefined}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left',
+                padding: collapsed ? '12px' : '12px 24px', justifyContent: collapsed ? 'center' : 'flex-start',
+                fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                color: tab === v ? '#fff' : MUTED,
+                borderLeft: collapsed ? '2px solid transparent' : (tab === v ? `2px solid ${RED}` : '2px solid transparent'),
+                backgroundColor: tab === v ? '#0f0f0f' : 'transparent',
+              }}
             >
-              {label}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}><path d={icon} /></svg>
+              {!collapsed && label}
             </button>
           ))}
         </nav>
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ margin: '24px 24px 0', borderTop: `1px solid ${BORDER}`, paddingTop: '20px' }}>
+        <div style={{ margin: collapsed ? '20px 12px 0' : '24px 24px 0', borderTop: `1px solid ${BORDER}`, paddingTop: collapsed ? '12px' : '20px' }}>
           <button
             onClick={() => { logout(); nav('/') }}
-            style={{ width: '100%', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED, padding: '10px', border: `1px solid ${BORDER}`, transition: 'color 0.15s, border-color 0.15s' }}
+            title={collapsed ? 'Log Out' : undefined}
+            style={{ width: '100%', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED, padding: collapsed ? '10px 0' : '10px', border: `1px solid ${BORDER}`, transition: 'color 0.15s, border-color 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#fff' }}
             onMouseLeave={e => { e.currentTarget.style.color = MUTED; e.currentTarget.style.borderColor = BORDER }}
           >
-            Log Out
+            {collapsed ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ margin: '0 auto' }}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+            ) : 'Log Out'}
           </button>
         </div>
       </aside>
 
-      <main style={{ padding: '40px 48px', backgroundColor: '#080808' }}>
+      <main style={{ flex: 1, minWidth: 0, backgroundColor: '#000000', ...(tab === 'fighters' ? {} : { padding: '40px 48px' }) }}>
         {tab === 'details' && <DetailsTab />}
         {tab === 'sparring' && <SparringTab />}
+        {tab === 'fighters' && <FighterDiscovery nav={nav} standalone />}
       </main>
     </div>
   )
@@ -232,7 +274,7 @@ function DetailsTab() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {DISCIPLINES.map(d => (
                 <button key={d} type="button" onClick={() => toggleDiscipline(d)}
-                  style={{ padding: '9px 16px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${disciplines.includes(d) ? RED : BORDER}`, backgroundColor: disciplines.includes(d) ? '#1a0507' : 'transparent', color: disciplines.includes(d) ? '#fff' : MUTED }}
+                  style={{ padding: '9px 16px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${disciplines.includes(d) ? RED : BORDER}`, backgroundColor: disciplines.includes(d) ? '#071a30' : 'transparent', color: disciplines.includes(d) ? '#fff' : MUTED }}
                 >
                   {d}
                 </button>

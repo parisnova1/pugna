@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import type { NavFn } from '../App'
+import { useAuth } from '../auth/AuthContext'
 import { useLanguage } from '../i18n/LanguageContext'
 import { apiFetch } from '../lib/api'
 import { formatDisplayDate } from '../lib/date'
 import BracketView, { type Bout } from '../components/Bracket'
+import Spinner from '../components/Spinner'
+import CopyButton from '../components/CopyButton'
+import BackButton from '../components/BackButton'
+import { subscribeToEvent } from '../lib/ws'
 
-const RED = '#e5172b'
+const RED = '#0070f3'
 const CARD = '#0f0f0f'
-const BORDER = '#1c1c1c'
+const BORDER = '#333333'
 const MUTED = '#888888'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const DISPLAY = "'Geist Sans', sans-serif"
 
 const HERO_IMG = 'https://images.unsplash.com/photo-1546711076-85a7923432ab?w=1440&h=600&fit=crop&auto=format'
 
@@ -24,6 +29,7 @@ type EventInfo = {
   status: string
   format: 'bracket' | 'card'
   livestream_url: string
+  qr_token: string
   fights: number
   fighters: number
   views: number
@@ -41,8 +47,53 @@ const TAB_LABEL_KEYS = {
   fighters: 'eventDetail.tab.fighters',
 } as const
 
+// Escapes text per RFC 5545 (backslash, semicolon, comma, newline).
+function icsEscape(value: string): string {
+  return value.replace(/[\\;,]/g, m => `\\${m}`).replace(/\n/g, '\\n')
+}
+
+// The events table only stores a date, not a start time — this generates an
+// all-day calendar entry rather than fabricating a specific start time.
+function downloadEventIcs(event: EventInfo) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(event.date)
+  if (!match) return
+  const [, y, m, d] = match
+  const start = `${y}${m}${d}`
+  const endDate = new Date(Number(y), Number(m) - 1, Number(d) + 1)
+  const end = `${endDate.getFullYear()}${String(endDate.getMonth() + 1).padStart(2, '0')}${String(endDate.getDate()).padStart(2, '0')}`
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+  const location = [event.venue, event.location].filter(Boolean).join(', ')
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Pugna//Event//EN',
+    'BEGIN:VEVENT',
+    `UID:event-${event.id}@pugna.app`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART;VALUE=DATE:${start}`,
+    `DTEND;VALUE=DATE:${end}`,
+    `SUMMARY:${icsEscape(event.name)}`,
+    location ? `LOCATION:${icsEscape(location)}` : null,
+    `DESCRIPTION:${icsEscape(`${event.discipline} · ${event.organizer_name} · ${window.location.href}`)}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].filter((line): line is string => line !== null).join('\r\n')
+
+  const blob = new Blob([lines], { type: 'text/calendar;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${event.name.trim().replace(/\s+/g, '-').toLowerCase()}.ics`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 export default function EventDetail({ nav }: { nav: NavFn }) {
   const { eventId } = useParams<{ eventId: string }>()
+  const { user } = useAuth()
   const { t } = useLanguage()
   const [tab, setTab] = useState<Tab>('overview')
   const [event, setEvent] = useState<EventInfo | null>(null)
@@ -50,6 +101,9 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
   const [fighters, setFighters] = useState<EventFighter[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+  const [saveBusy, setSaveBusy] = useState(false)
+  const [shareToast, setShareToast] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -67,8 +121,62 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
       .finally(() => setLoading(false))
   }, [eventId])
 
+  useEffect(() => {
+    if (user?.role !== 'viewer') return
+    apiFetch<{ events: { id: number }[] }>('/api/public/events/saved')
+      .then(r => setSaved(r.events.some(e => e.id === Number(eventId))))
+      .catch(() => {})
+  }, [eventId, user?.role])
+
+  const handleShare = async () => {
+    if (!event) return
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: event.name, url: window.location.href })
+      } catch {
+        /* user cancelled the native share sheet — no-op */
+      }
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+    } catch {
+      const el = document.createElement('textarea')
+      el.value = window.location.href
+      el.style.position = 'fixed'
+      el.style.opacity = '0'
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+    }
+    setShareToast(true)
+    setTimeout(() => setShareToast(false), 1600)
+  }
+
+  const toggleSave = async () => {
+    setSaveBusy(true)
+    try {
+      if (saved) {
+        await apiFetch(`/api/public/events/${eventId}/save`, { method: 'DELETE' })
+        setSaved(false)
+      } else {
+        await apiFetch(`/api/public/events/${eventId}/save`, { method: 'POST' })
+        setSaved(true)
+      }
+    } catch {
+      /* leave state unchanged on failure */
+    } finally {
+      setSaveBusy(false)
+    }
+  }
+
   if (loading) {
-    return <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '80px 32px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}>{t('common.loading')}</div>
+    return (
+      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '80px 32px', display: 'flex', alignItems: 'center', gap: '12px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}>
+        <Spinner size={18} /> {t('common.loading')}
+      </div>
+    )
   }
   if (error || !event) {
     return (
@@ -81,10 +189,14 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
 
   return (
     <div>
+      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '16px 32px 0' }}>
+        <BackButton />
+      </div>
+
       {/* Hero */}
       <div style={{ position: 'relative', height: '400px', overflow: 'hidden' }}>
         <img src={HERO_IMG} alt={event.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #080808 0%, rgba(8,8,8,0.6) 50%, rgba(8,8,8,0.1) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #000000 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.1) 100%)' }} />
         <div style={{ position: 'absolute', bottom: 0, left: 0, width: '3px', height: '100%', backgroundColor: RED }} />
 
         <div style={{ position: 'absolute', bottom: '40px', left: '0', right: '0', maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
@@ -108,12 +220,41 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
                 {t('eventDetail.watchLive')}
               </a>
             )}
+            <CopyButton text={window.location.href} style={{ padding: '8px 18px', backgroundColor: 'rgba(0,0,0,0.6)' }} />
+            {user?.role === 'viewer' && (
+              <button
+                onClick={toggleSave}
+                disabled={saveBusy}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700,
+                  letterSpacing: '0.08em', textTransform: 'uppercase', padding: '8px 18px', opacity: saveBusy ? 0.6 : 1, transition: 'all 0.15s',
+                  backgroundColor: saved ? RED : 'rgba(0,0,0,0.6)', color: '#fff', border: `1px solid ${saved ? RED : BORDER}`,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                {saved ? t('eventDetail.saved') : t('eventDetail.save')}
+              </button>
+            )}
+            <button
+              onClick={handleShare}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '8px 18px', backgroundColor: 'rgba(0,0,0,0.6)', color: '#fff', border: `1px solid ${BORDER}` }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.6" y1="10.5" x2="15.4" y2="6.5" /><line x1="8.6" y1="13.5" x2="15.4" y2="17.5" /></svg>
+              {shareToast ? t('eventDetail.linkCopied') : t('eventDetail.share')}
+            </button>
+            <button
+              onClick={() => event && downloadEventIcs(event)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '8px 18px', backgroundColor: 'rgba(0,0,0,0.6)', color: '#fff', border: `1px solid ${BORDER}` }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 11h18" /></svg>
+              {t('eventDetail.addToCalendar')}
+            </button>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div style={{ borderBottom: `1px solid ${BORDER}`, backgroundColor: '#080808', position: 'sticky', top: '64px', zIndex: 50 }}>
+      <div style={{ borderBottom: `1px solid ${BORDER}`, backgroundColor: '#000000', position: 'sticky', top: '64px', zIndex: 50 }}>
         <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px', display: 'flex', gap: '0' }}>
           {(event.format === 'card' ? (['overview', 'fightcard'] as const) : (['overview', 'fightcard', 'fighters'] as const)).map(tabKey => (
             <button key={tabKey} onClick={() => setTab(tabKey)}
@@ -137,7 +278,7 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
         {tab === 'fightcard' && (
           event.format === 'card'
             ? <CardFightCardTab eventId={eventId!} />
-            : <FightCardTab weightClasses={weightClasses} fighters={fighters} />
+            : <FightCardTab weightClasses={weightClasses} fighters={fighters} qrToken={event.qr_token} />
         )}
         {tab === 'fighters' && <FightersTab nav={nav} fighters={fighters} />}
       </div>
@@ -182,7 +323,7 @@ function OverviewTab({ event, weightClasses }: { event: EventInfo; weightClasses
   )
 }
 
-function FightCardTab({ weightClasses, fighters }: { weightClasses: WeightClass[]; fighters: EventFighter[] }) {
+function FightCardTab({ weightClasses, fighters, qrToken }: { weightClasses: WeightClass[]; fighters: EventFighter[]; qrToken: string }) {
   const { t } = useLanguage()
   const [selected, setSelected] = useState<number | null>(weightClasses[0]?.id ?? null)
   const [bouts, setBouts] = useState<Bout[]>([])
@@ -199,6 +340,21 @@ function FightCardTab({ weightClasses, fighters }: { weightClasses: WeightClass[
       .finally(() => setLoading(false))
   }, [selected])
 
+  // Keeps results live while a viewer sits on this page during an event —
+  // mirrors PublicEvent.tsx's audience-page subscription exactly.
+  useEffect(() => {
+    if (!qrToken) return
+    const unsubscribe = subscribeToEvent(qrToken, weightClassId => {
+      if (weightClassId === selected) {
+        apiFetch<{ bouts: Bout[] }>(`/api/public/weight-classes/${weightClassId}/bracket`)
+          .then(r => setBouts(r.bouts))
+          .catch(() => {})
+      }
+    })
+    return unsubscribe
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qrToken, selected])
+
   if (weightClasses.length === 0) {
     return (
       <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '32px 20px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase', textAlign: 'center' }}>
@@ -212,7 +368,7 @@ function FightCardTab({ weightClasses, fighters }: { weightClasses: WeightClass[
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '32px' }}>
         {weightClasses.map(wc => (
           <button key={wc.id} onClick={() => setSelected(wc.id)}
-            style={{ padding: '10px 18px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', border: `1px solid ${selected === wc.id ? RED : BORDER}`, backgroundColor: selected === wc.id ? '#1a0507' : 'transparent', color: selected === wc.id ? '#fff' : MUTED }}
+            style={{ padding: '10px 18px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', border: `1px solid ${selected === wc.id ? RED : BORDER}`, backgroundColor: selected === wc.id ? '#071a30' : 'transparent', color: selected === wc.id ? '#fff' : MUTED }}
           >
             {wc.name}
           </button>
@@ -220,7 +376,7 @@ function FightCardTab({ weightClasses, fighters }: { weightClasses: WeightClass[
       </div>
 
       {loading ? (
-        <div style={{ fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}>{t('common.loading')}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}><Spinner size={14} /> {t('common.loading')}</div>
       ) : (
         <BracketView bouts={bouts} fighters={fightersById} />
       )}

@@ -6,12 +6,14 @@ import { useLanguage } from '../i18n/LanguageContext'
 import { apiFetch } from '../lib/api'
 import { formatDisplayDate } from '../lib/date'
 import LocationInput from '../components/LocationInput'
+import Spinner from '../components/Spinner'
+import Reveal from '../components/Reveal'
 
-const RED = '#e5172b'
+const RED = '#0070f3'
 const CARD = '#0f0f0f'
-const BORDER = '#1c1c1c'
+const BORDER = '#333333'
 const MUTED = '#888888'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const DISPLAY = "'Geist Sans', sans-serif"
 
 const IMAGES = {
   hero: 'https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?w=1920&h=1080&fit=crop&auto=format',
@@ -35,19 +37,18 @@ export default function Home({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Open
   return (
     <main>
       <HeroSection nav={nav} onOpenAuth={onOpenAuth} />
-      <StatsBar />
-      <FeaturedFight nav={nav} />
-      <EventDiscovery nav={nav} />
-      <FighterDiscovery nav={nav} />
-      <MatchmakingFeature nav={nav} />
-      <SparringSection nav={nav} onOpenAuth={onOpenAuth} />
-      <ClubDiscovery nav={nav} onOpenAuth={onOpenAuth} />
-      <BrandsSection />
-      <MarketplacePreview nav={nav} />
-      <ProFights nav={nav} />
-      <ForClubs onOpenAuth={onOpenAuth} />
-      <ForOrganizers nav={nav} />
-      <AdvertiseCTA />
+      <Reveal><StatsBar /></Reveal>
+      <Reveal><FeaturedFight nav={nav} /></Reveal>
+      <Reveal><EventDiscovery nav={nav} /></Reveal>
+      <Reveal><MatchmakingFeature nav={nav} /></Reveal>
+      <Reveal><SparringSection nav={nav} onOpenAuth={onOpenAuth} /></Reveal>
+      <Reveal><ClubDiscovery nav={nav} onOpenAuth={onOpenAuth} /></Reveal>
+      <Reveal><BrandsSection /></Reveal>
+      <Reveal><ProFights nav={nav} /></Reveal>
+      <Reveal><ForClubs onOpenAuth={onOpenAuth} /></Reveal>
+      <Reveal><ForOrganizers nav={nav} /></Reveal>
+      <Reveal><AdvertiseCTA /></Reveal>
+      <Reveal><FaqSection /></Reveal>
       <Footer nav={nav} />
     </main>
   )
@@ -60,8 +61,8 @@ function HeroSection({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }
   return (
     <section style={{ position: 'relative', height: '100vh', minHeight: '640px', overflow: 'hidden', display: 'flex', alignItems: 'flex-end' }}>
       <img src={IMAGES.hero} alt="Boxing ring" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #080808 0%, rgba(8,8,8,0.7) 40%, rgba(8,8,8,0.2) 100%)' }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(8,8,8,0.6) 0%, transparent 60%)' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #000000 0%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0.2) 100%)' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, transparent 60%)' }} />
 
       {/* Red accent line */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '3px', height: '100%', backgroundColor: RED }} />
@@ -91,7 +92,7 @@ function HeroSection({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }
             <button
               onClick={() => nav('/events')}
               style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 32px', transition: 'background-color 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
             >
               {t('hero.exploreEvents')}
@@ -145,13 +146,13 @@ function StatsBar() {
 
 function FeaturedFight({ nav }: { nav: NavFn }) {
   return (
-    <section style={{ padding: '80px 0', backgroundColor: '#080808' }}>
+    <section style={{ padding: '80px 0', backgroundColor: '#000000' }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <SectionLabel text="Featured Fight" />
 
         <div style={{ position: 'relative', overflow: 'hidden', backgroundColor: CARD, border: `1px solid ${BORDER}` }}>
           <img src={IMAGES.fight1} alt="Championship Night Berlin" style={{ width: '100%', height: '480px', objectFit: 'cover', objectPosition: 'center 40%', display: 'block' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(8,8,8,0.95) 40%, rgba(8,8,8,0.4) 100%)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.4) 100%)' }} />
 
           {/* Red top bar */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', backgroundColor: RED }} />
@@ -193,7 +194,7 @@ function FeaturedFight({ nav }: { nav: NavFn }) {
                 <button
                   onClick={() => nav('/events')}
                   style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 28px', transition: 'background-color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
                   onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
                 >
                   View Fight Card
@@ -244,7 +245,7 @@ export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: b
   }, [])
 
   return (
-    <section style={{ padding: '80px 0', backgroundColor: '#080808' }}>
+    <section style={{ padding: '80px 0', backgroundColor: '#000000' }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '40px', gap: '24px', flexWrap: 'wrap' }}>
           <div>
@@ -266,7 +267,7 @@ export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: b
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder={t('events.searchPlaceholder')}
-              style={{ width: '100%', maxWidth: '520px', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff', padding: '13px 16px', fontFamily: "'Inter', sans-serif", fontSize: '14px', outline: 'none' }}
+              style={{ width: '100%', maxWidth: '520px', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff', padding: '13px 16px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none' }}
             />
           </div>
         )}
@@ -380,16 +381,6 @@ export function FighterDiscovery({ nav, standalone }: { nav: NavFn; standalone?:
                   <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 600, color: '#fff' }}>{val}</span>
                 </div>
               ))}
-              {!standalone && (
-                <button
-                  onClick={() => nav('/fighters')}
-                  style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px', marginTop: '8px', transition: 'background-color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
-                >
-                  {t('fighters.findFighters')}
-                </button>
-              )}
             </div>
           </div>
 
@@ -406,7 +397,7 @@ export function FighterDiscovery({ nav, standalone }: { nav: NavFn; standalone?:
               >
                 <div style={{ position: 'relative', height: '260px', backgroundColor: '#111' }}>
                   <img src={FIGHTER_IMAGE_POOL[i % FIGHTER_IMAGE_POOL.length]} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', filter: 'grayscale(20%)' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(8,8,8,0.9) 0%, transparent 60%)' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%)' }} />
                   <div style={{ position: 'absolute', bottom: '12px', left: '16px', right: '16px' }}>
                     <div style={{ fontFamily: DISPLAY, fontSize: '24px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>{f.name}</div>
                     <div style={{ fontFamily: DISPLAY, fontSize: '12px', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase' }}>{f.club}</div>
@@ -445,7 +436,7 @@ export function FighterDiscovery({ nav, standalone }: { nav: NavFn; standalone?:
 
 function MatchmakingFeature({ nav }: { nav: NavFn }) {
   return (
-    <section style={{ padding: '100px 0', backgroundColor: '#080808', borderTop: `1px solid ${BORDER}` }}>
+    <section style={{ padding: '100px 0', backgroundColor: '#000000', borderTop: `1px solid ${BORDER}` }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
           <div>
@@ -459,7 +450,7 @@ function MatchmakingFeature({ nav }: { nav: NavFn }) {
             <button
               onClick={() => nav('/organizer')}
               style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 32px', transition: 'background-color 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
             >
               Find Fighters
@@ -642,7 +633,7 @@ function JoinSparringModal({ session, onCancel, onJoined }: { session: SparringS
 
   const fieldInputStyle: React.CSSProperties = {
     width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff',
-    padding: '11px 14px', fontFamily: "'Inter', sans-serif", fontSize: '14px', outline: 'none',
+    padding: '11px 14px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none',
   }
   const fieldLabelStyle: React.CSSProperties = {
     fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px',
@@ -740,11 +731,11 @@ export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Ope
 
   const fieldInputStyle: React.CSSProperties = {
     width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff',
-    padding: '11px 14px', fontFamily: "'Inter', sans-serif", fontSize: '14px', outline: 'none',
+    padding: '11px 14px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none',
   }
 
   return (
-    <section style={{ padding: '80px 0', backgroundColor: '#080808', borderTop: `1px solid ${BORDER}` }}>
+    <section style={{ padding: '80px 0', backgroundColor: '#000000', borderTop: `1px solid ${BORDER}` }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <div style={{ marginBottom: '32px' }}>
           <SectionLabel text={t('clubs.label')} />
@@ -798,7 +789,7 @@ export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Ope
         </div>
 
         {loading ? (
-          <div style={{ fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}>{t('common.loading')}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}><Spinner size={14} /> {t('common.loading')}</div>
         ) : clubs.length === 0 ? (
           <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '32px 20px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase', textAlign: 'center' }}>
             {searched ? t('clubs.noClubsRadius', { radius: radiusKm, area }) : t('clubs.noClubs')}
@@ -815,7 +806,7 @@ export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Ope
                   <img src={c.cover_url || CLUB_IMAGES[i % CLUB_IMAGES.length]} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(30%)' }} />
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,15,15,0.9) 0%, transparent 60%)' }} />
                   {c.distance_km != null && (
-                    <div style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: 'rgba(8,8,8,0.85)', border: `1px solid ${BORDER}`, padding: '3px 9px', fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, color: RED, textTransform: 'uppercase' }}>
+                    <div style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: 'rgba(0,0,0,0.85)', border: `1px solid ${BORDER}`, padding: '3px 9px', fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, color: RED, textTransform: 'uppercase' }}>
                       {c.distance_km} km
                     </div>
                   )}
@@ -891,7 +882,7 @@ function BrandsSection() {
                 <div style={{ fontFamily: DISPLAY, fontSize: '28px', fontWeight: 800 }}>€179</div>
                 <button
                   style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '10px 24px', transition: 'background-color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
                   onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
                 >
                   Shop Now
@@ -899,79 +890,6 @@ function BrandsSection() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Marketplace Preview ──────────────────────────────────────────────────────
-
-const PRODUCTS = [
-  { name: 'Pro Boxing Gloves', brand: 'Rival', price: '€179', category: 'Boxing Gloves', img: IMAGES.sparring },
-  { name: 'Head Guard Pro', brand: 'Fairtex', price: '€89', category: 'Headgear', img: IMAGES.fighter1 },
-  { name: 'Competition Shorts', brand: 'Venum', price: '€59', category: 'Apparel', img: IMAGES.fighter2 },
-  { name: 'Hand Wraps 4.5m', brand: 'Everlast', price: '€14', category: 'Hand Wraps', img: IMAGES.ring },
-]
-
-function MarketplacePreview({ nav }: { nav: NavFn }) {
-  return (
-    <section style={{ padding: '80px 0', backgroundColor: '#080808', borderTop: `1px solid ${BORDER}` }}>
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '48px', flexWrap: 'wrap', gap: '24px' }}>
-          <div>
-            <SectionLabel text="Marketplace" />
-            <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(36px, 4.5vw, 56px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>
-              PUGNA<br /><span style={{ color: RED }}>MARKETPLACE</span>
-            </h2>
-          </div>
-          <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#888', maxWidth: '320px' }}>Equipment, apparel and everything you need to train and compete.</p>
-        </div>
-
-        {/* Category pills */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '40px' }}>
-          {['Boxing Gloves', 'Hand Wraps', 'Headgear', 'Shoes', 'Apparel', 'Training Equipment', 'Club Merchandise'].map(cat => (
-            <button key={cat} onClick={() => nav('/marketplace')}
-              style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '6px 14px', border: `1px solid ${BORDER}`, color: MUTED, backgroundColor: 'transparent', transition: 'all 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.color = '#fff' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = MUTED }}
-            >{cat}</button>
-          ))}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1px', backgroundColor: BORDER, marginBottom: '40px' }}>
-          {PRODUCTS.map((p, i) => (
-            <div key={i} style={{ backgroundColor: CARD, overflow: 'hidden', cursor: 'pointer' }}
-              onClick={() => nav('/marketplace')}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
-            >
-              <div style={{ height: '200px', backgroundColor: '#0a0a0a' }}>
-                <img src={p.img} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(20%)' }} />
-              </div>
-              <div style={{ padding: '16px' }}>
-                <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase', marginBottom: '4px' }}>{p.brand} · {p.category}</div>
-                <div style={{ fontFamily: DISPLAY, fontSize: '18px', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>{p.name}</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900 }}>{p.price}</div>
-                  <div style={{ display: 'flex', gap: '2px' }}>
-                    {[1,2,3,4,5].map(s => <div key={s} style={{ width: '8px', height: '8px', backgroundColor: RED, clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)' }} />)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ textAlign: 'center' }}>
-          <button
-            onClick={() => nav('/marketplace')}
-            style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 40px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
-          >
-            Explore Marketplace
-          </button>
         </div>
       </div>
     </section>
@@ -1034,12 +952,12 @@ function ProFights({ nav }: { nav: NavFn }) {
 
 function ForClubs({ onOpenAuth }: { onOpenAuth: OpenAuthFn }) {
   return (
-    <section style={{ padding: '100px 0', backgroundColor: '#080808', borderTop: `1px solid ${BORDER}` }}>
+    <section style={{ padding: '100px 0', backgroundColor: '#000000', borderTop: `1px solid ${BORDER}` }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
           <div style={{ position: 'relative', height: '420px', backgroundColor: '#111', overflow: 'hidden' }}>
             <img src={IMAGES.ring} alt="Boxing ring" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(229,23,43,0.15) 0%, transparent 60%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(0,112,243,0.15) 0%, transparent 60%)' }} />
             <div style={{ position: 'absolute', top: 0, left: 0, width: '3px', height: '100%', backgroundColor: RED }} />
           </div>
           <div>
@@ -1062,7 +980,7 @@ function ForClubs({ onOpenAuth }: { onOpenAuth: OpenAuthFn }) {
               <button
                 onClick={() => onOpenAuth('signup', 'club')}
                 style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 28px', transition: 'background-color 0.15s' }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
               >
                 Create Club Profile
@@ -1109,7 +1027,7 @@ function ForOrganizers({ nav }: { nav: NavFn }) {
               <button
                 onClick={() => nav('/organizer')}
                 style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 32px', transition: 'background-color 0.15s' }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
               >
                 Create an Event
@@ -1119,7 +1037,7 @@ function ForOrganizers({ nav }: { nav: NavFn }) {
 
           <div style={{ position: 'relative', height: '420px', backgroundColor: '#111', overflow: 'hidden' }}>
             <img src={IMAGES.crowd} alt="Event crowd" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, transparent 60%, rgba(8,8,8,0.8) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, transparent 60%, rgba(0,0,0,0.8) 100%)' }} />
           </div>
         </div>
       </div>
@@ -1131,7 +1049,7 @@ function ForOrganizers({ nav }: { nav: NavFn }) {
 
 function AdvertiseCTA() {
   return (
-    <section style={{ padding: '100px 0', backgroundColor: '#080808', borderTop: `1px solid ${BORDER}`, position: 'relative', overflow: 'hidden' }}>
+    <section style={{ padding: '100px 0', backgroundColor: '#000000', borderTop: `1px solid ${BORDER}`, position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', inset: 0 }}>
         <img src={IMAGES.venue} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.08 }} />
       </div>
@@ -1152,11 +1070,71 @@ function AdvertiseCTA() {
         </div>
         <button
           style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '16px 48px', transition: 'background-color 0.15s' }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
           onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
         >
           Advertise With PUGNA
         </button>
+      </div>
+    </section>
+  )
+}
+
+// ─── FAQ ────────────────────────────────────────────────────────────────────
+
+const FAQ_KEYS = ['faq.q1', 'faq.q2', 'faq.q3', 'faq.q4', 'faq.q5', 'faq.q6'] as const
+const FAQ_ANSWER_KEYS = ['faq.a1', 'faq.a2', 'faq.a3', 'faq.a4', 'faq.a5', 'faq.a6'] as const
+
+function FaqSection() {
+  const { t } = useLanguage()
+  const [openIndex, setOpenIndex] = useState<number | null>(0)
+
+  return (
+    <section style={{ padding: '80px 0', backgroundColor: '#000000', borderTop: `1px solid ${BORDER}` }}>
+      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <SectionLabel text={t('faq.label')} centered />
+          <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(32px, 4.5vw, 48px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>
+            {t('faq.heading1')} <span style={{ color: RED }}>{t('faq.heading2')}</span>
+          </h2>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER, border: `1px solid ${BORDER}` }}>
+          {FAQ_KEYS.map((qKey, i) => {
+            const isOpen = openIndex === i
+            return (
+              <div key={qKey} style={{ backgroundColor: CARD }}>
+                <button
+                  onClick={() => setOpenIndex(isOpen ? null : i)}
+                  aria-expanded={isOpen}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
+                    padding: '22px 24px', textAlign: 'left', backgroundColor: 'transparent', transition: 'background-color 0.15s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  <span style={{ fontFamily: DISPLAY, fontSize: '17px', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                    {t(qKey)}
+                  </span>
+                  <span style={{
+                    flexShrink: 0, width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: isOpen ? RED : MUTED, transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform 0.2s, color 0.15s',
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                  </span>
+                </button>
+                <div style={{ display: 'grid', gridTemplateRows: isOpen ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
+                  <div style={{ overflow: 'hidden' }}>
+                    <p style={{ margin: 0, padding: '0 24px 22px', fontSize: '14px', lineHeight: 1.7, color: '#999' }}>
+                      {t(FAQ_ANSWER_KEYS[i])}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </section>
   )

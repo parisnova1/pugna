@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import type * as XLSXType from 'xlsx'
 
-const RED = '#e5172b'
+const RED = '#0070f3'
 const CARD = '#0f0f0f'
-const BORDER = '#1c1c1c'
+const BORDER = '#333333'
 const MUTED = '#888888'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const DISPLAY = "'Geist Sans', sans-serif"
 
 export type ImportedFighter = { name: string; club: string; weight: string; record?: string }
 

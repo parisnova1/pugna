@@ -93,6 +93,9 @@ const userColumns = columnsOf('users')
 if (!userColumns.includes('role')) {
   db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'organizer'")
 }
+if (!userColumns.includes('home_location')) {
+  db.exec("ALTER TABLE users ADD COLUMN home_location TEXT NOT NULL DEFAULT ''")
+}
 
 // Backfill qr_token for any event created before this column existed.
 const missingToken = db.prepare('SELECT id FROM events WHERE qr_token IS NULL').all()
@@ -243,4 +246,24 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_club_follows_user ON club_follows(user_id);
+
+  CREATE TABLE IF NOT EXISTS event_saves (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(user_id, event_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_event_saves_user ON event_saves(user_id);
+
+  CREATE TABLE IF NOT EXISTS fighter_follows (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    fighter_id INTEGER NOT NULL REFERENCES fighters(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(user_id, fighter_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_fighter_follows_user ON fighter_follows(user_id);
 `)

@@ -5,11 +5,11 @@ import { apiFetch } from '../lib/api'
 import { formatDisplayDate } from '../lib/date'
 import LocationInput from '../components/LocationInput'
 
-const RED = '#e5172b'
+const RED = '#0070f3'
 const CARD = '#0f0f0f'
-const BORDER = '#1c1c1c'
+const BORDER = '#333333'
 const MUTED = '#888888'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const DISPLAY = "'Geist Sans', sans-serif"
 const DISCIPLINES = ['Boxing', 'Kickboxing', 'Muay Thai', 'MMA', 'BJJ', 'Wrestling']
 
 type DashView = 'overview' | 'events' | 'fighters' | 'matchmaking' | 'results' | 'analytics'
@@ -21,7 +21,7 @@ type FighterFields = { name: string; club: string; weight: string; record: strin
 
 const inputStyle: React.CSSProperties = {
   width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff',
-  padding: '11px 14px', fontFamily: "'Inter', sans-serif", fontSize: '14px', outline: 'none',
+  padding: '11px 14px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none',
 }
 const labelStyle: React.CSSProperties = {
   fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px',
@@ -51,7 +51,7 @@ function SubmitButton({ children, disabled }: { children: React.ReactNode; disab
       type="submit"
       disabled={disabled}
       style={{ marginTop: '8px', width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', transition: 'background-color 0.15s', opacity: disabled ? 0.6 : 1 }}
-      onMouseEnter={e => { if (!disabled) e.currentTarget.style.backgroundColor = '#c9112a' }}
+      onMouseEnter={e => { if (!disabled) e.currentTarget.style.backgroundColor = '#0058cc' }}
       onMouseLeave={e => { if (!disabled) e.currentTarget.style.backgroundColor = RED }}
     >
       {children}
@@ -62,6 +62,7 @@ function SubmitButton({ children, disabled }: { children: React.ReactNode; disab
 export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
   const { user, logout } = useAuth()
   const [view, setView] = useState<DashView>('overview')
+  const [collapsed, setCollapsed] = useState(false)
   const [events, setEvents] = useState<EventRow[]>([])
   const [fighters, setFighters] = useState<FighterRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -113,62 +114,89 @@ export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
   ]
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', minHeight: 'calc(100vh - 64px)' }}>
+    <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
       {/* Sidebar */}
-      <aside style={{ backgroundColor: '#060606', borderRight: `1px solid ${BORDER}`, padding: '32px 0', position: 'sticky', top: '64px', height: 'calc(100vh - 64px)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '0 24px', marginBottom: '32px' }}>
-          <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', marginBottom: '4px' }}>Organizer Dashboard</div>
-          <div style={{ fontFamily: DISPLAY, fontSize: '18px', fontWeight: 900, textTransform: 'uppercase' }}>{user?.name || 'Organizer'}</div>
-          {user?.email && <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, letterSpacing: '0.04em', marginTop: '2px' }}>{user.email}</div>}
+      <aside style={{
+        width: collapsed ? '76px' : '240px', flexShrink: 0, backgroundColor: '#060606', borderRight: `1px solid ${BORDER}`,
+        padding: '20px 0', position: 'sticky', top: '64px', height: 'calc(100vh - 64px)', overflowY: 'auto', overflowX: 'hidden',
+        display: 'flex', flexDirection: 'column', transition: 'width 0.2s ease',
+      }}>
+        <div style={{ display: 'flex', justifyContent: collapsed ? 'center' : 'flex-end', padding: '0 12px', marginBottom: '12px' }}>
+          <button
+            onClick={() => setCollapsed(v => !v)}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            style={{ color: MUTED, padding: '8px', transition: 'color 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+            onMouseLeave={e => (e.currentTarget.style.color = MUTED)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+              <path d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
+            </svg>
+          </button>
         </div>
+
+        {!collapsed && (
+          <div style={{ padding: '0 24px', marginBottom: '32px' }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', marginBottom: '4px' }}>Organizer Dashboard</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: '18px', fontWeight: 900, textTransform: 'uppercase' }}>{user?.name || 'Organizer'}</div>
+            {user?.email && <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, letterSpacing: '0.04em', marginTop: '2px' }}>{user.email}</div>}
+          </div>
+        )}
 
         <nav style={{ display: 'flex', flexDirection: 'column' }}>
           {navItems.map(([v, label, icon]) => (
             <button key={v} onClick={() => setView(v)}
+              title={collapsed ? label : undefined}
               style={{
-                display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 24px',
+                display: 'flex', alignItems: 'center', gap: '12px', padding: collapsed ? '12px' : '12px 24px',
+                justifyContent: collapsed ? 'center' : 'flex-start',
                 backgroundColor: view === v ? '#0f0f0f' : 'transparent',
-                borderLeft: view === v ? `2px solid ${RED}` : '2px solid transparent',
+                borderLeft: collapsed ? '2px solid transparent' : (view === v ? `2px solid ${RED}` : '2px solid transparent'),
                 color: view === v ? '#fff' : MUTED, transition: 'all 0.15s', textAlign: 'left',
               }}
               onMouseEnter={e => { if (view !== v) { e.currentTarget.style.color = '#ddd'; e.currentTarget.style.backgroundColor = '#0a0a0a' } }}
               onMouseLeave={e => { if (view !== v) { e.currentTarget.style.color = MUTED; e.currentTarget.style.backgroundColor = 'transparent' } }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={icon} /></svg>
-              <span style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}><path d={icon} /></svg>
+              {!collapsed && <span style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</span>}
             </button>
           ))}
         </nav>
 
-        <div style={{ margin: '32px 24px 0', borderTop: `1px solid ${BORDER}`, paddingTop: '24px' }}>
+        <div style={{ margin: collapsed ? '20px 12px 0' : '32px 24px 0', borderTop: `1px solid ${BORDER}`, paddingTop: collapsed ? '12px' : '24px' }}>
           <button
             onClick={() => setEventModal({ id: null })}
-            style={{ width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px', transition: 'background-color 0.15s' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
+            title={collapsed ? 'Create Event' : undefined}
+            style={{ width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: collapsed ? '12px 0' : '12px', transition: 'background-color 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
           >
-            + Create Event
+            {collapsed ? '+' : '+ Create Event'}
           </button>
         </div>
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ margin: '24px 24px 0', borderTop: `1px solid ${BORDER}`, paddingTop: '20px' }}>
+        <div style={{ margin: collapsed ? '20px 12px 0' : '24px 24px 0', borderTop: `1px solid ${BORDER}`, paddingTop: collapsed ? '12px' : '20px' }}>
           <button
             onClick={() => { logout(); nav('/') }}
-            style={{ width: '100%', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED, padding: '10px', border: `1px solid ${BORDER}`, transition: 'color 0.15s, border-color 0.15s' }}
+            title={collapsed ? 'Log Out' : undefined}
+            style={{ width: '100%', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED, padding: collapsed ? '10px 0' : '10px', border: `1px solid ${BORDER}`, transition: 'color 0.15s, border-color 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#fff' }}
             onMouseLeave={e => { e.currentTarget.style.color = MUTED; e.currentTarget.style.borderColor = BORDER }}
           >
-            Log Out
+            {collapsed ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ margin: '0 auto' }}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+            ) : 'Log Out'}
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <main style={{ padding: '40px 48px', backgroundColor: '#080808' }}>
+      <main style={{ flex: 1, minWidth: 0, padding: '40px 48px', backgroundColor: '#000000' }}>
         {loadError && (
-          <div style={{ backgroundColor: '#1a0507', border: `1px solid ${RED}`, color: '#ff8c96', fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.04em', padding: '14px 18px', marginBottom: '24px' }}>
+          <div style={{ backgroundColor: '#071a30', border: `1px solid ${RED}`, color: '#8ec5ff', fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.04em', padding: '14px 18px', marginBottom: '24px' }}>
             {loadError} — is the API server running on port 4000?
           </div>
         )}
@@ -275,7 +303,7 @@ function EventModal({ initial, onCancel, onSave }: { initial: EventRow | null; o
             <div style={{ display: 'flex', gap: '2px' }}>
               {([['card', 'Fight Card'], ['bracket', 'Tournament Bracket']] as const).map(([v, label]) => (
                 <button key={v} type="button" onClick={() => setFormat(v)}
-                  style={{ flex: 1, padding: '12px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${format === v ? RED : BORDER}`, backgroundColor: format === v ? '#1a0507' : 'transparent', color: format === v ? '#fff' : MUTED }}
+                  style={{ flex: 1, padding: '12px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${format === v ? RED : BORDER}`, backgroundColor: format === v ? '#071a30' : 'transparent', color: format === v ? '#fff' : MUTED }}
                 >
                   {label}
                 </button>
@@ -519,7 +547,7 @@ function FightersView({ fighters, onAddFighter }: { fighters: FighterRow[]; onAd
         <div style={{ display: 'flex', gap: '2px' }}>
           {(['All', 'Matched', 'Unmatched'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 16px', border: `1px solid ${filter === f ? RED : BORDER}`, color: filter === f ? '#fff' : MUTED, backgroundColor: filter === f ? '#1a0507' : 'transparent' }}
+              style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 16px', border: `1px solid ${filter === f ? RED : BORDER}`, color: filter === f ? '#fff' : MUTED, backgroundColor: filter === f ? '#071a30' : 'transparent' }}
             >
               {f}
             </button>
@@ -682,9 +710,9 @@ function AnalyticsView({ events }: { events: EventRow[] }) {
           {months.map((m, i) => (
             <div key={m} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', flex: 1 }}>
               <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED }}>{views[i]}</div>
-              <div style={{ width: '100%', backgroundColor: i === 5 ? RED : '#1c1c1c', height: `${(views[i] / maxViews) * 120}px`, transition: 'height 0.3s' }}
+              <div style={{ width: '100%', backgroundColor: i === 5 ? RED : '#333333', height: `${(views[i] / maxViews) * 120}px`, transition: 'height 0.3s' }}
                 onMouseEnter={e => { if (i !== 5) (e.currentTarget.style.backgroundColor = '#2a2a2a') }}
-                onMouseLeave={e => { if (i !== 5) (e.currentTarget.style.backgroundColor = '#1c1c1c') }}
+                onMouseLeave={e => { if (i !== 5) (e.currentTarget.style.backgroundColor = '#333333') }}
               />
               <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase' }}>{m}</div>
             </div>

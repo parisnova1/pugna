@@ -4,12 +4,15 @@ import type { NavFn } from '../App'
 import { useAuth } from '../auth/AuthContext'
 import { useLanguage } from '../i18n/LanguageContext'
 import { apiFetch } from '../lib/api'
+import Spinner from '../components/Spinner'
+import CopyButton from '../components/CopyButton'
+import BackButton from '../components/BackButton'
 
-const RED = '#e5172b'
+const RED = '#0070f3'
 const CARD = '#0f0f0f'
-const BORDER = '#1c1c1c'
+const BORDER = '#333333'
 const MUTED = '#888888'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const DISPLAY = "'Geist Sans', sans-serif"
 
 const COVER = 'https://images.unsplash.com/photo-1509563268479-0f004cf3f58b?w=1440&h=500&fit=crop&auto=format'
 
@@ -70,7 +73,11 @@ export default function ClubProfile({ nav: _nav }: { nav: NavFn }) {
   }
 
   if (loading) {
-    return <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '80px 32px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}>{t('common.loading')}</div>
+    return (
+      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '80px 32px', display: 'flex', alignItems: 'center', gap: '12px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}>
+        <Spinner size={18} /> {t('common.loading')}
+      </div>
+    )
   }
   if (error || !club) {
     return <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '80px 32px', fontFamily: DISPLAY, fontSize: '14px', color: RED }}>{error || t('clubProfile.notFound')}</div>
@@ -80,15 +87,19 @@ export default function ClubProfile({ nav: _nav }: { nav: NavFn }) {
 
   return (
     <div>
+      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '16px 32px 0' }}>
+        <BackButton />
+      </div>
+
       {/* Cover */}
       <div style={{ position: 'relative', height: '360px', overflow: 'hidden' }}>
         <img src={club.cover_url || COVER} alt={club.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(20%)' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #080808 0%, rgba(8,8,8,0.5) 60%, rgba(8,8,8,0.1) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #000000 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.1) 100%)' }} />
         <div style={{ position: 'absolute', top: 0, left: 0, width: '3px', height: '100%', backgroundColor: RED }} />
       </div>
 
       {/* Club header */}
-      <div style={{ backgroundColor: '#080808', borderBottom: `1px solid ${BORDER}` }}>
+      <div style={{ backgroundColor: '#000000', borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '32px 32px', display: 'flex', alignItems: 'flex-end', gap: '32px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '24px' }}>
             <div style={{ width: '80px', height: '80px', backgroundColor: CARD, border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
@@ -113,20 +124,23 @@ export default function ClubProfile({ nav: _nav }: { nav: NavFn }) {
             </div>
           </div>
 
-          {user?.role === 'viewer' && (
-            <button
-              onClick={toggleFollow}
-              disabled={followBusy}
-              style={{
-                fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
-                padding: '12px 28px', opacity: followBusy ? 0.6 : 1, transition: 'all 0.15s',
-                backgroundColor: following ? 'transparent' : RED, color: '#fff',
-                border: `1px solid ${following ? BORDER : RED}`,
-              }}
-            >
-              {following ? t('clubs.following') : t('clubs.followClub')}
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <CopyButton text={window.location.href} />
+            {user?.role === 'viewer' && (
+              <button
+                onClick={toggleFollow}
+                disabled={followBusy}
+                style={{
+                  fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+                  padding: '12px 28px', opacity: followBusy ? 0.6 : 1, transition: 'all 0.15s',
+                  backgroundColor: following ? 'transparent' : RED, color: '#fff',
+                  border: `1px solid ${following ? BORDER : RED}`,
+                }}
+              >
+                {following ? t('clubs.following') : t('clubs.followClub')}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Stats bar */}

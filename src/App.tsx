@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
-import Home, { SparringSection, EventDiscovery, FighterDiscovery, ClubDiscovery } from './pages/Home'
+import Home, { SparringSection, EventDiscovery, ClubDiscovery } from './pages/Home'
 import EventDetail from './pages/EventDetail'
 import ClubProfile from './pages/ClubProfile'
 import OrganizerDashboard from './pages/OrganizerDashboard'
 import FighterProfile from './pages/FighterProfile'
-import Marketplace from './pages/Marketplace'
 import EventManage from './pages/EventManage'
 import PublicEvent from './pages/PublicEvent'
 import ClubDashboard from './pages/ClubDashboard'
@@ -14,6 +13,7 @@ import ViewerHome from './pages/ViewerHome'
 import { AuthProvider, useAuth, type Role } from './auth/AuthContext'
 import { LanguageProvider, useLanguage, type Lang } from './i18n/LanguageContext'
 import LoginModal from './components/LoginModal'
+import CookieBanner from './components/CookieBanner'
 
 export type NavFn = (path: string) => void
 
@@ -61,25 +61,25 @@ function AppShell() {
   }, [user])
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#080808', color: '#fff', fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#000000', color: '#fff', fontFamily: "'Geist Sans', sans-serif" }}>
       <Header nav={nav} onOpenAuth={openAuth} />
+      <div style={{ paddingTop: '64px' }}>
       <Routes>
         <Route path="/" element={<Home nav={nav} onOpenAuth={openAuth} />} />
         <Route path="/home" element={<RequireRole role="viewer"><ViewerHome nav={nav} /></RequireRole>} />
         <Route path="/events" element={<EventDiscovery nav={nav} standalone />} />
         <Route path="/events/:eventId" element={<EventDetail nav={nav} />} />
-        <Route path="/fighters" element={<FighterDiscovery nav={nav} standalone />} />
         <Route path="/fighters/:fighterId" element={<FighterProfile nav={nav} />} />
         <Route path="/clubs" element={<ClubDiscovery nav={nav} onOpenAuth={openAuth} />} />
         <Route path="/clubs/:clubId" element={<ClubProfile nav={nav} />} />
         <Route path="/sparring" element={<SparringSection nav={nav} onOpenAuth={openAuth} standalone />} />
-        <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/search" element={<SearchResults nav={nav} />} />
         <Route path="/organizer" element={<RequireRole role="organizer"><OrganizerDashboard nav={nav} /></RequireRole>} />
         <Route path="/organizer/events/:eventId/manage" element={<RequireRole role="organizer"><EventManage nav={nav} /></RequireRole>} />
         <Route path="/club-dashboard" element={<RequireRole role="club"><ClubDashboard nav={nav} /></RequireRole>} />
         <Route path="*" element={<NotFound nav={nav} />} />
       </Routes>
+      </div>
 
       {authModal && (
         <LoginModal
@@ -88,6 +88,7 @@ function AppShell() {
           onClose={() => setAuthModal(null)}
         />
       )}
+      <CookieBanner />
     </div>
   )
 }
@@ -109,15 +110,15 @@ function RequireRole({ role, children }: { role: Role; children: React.ReactNode
   if (user.role !== role) {
     return (
       <div style={{ maxWidth: '480px', margin: '120px auto', padding: '0 24px', textAlign: 'center' }}>
-        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '12px' }}>
+        <div style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '12px' }}>
           {t('accessRestricted.title')}
         </div>
-        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '14px', color: '#888', marginBottom: '28px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        <div style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', color: '#888', marginBottom: '28px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
           {t('accessRestricted.body', { role: t(`role.${role}`) })}
         </div>
         <button
           onClick={() => navigate('/')}
-          style={{ backgroundColor: '#e5172b', color: '#fff', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px 28px' }}
+          style={{ backgroundColor: '#0070f3', color: '#fff', fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px 28px' }}
         >
           {t('common.goHome')}
         </button>
@@ -132,13 +133,13 @@ function NotFound({ nav }: { nav: NavFn }) {
   const { t } = useLanguage()
   return (
     <div style={{ maxWidth: '480px', margin: '120px auto', padding: '0 24px', textAlign: 'center' }}>
-      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '64px', fontWeight: 900, color: '#e5172b', marginBottom: '8px' }}>{t('notFound.title')}</div>
-      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '16px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '28px' }}>
+      <div style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '64px', fontWeight: 900, color: '#0070f3', marginBottom: '8px' }}>{t('notFound.title')}</div>
+      <div style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '16px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '28px' }}>
         {t('notFound.body')}
       </div>
       <button
         onClick={() => nav('/')}
-        style={{ backgroundColor: '#e5172b', color: '#fff', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px 28px' }}
+        style={{ backgroundColor: '#0070f3', color: '#fff', fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px 28px' }}
       >
         {t('common.goHome')}
       </button>
@@ -155,9 +156,9 @@ function LanguageToggle({ compact }: { compact?: boolean }) {
           key={l}
           onClick={() => setLang(l)}
           style={{
-            fontFamily: "'Barlow Condensed', sans-serif", fontSize: compact ? '12px' : '11px', fontWeight: 700, letterSpacing: '0.06em',
+            fontFamily: "'Geist Sans', sans-serif", fontSize: compact ? '12px' : '11px', fontWeight: 700, letterSpacing: '0.06em',
             padding: compact ? '8px 12px' : '5px 9px', color: lang === l ? '#fff' : '#666',
-            backgroundColor: lang === l ? '#e5172b' : 'transparent', textTransform: 'uppercase',
+            backgroundColor: lang === l ? '#0070f3' : 'transparent', textTransform: 'uppercase',
           }}
         >
           {l}
@@ -185,28 +186,54 @@ function Header({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: (mode: 'login' | 
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/')
 
+  // Sliding red "cover" that tracks whichever primary nav link is hovered —
+  // measured off the link's own offsetLeft/offsetWidth so it can smoothly
+  // animate between links instead of just fading per-item.
+  const navLinkRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const [hoveredPath, setHoveredPath] = useState<string | null>(null)
+  const [navPill, setNavPill] = useState({ left: 0, width: 0, opacity: 0 })
+
+  useEffect(() => {
+    if (!hoveredPath) { setNavPill(p => ({ ...p, opacity: 0 })); return }
+    const el = navLinkRefs.current[hoveredPath]
+    if (!el) return
+    setNavPill({ left: el.offsetLeft, width: el.offsetWidth, opacity: 1 })
+  }, [hoveredPath])
+
   const link = (label: string, path: string) => (
     <button
+      ref={el => { navLinkRefs.current[path] = el }}
       onClick={() => nav(path)}
-      className="text-sm font-medium tracking-widest uppercase transition-colors duration-150"
-      style={{ color: isActive(path) ? '#e5172b' : '#aaaaaa', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', letterSpacing: '0.1em' }}
-      onMouseEnter={e => { if (!isActive(path)) (e.target as HTMLElement).style.color = '#ffffff' }}
-      onMouseLeave={e => { if (!isActive(path)) (e.target as HTMLElement).style.color = '#aaaaaa' }}
+      onMouseEnter={() => setHoveredPath(path)}
+      onMouseLeave={() => setHoveredPath(null)}
+      className="text-sm font-medium tracking-widest uppercase"
+      style={{
+        position: 'relative', zIndex: 1, padding: '8px 16px', borderRadius: '9999px',
+        color: hoveredPath === path ? '#ffffff' : isActive(path) ? '#0070f3' : '#aaaaaa',
+        fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', letterSpacing: '0.1em',
+        transition: 'color 0.2s ease',
+      }}
     >
       {label}
     </button>
   )
 
   return (
-    <header style={{ backgroundColor: 'rgba(8,8,8,0.96)', borderBottom: '1px solid #1c1c1c', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)' }}>
+    <header style={{ backgroundColor: 'rgba(0,0,0,0.96)', borderBottom: '1px solid #333333', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, backdropFilter: 'blur(12px)' }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px', height: '64px', display: 'flex', alignItems: 'center', gap: '40px' }}>
         {/* Logo */}
-        <button onClick={() => nav(user?.role === 'viewer' ? '/home' : '/')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '28px', fontWeight: 900, letterSpacing: '0.12em', color: '#ffffff', textTransform: 'uppercase', flexShrink: 0 }}>
+        <button onClick={() => nav('/')} style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '28px', fontWeight: 900, letterSpacing: '0.12em', color: '#ffffff', textTransform: 'uppercase', flexShrink: 0 }}>
           PUGNA
         </button>
 
         {/* Primary nav */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center" style={{ position: 'relative' }}>
+          <div style={{
+            position: 'absolute', top: 0, bottom: 0, left: navPill.left, width: navPill.width,
+            backgroundColor: '#0070f3', borderRadius: '9999px', opacity: navPill.opacity,
+            transition: 'left 0.28s cubic-bezier(0.4,0,0.2,1), width 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.15s ease',
+            zIndex: 0, pointerEvents: 'none',
+          }} />
           {link(t('nav.events'), '/events')}
           {link(t('nav.clubs'), '/clubs')}
           {link(t('nav.sparring'), '/sparring')}
@@ -219,7 +246,7 @@ function Header({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: (mode: 'login' | 
           <nav className="hidden md:flex items-center gap-6">
             <button
               onClick={() => nav('/organizer')}
-              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', letterSpacing: '0.08em', color: '#888', textTransform: 'uppercase', transition: 'color 0.15s' }}
+              style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', letterSpacing: '0.08em', color: '#888', textTransform: 'uppercase', transition: 'color 0.15s' }}
               onMouseEnter={e => (e.target as HTMLElement).style.color = '#fff'}
               onMouseLeave={e => (e.target as HTMLElement).style.color = '#888'}
             >
@@ -227,7 +254,7 @@ function Header({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: (mode: 'login' | 
             </button>
             <button
               onClick={() => onOpenAuth('signup', 'club')}
-              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', letterSpacing: '0.08em', color: '#888', textTransform: 'uppercase', transition: 'color 0.15s' }}
+              style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', letterSpacing: '0.08em', color: '#888', textTransform: 'uppercase', transition: 'color 0.15s' }}
               onMouseEnter={e => (e.target as HTMLElement).style.color = '#fff'}
               onMouseLeave={e => (e.target as HTMLElement).style.color = '#888'}
             >
@@ -247,7 +274,7 @@ function Header({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: (mode: 'login' | 
               onKeyDown={e => { if (e.key === 'Enter') submitSearch(); if (e.key === 'Escape') setSearchOpen(false) }}
               onBlur={() => { if (!searchQuery.trim()) setSearchOpen(false) }}
               placeholder={t('header.searchPlaceholder')}
-              style={{ width: '220px', backgroundColor: '#0a0a0a', border: '1px solid #1c1c1c', color: '#fff', padding: '7px 12px', fontFamily: "'Inter', sans-serif", fontSize: '13px', outline: 'none' }}
+              style={{ width: '220px', backgroundColor: '#0a0a0a', border: '1px solid #333333', color: '#fff', padding: '7px 12px', fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', outline: 'none' }}
             />
           )}
           <button
@@ -267,27 +294,25 @@ function Header({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: (mode: 'login' | 
                 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
               >
                 <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 800, color: '#e5172b' }}>
+                  <span style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', fontWeight: 800, color: '#0070f3' }}>
                     {user.name.trim().charAt(0).toUpperCase() || '?'}
                   </span>
                 </div>
-                <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', letterSpacing: '0.08em', color: '#fff', textTransform: 'uppercase' }}>
+                <span style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', letterSpacing: '0.08em', color: '#fff', textTransform: 'uppercase' }}>
                   {user.name.split(' ')[0]}
                 </span>
               </button>
               {accountOpen && (
-                <div style={{ position: 'absolute', right: 0, top: '42px', backgroundColor: '#0f0f0f', border: '1px solid #1c1c1c', minWidth: '180px', zIndex: 110 }}>
-                  {user.role !== 'viewer' && (
-                    <button
-                      onClick={() => { setAccountOpen(false); nav(user.role === 'club' ? '/club-dashboard' : '/organizer') }}
-                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '12px 16px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', letterSpacing: '0.06em', color: '#ccc', textTransform: 'uppercase', borderBottom: '1px solid #1c1c1c' }}
-                    >
-                      {user.role === 'club' ? t('header.clubDashboard') : t('header.organizerDashboard')}
-                    </button>
-                  )}
+                <div style={{ position: 'absolute', right: 0, top: '42px', backgroundColor: '#0f0f0f', border: '1px solid #333333', minWidth: '180px', zIndex: 110 }}>
+                  <button
+                    onClick={() => { setAccountOpen(false); nav(user.role === 'club' ? '/club-dashboard' : user.role === 'organizer' ? '/organizer' : '/home') }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '12px 16px', fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', letterSpacing: '0.06em', color: '#ccc', textTransform: 'uppercase', borderBottom: '1px solid #333333' }}
+                  >
+                    {user.role === 'club' ? t('header.clubDashboard') : user.role === 'organizer' ? t('header.organizerDashboard') : t('header.viewerHome')}
+                  </button>
                   <button
                     onClick={() => { setAccountOpen(false); logout(); }}
-                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '12px 16px', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', letterSpacing: '0.06em', color: '#e5172b', textTransform: 'uppercase' }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '12px 16px', fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', letterSpacing: '0.06em', color: '#0070f3', textTransform: 'uppercase' }}
                   >
                     {t('header.logOut')}
                   </button>
@@ -296,7 +321,7 @@ function Header({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: (mode: 'login' | 
             </div>
           ) : (
             <>
-              <button onClick={() => onOpenAuth('login')} style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', letterSpacing: '0.08em', color: '#888', textTransform: 'uppercase', transition: 'color 0.15s' }}
+              <button onClick={() => onOpenAuth('login')} style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', letterSpacing: '0.08em', color: '#888', textTransform: 'uppercase', transition: 'color 0.15s' }}
                 onMouseEnter={e => (e.target as HTMLElement).style.color = '#fff'}
                 onMouseLeave={e => (e.target as HTMLElement).style.color = '#888'}
               >
@@ -304,9 +329,9 @@ function Header({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: (mode: 'login' | 
               </button>
               <button
                 onClick={() => onOpenAuth('signup', 'viewer')}
-                style={{ backgroundColor: '#e5172b', color: '#fff', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '8px 20px', transition: 'background-color 0.15s' }}
-                onMouseEnter={e => (e.target as HTMLElement).style.backgroundColor = '#c9112a'}
-                onMouseLeave={e => (e.target as HTMLElement).style.backgroundColor = '#e5172b'}
+                style={{ backgroundColor: '#0070f3', color: '#fff', fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '8px 20px', transition: 'background-color 0.15s' }}
+                onMouseEnter={e => (e.target as HTMLElement).style.backgroundColor = '#0058cc'}
+                onMouseLeave={e => (e.target as HTMLElement).style.backgroundColor = '#0070f3'}
               >
                 {t('header.joinPugna')}
               </button>
@@ -324,33 +349,31 @@ function Header({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: (mode: 'login' | 
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div style={{ borderTop: '1px solid #1c1c1c', padding: '20px 32px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#080808' }}>
+        <div style={{ borderTop: '1px solid #333333', padding: '20px 32px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#000000' }}>
           {([[t('nav.events'), '/events'], [t('nav.clubs'), '/clubs'], [t('nav.sparring'), '/sparring']] as const).map(([label, path]) => (
             <button key={path} onClick={() => { setMenuOpen(false); nav(path) }}
-              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '18px', fontWeight: 700, letterSpacing: '0.1em', color: '#fff', textTransform: 'uppercase', textAlign: 'left' }}
+              style={{ fontFamily: "'Geist Sans', sans-serif", fontSize: '18px', fontWeight: 700, letterSpacing: '0.1em', color: '#fff', textTransform: 'uppercase', textAlign: 'left' }}
             >{label}</button>
           ))}
           <div>
             <LanguageToggle compact />
           </div>
-          <div style={{ borderTop: '1px solid #1c1c1c', paddingTop: '16px', display: 'flex', gap: '12px' }}>
+          <div style={{ borderTop: '1px solid #333333', paddingTop: '16px', display: 'flex', gap: '12px' }}>
             {user ? (
               <>
-                {user.role !== 'viewer' && (
-                  <button onClick={() => { setMenuOpen(false); nav(user.role === 'club' ? '/club-dashboard' : '/organizer') }} style={{ flex: 1, padding: '10px', border: '1px solid #1c1c1c', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', letterSpacing: '0.08em', color: '#fff', textTransform: 'uppercase' }}>
-                    {t('header.dashboard')}
-                  </button>
-                )}
-                <button onClick={logout} style={{ flex: 1, padding: '10px', backgroundColor: '#e5172b', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', color: '#fff', textTransform: 'uppercase' }}>
+                <button onClick={() => { setMenuOpen(false); nav(user.role === 'club' ? '/club-dashboard' : user.role === 'organizer' ? '/organizer' : '/home') }} style={{ flex: 1, padding: '10px', border: '1px solid #333333', fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', letterSpacing: '0.08em', color: '#fff', textTransform: 'uppercase' }}>
+                  {t('header.dashboard')}
+                </button>
+                <button onClick={logout} style={{ flex: 1, padding: '10px', backgroundColor: '#0070f3', fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', color: '#fff', textTransform: 'uppercase' }}>
                   {t('header.logOut')}
                 </button>
               </>
             ) : (
               <>
-                <button onClick={() => { setMenuOpen(false); onOpenAuth('login') }} style={{ flex: 1, padding: '10px', border: '1px solid #1c1c1c', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', letterSpacing: '0.08em', color: '#888', textTransform: 'uppercase' }}>
+                <button onClick={() => { setMenuOpen(false); onOpenAuth('login') }} style={{ flex: 1, padding: '10px', border: '1px solid #333333', fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', letterSpacing: '0.08em', color: '#888', textTransform: 'uppercase' }}>
                   {t('header.logIn')}
                 </button>
-                <button onClick={() => { setMenuOpen(false); onOpenAuth('signup', 'viewer') }} style={{ flex: 1, padding: '10px', backgroundColor: '#e5172b', fontFamily: "'Barlow Condensed', sans-serif", fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', color: '#fff', textTransform: 'uppercase' }}>
+                <button onClick={() => { setMenuOpen(false); onOpenAuth('signup', 'viewer') }} style={{ flex: 1, padding: '10px', backgroundColor: '#0070f3', fontFamily: "'Geist Sans', sans-serif", fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', color: '#fff', textTransform: 'uppercase' }}>
                   {t('header.joinPugna')}
                 </button>
               </>

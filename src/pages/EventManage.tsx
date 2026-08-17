@@ -5,12 +5,13 @@ import { apiFetch } from '../lib/api'
 import { formatDisplayDate } from '../lib/date'
 import ExcelImport, { type ImportedFighter } from '../components/ExcelImport'
 import BracketView, { type Bout } from '../components/Bracket'
+import CopyButton from '../components/CopyButton'
 
-const RED = '#e5172b'
+const RED = '#0070f3'
 const CARD = '#0f0f0f'
-const BORDER = '#1c1c1c'
+const BORDER = '#333333'
 const MUTED = '#888888'
-const DISPLAY = "'Barlow Condensed', sans-serif"
+const DISPLAY = "'Geist Sans', sans-serif"
 
 type AgeGroup = 'adult' | 'youth' | 'children'
 
@@ -54,7 +55,7 @@ type EventFighter = {
 
 const inputStyle: React.CSSProperties = {
   width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff',
-  padding: '11px 14px', fontFamily: "'Inter', sans-serif", fontSize: '14px', outline: 'none',
+  padding: '11px 14px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none',
 }
 const labelStyle: React.CSSProperties = {
   fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px',
@@ -80,7 +81,7 @@ function SubmitButton({ children, disabled }: { children: React.ReactNode; disab
   return (
     <button type="submit" disabled={disabled}
       style={{ marginTop: '8px', width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', opacity: disabled ? 0.6 : 1, transition: 'background-color 0.15s' }}
-      onMouseEnter={e => { if (!disabled) e.currentTarget.style.backgroundColor = '#c9112a' }}
+      onMouseEnter={e => { if (!disabled) e.currentTarget.style.backgroundColor = '#0058cc' }}
       onMouseLeave={e => { if (!disabled) e.currentTarget.style.backgroundColor = RED }}
     >
       {children}
@@ -231,7 +232,7 @@ function SetupTab({ event, onSaved }: { event: EventDetail; onSaved: (e: EventDe
             <div style={{ display: 'flex', gap: '2px' }}>
               {(['day', 'multi-day'] as const).map(t => (
                 <button key={t} onClick={() => setTournamentType(t)}
-                  style={{ flex: 1, padding: '14px', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', border: `1px solid ${tournamentType === t ? RED : BORDER}`, backgroundColor: tournamentType === t ? '#1a0507' : 'transparent', color: tournamentType === t ? '#fff' : MUTED }}
+                  style={{ flex: 1, padding: '14px', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', border: `1px solid ${tournamentType === t ? RED : BORDER}`, backgroundColor: tournamentType === t ? '#071a30' : 'transparent', color: tournamentType === t ? '#fff' : MUTED }}
                 >
                   {t === 'day' ? 'Day Tournament' : 'Multi-Day Tournament'}
                 </button>
@@ -278,15 +279,18 @@ function SetupTab({ event, onSaved }: { event: EventDetail; onSaved: (e: EventDe
           </div>
           <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <code style={{ display: 'block', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, padding: '10px 14px', fontSize: '13px', color: '#ccc', wordBreak: 'break-all' }}>{publicUrl}</code>
-            {qrDataUrl && (
-              <a
-                href={qrDataUrl}
-                download={`${event.name.replace(/\s+/g, '-').toLowerCase()}-qr.png`}
-                style={{ display: 'inline-block', textAlign: 'center', border: `1px solid ${BORDER}`, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '10px 18px' }}
-              >
-                Download QR
-              </a>
-            )}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <CopyButton text={publicUrl} />
+              {qrDataUrl && (
+                <a
+                  href={qrDataUrl}
+                  download={`${event.name.replace(/\s+/g, '-').toLowerCase()}-qr.png`}
+                  style={{ display: 'inline-block', textAlign: 'center', border: `1px solid ${BORDER}`, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '10px 18px' }}
+                >
+                  Download QR
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -415,7 +419,7 @@ function TemplateModal({ onCancel, onApply }: { onCancel: () => void; onApply: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {AGE_GROUPS.map(g => (
             <button key={g.value} type="button" onClick={() => setAgeGroup(g.value)}
-              style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', border: `1px solid ${ageGroup === g.value ? RED : BORDER}`, backgroundColor: ageGroup === g.value ? '#1a0507' : 'transparent' }}
+              style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', border: `1px solid ${ageGroup === g.value ? RED : BORDER}`, backgroundColor: ageGroup === g.value ? '#071a30' : 'transparent' }}
             >
               <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, color: '#fff', textTransform: 'uppercase' }}>{g.label}</span>
               <span style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED }}>{g.hint}</span>
@@ -729,7 +733,7 @@ function BracketTab({ weightClasses, fighters }: { weightClasses: WeightClass[];
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '28px' }}>
         {weightClasses.map(wc => (
           <button key={wc.id} onClick={() => setSelected(wc.id)}
-            style={{ padding: '10px 16px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${selected === wc.id ? RED : BORDER}`, backgroundColor: selected === wc.id ? '#1a0507' : 'transparent', color: selected === wc.id ? '#fff' : MUTED }}
+            style={{ padding: '10px 16px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${selected === wc.id ? RED : BORDER}`, backgroundColor: selected === wc.id ? '#071a30' : 'transparent', color: selected === wc.id ? '#fff' : MUTED }}
           >
             {wc.name} <span style={{ color: MUTED }}>({wc.fighterCount})</span>
           </button>
@@ -812,7 +816,7 @@ function ResultModal({ bout, fighters, onCancel, onSave }: {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {corners.map(([side, fid]) => (
               <button key={side} type="button" onClick={() => setWinnerId(fid)}
-                style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', border: `1px solid ${winnerId === fid ? RED : BORDER}`, backgroundColor: winnerId === fid ? '#1a0507' : 'transparent' }}
+                style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', border: `1px solid ${winnerId === fid ? RED : BORDER}`, backgroundColor: winnerId === fid ? '#071a30' : 'transparent' }}
               >
                 <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, color: '#fff' }}>{fighters[fid]?.name ?? `Fighter #${fid}`}</span>
                 <span style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase' }}>{fighters[fid]?.club}</span>
