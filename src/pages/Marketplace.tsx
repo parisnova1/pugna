@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import type { NavFn } from '../App'
 
 const RED = '#e5172b'
 const CARD = '#0f0f0f'
@@ -20,7 +19,7 @@ const PRODUCTS = [
   { name: 'Sparring Gloves 16oz', brand: 'Cleto Reyes', price: 219, category: 'Boxing Gloves', rating: 5, reviews: 37, img: 'https://images.unsplash.com/photo-1564097147829-44f8c74a8549?w=400&h=400&fit=crop&auto=format' },
 ]
 
-export default function Marketplace({ nav: _nav }: { nav: NavFn }) {
+export default function Marketplace() {
   const [category, setCategory] = useState('All')
   const [sort, setSort] = useState<'featured' | 'price-asc' | 'price-desc' | 'rating'>('featured')
   const [maxPrice, setMaxPrice] = useState(300)

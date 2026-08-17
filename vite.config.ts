@@ -1,6 +1,7 @@
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 import path from 'node:path'
 
 import siteConfiguration from './.figma/make/site.json'
@@ -23,6 +24,22 @@ export default defineConfig(({ mode }) => {
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
       figmaMakeKitPlugin({ storiesGlob: '/src/**/*.stories.{ts,tsx,js,jsx}' }),
+      // manifest.webmanifest and its <link> tag are hand-authored in public/
+      // and index.html to match this project's existing favicon/meta-tag
+      // conventions — this plugin only handles service worker generation
+      // and registration, not manifest injection.
+      VitePWA({
+        manifest: false,
+        injectRegister: 'auto',
+        registerType: 'autoUpdate',
+        workbox: {
+          // Precache the built app shell only. API requests (different
+          // origin, live sports data — events, sparring, auth) are never
+          // intercepted, so the app always shows current data when online
+          // and just fails normally (existing error states) when offline.
+          globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        },
+      }),
     ],
     resolve: {
       alias: {

@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/Start up//**)",
+      "Bash(ffprobe -v error -show_entries format=duration,size -show_entries stream=width,height,codec_name -of default=noprint_wrappers=1 \"/d/Start up/pugna.mp4\")",
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "Bash(mkdir -p \"/c/Users/SAINTS/AppData/Local/Temp/claude/D--pugna/36af4e37-a45d-4e14-b7fb-bf6e85fe911f/scratchpad/pugna_make\")",
+      "Read(//c/Users/SAINTS/AppData/Local/Temp/claude/D--pugna/36af4e37-a45d-4e14-b7fb-bf6e85fe911f/scratchpad/**)",
+      "Bash(unzip -o \"/d/Start up/Design PUGNA Combat Sports Platform.make\" -d .)",
+      "Bash(mkdir -p repo)",
+      "Bash(unzip -o \"make_repos/joqpm6.zip\" -d repo)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(code \"D:\\\\pugna\")",
+      "Bash(node -e \"const {DatabaseSync} = require\\('node:sqlite'\\); const db = new DatabaseSync\\(':memory:'\\); db.exec\\('CREATE TABLE t \\(id INTEGER\\)'\\); console.log\\('node:sqlite OK'\\)\")",
+      "Bash(npm install *)",
+      "Bash(node src/index.js)",
+      "Bash(curl -s http://localhost:4000/api/health)",
+      "Bash(curl -s -X POST http://localhost:4000/api/auth/signup -H \"Content-Type: application/json\" -d '{\"name\":\"Test Organizer\",\"email\":\"test@example.com\",\"password\":\"secret123\"}')",
+      "Bash(kill %1)",
+      "Bash(powershell -NoProfile -Command \"Get-NetTCPConnection -LocalPort 4000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess\")",
+      "Bash(powershell -NoProfile -Command \"Stop-Process -Id 30932 -Force\")",
+      "Bash(node -e \"console.log\\(typeof process.loadEnvFile\\)\")",
+      "Bash(curl -s http://localhost:4000/api/public/events)",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s http://localhost:4000/api/public/fighters)",
+      "Bash(curl -s -X POST http://localhost:4000/api/auth/signup -H 'Content-Type: application/json' -d '{\"name\":\"Test Organizer\",\"email\":\"test@pugna.app\",\"password\":\"pugna1234\"}')",
+      "Bash(curl -s -X POST http://localhost:4000/api/events -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjksImVtYWlsIjoidGVzdEBwdWduYS5hcHAiLCJpYXQiOjE3ODY2MzAyNzksImV4cCI6MTc4OTIyMjI3OX0.Qq_pD8-GN_6xau65M7zaAS2fUWjG440lUtbiAKk5EO4' -d '{\"name\":\"Test Fight Night\",\"date\":\"15 Nov 2026\",\"location\":\"Nürnberg\",\"discipline\":\"Boxing\",\"status\":\"Active\"}')",
+      "Bash(curl -s -X POST http://localhost:4000/api/events -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjksImVtYWlsIjoidGVzdEBwdWduYS5hcHAiLCJpYXQiOjE3ODY2MzAyNzksImV4cCI6MTc4OTIyMjI3OX0.Qq_pD8-GN_6xau65M7zaAS2fUWjG440lUtbiAKk5EO4' -d '{\"name\":\"Draft Showcase Event\",\"date\":\"20 Dec 2026\",\"location\":\"Berlin\",\"discipline\":\"MMA\",\"status\":\"Draft\"}')",
+      "Bash(curl -s -X POST http://localhost:4000/api/fighters -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjksImVtYWlsIjoidGVzdEBwdWduYS5hcHAiLCJpYXQiOjE3ODY2MzAyNzksImV4cCI6MTc4OTIyMjI3OX0.Qq_pD8-GN_6xau65M7zaAS2fUWjG440lUtbiAKk5EO4' -d '{\"name\":\"Test Fighter One\",\"club\":\"Test Boxing Club\",\"weight\":\"72 KG\",\"record\":\"5-1\",\"status\":\"Matched\",\"discipline\":\"Boxing\",\"location\":\"Nürnberg\"}')",
+      "Bash(curl -s -X POST http://localhost:4000/api/fighters -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjksImVtYWlsIjoidGVzdEBwdWduYS5hcHAiLCJpYXQiOjE3ODY2MzAyNzksImV4cCI6MTc4OTIyMjI3OX0.Qq_pD8-GN_6xau65M7zaAS2fUWjG440lUtbiAKk5EO4' -d '{\"name\":\"Test Fighter Two\",\"club\":\"Test MMA Gym\",\"weight\":\"80 KG\",\"record\":\"3-2\",\"status\":\"Unmatched\",\"discipline\":\"MMA\",\"location\":\"Berlin\"}')",
+      "Bash(curl -s -X PATCH http://localhost:4000/api/events/7 -H 'Content-Type: application/json; charset=utf-8' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjksImVtYWlsIjoidGVzdEBwdWduYS5hcHAiLCJpYXQiOjE3ODY2MzAyNzksImV4cCI6MTc4OTIyMjI3OX0.Qq_pD8-GN_6xau65M7zaAS2fUWjG440lUtbiAKk5EO4' --data-binary '{\"location\":\"Nürnberg\"}')",
+      "Bash(curl -s -X PATCH http://localhost:4000/api/fighters/6 -H 'Content-Type: application/json; charset=utf-8' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjksImVtYWlsIjoidGVzdEBwdWduYS5hcHAiLCJpYXQiOjE3ODY2MzAyNzksImV4cCI6MTc4OTIyMjI3OX0.Qq_pD8-GN_6xau65M7zaAS2fUWjG440lUtbiAKk5EO4' --data-binary '{\"location\":\"Nürnberg\"}')",
+      "Bash(curl -s \"http://localhost:4000/api/geo/search?q=Nurnberg\")",
+      "Bash(node --use-system-ca -e \"fetch\\('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=Nurnberg',{headers:{'User-Agent':'test/1.0'}}\\).then\\(r=>r.json\\(\\)\\).then\\(d=>console.log\\('OK',JSON.stringify\\(d\\).slice\\(0,200\\)\\)\\).catch\\(e=>console.log\\('FAIL',e.message\\)\\)\")",
+      "Bash(cd D:/fighthub && ls -la && find . -maxdepth 3 -iname \"*.prisma\" -o -iname \"schema.prisma\" 2>/dev/null | grep -v node_modules)"
+    ]
+  }
+}

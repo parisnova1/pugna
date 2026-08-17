@@ -1,5 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import type { NavFn } from '../App'
+import { useAuth, type Role } from '../auth/AuthContext'
+import { useLanguage } from '../i18n/LanguageContext'
+import { apiFetch } from '../lib/api'
+import { formatDisplayDate } from '../lib/date'
+import LocationInput from '../components/LocationInput'
 
 const RED = '#e5172b'
 const CARD = '#0f0f0f'
@@ -19,21 +25,27 @@ const IMAGES = {
   sparring: 'https://images.unsplash.com/photo-1620123449946-30d6efd4b8ba?w=600&h=400&fit=crop&auto=format',
 }
 
-export default function Home({ nav }: { nav: NavFn }) {
+type PublicEvent = { id: number; name: string; date: string; location: string; discipline: string; fights: number; fighters: number; views: number; organizer_name: string }
+type PublicFighter = { id: number; name: string; club: string; weight: string; record: string; discipline: string; location: string; organizer_name: string }
+type PublicClub = { id: number; name: string; location: string; disciplines: string[]; founded_year: number | null; member_count: number; description: string; logo_url: string; cover_url: string; distance_km?: number }
+
+type OpenAuthFn = (mode: 'login' | 'signup', role?: Role) => void
+
+export default function Home({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }) {
   return (
     <main>
-      <HeroSection nav={nav} />
+      <HeroSection nav={nav} onOpenAuth={onOpenAuth} />
       <StatsBar />
       <FeaturedFight nav={nav} />
       <EventDiscovery nav={nav} />
       <FighterDiscovery nav={nav} />
       <MatchmakingFeature nav={nav} />
-      <SparringSection nav={nav} />
-      <ClubDiscovery nav={nav} />
+      <SparringSection nav={nav} onOpenAuth={onOpenAuth} />
+      <ClubDiscovery nav={nav} onOpenAuth={onOpenAuth} />
       <BrandsSection />
       <MarketplacePreview nav={nav} />
       <ProFights nav={nav} />
-      <ForClubs nav={nav} />
+      <ForClubs onOpenAuth={onOpenAuth} />
       <ForOrganizers nav={nav} />
       <AdvertiseCTA />
       <Footer nav={nav} />
@@ -43,7 +55,8 @@ export default function Home({ nav }: { nav: NavFn }) {
 
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
-function HeroSection({ nav }: { nav: NavFn }) {
+function HeroSection({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }) {
+  const { t } = useLanguage()
   return (
     <section style={{ position: 'relative', height: '100vh', minHeight: '640px', overflow: 'hidden', display: 'flex', alignItems: 'flex-end' }}>
       <img src={IMAGES.hero} alt="Boxing ring" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
@@ -59,36 +72,37 @@ function HeroSection({ nav }: { nav: NavFn }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
             <div style={{ width: '32px', height: '2px', backgroundColor: RED }} />
             <span style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 600, letterSpacing: '0.2em', color: RED, textTransform: 'uppercase' }}>
-              DACH · Boxing · Kickboxing · MMA · BJJ
+              {t('hero.eyebrow')}
             </span>
           </div>
 
           <h1 style={{ fontFamily: DISPLAY, fontSize: 'clamp(64px, 10vw, 120px)', fontWeight: 900, lineHeight: 0.9, textTransform: 'uppercase', letterSpacing: '-0.01em', marginBottom: '28px' }}>
-            WHERE<br />
-            <span style={{ color: RED }}>COMBAT</span><br />
-            SPORTS<br />
-            CONNECT.
+            {t('hero.title1')}<br />
+            <span style={{ color: RED }}>{t('hero.title2')}</span><br />
+            {t('hero.title3')}<br />
+            {t('hero.title4')}
           </h1>
 
           <p style={{ fontSize: '16px', lineHeight: 1.6, color: '#aaaaaa', maxWidth: '520px', marginBottom: '40px' }}>
-            Discover fights, find fighters, connect with clubs, organize events and shop combat sports equipment — all in one place.
+            {t('hero.subtitle')}
           </p>
 
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <button
-              onClick={() => nav('event')}
+              onClick={() => nav('/events')}
               style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 32px', transition: 'background-color 0.15s' }}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
             >
-              Explore Events
+              {t('hero.exploreEvents')}
             </button>
             <button
+              onClick={() => onOpenAuth('signup', 'viewer')}
               style={{ backgroundColor: 'transparent', color: '#fff', fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 32px', border: '1px solid rgba(255,255,255,0.3)', transition: 'border-color 0.15s' }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)')}
             >
-              Join Pugna
+              {t('hero.joinPugna')}
             </button>
           </div>
         </div>
@@ -96,7 +110,7 @@ function HeroSection({ nav }: { nav: NavFn }) {
 
       {/* Scroll hint */}
       <div style={{ position: 'absolute', bottom: '32px', right: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', writingMode: 'vertical-rl' }}>Scroll</span>
+        <span style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', writingMode: 'vertical-rl' }}>{t('hero.scroll')}</span>
         <div style={{ width: '1px', height: '40px', backgroundColor: MUTED }} />
       </div>
     </section>
@@ -106,11 +120,12 @@ function HeroSection({ nav }: { nav: NavFn }) {
 // ─── Stats Bar ───────────────────────────────────────────────────────────────
 
 function StatsBar() {
+  const { t } = useLanguage()
   const stats = [
-    { value: '100+', label: 'Clubs' },
-    { value: '1,000+', label: 'Fighters' },
-    { value: '50+', label: 'Events' },
-    { value: 'DACH', label: 'Region' },
+    { value: '100+', label: t('stats.clubs') },
+    { value: '1,000+', label: t('stats.fighters') },
+    { value: '50+', label: t('stats.events') },
+    { value: 'DACH', label: t('stats.region') },
   ]
   return (
     <div style={{ borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, backgroundColor: '#0a0a0a' }}>
@@ -176,7 +191,7 @@ function FeaturedFight({ nav }: { nav: NavFn }) {
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
-                  onClick={() => nav('event')}
+                  onClick={() => nav('/events')}
                   style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 28px', transition: 'background-color 0.15s' }}
                   onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
                   onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
@@ -202,28 +217,40 @@ function FeaturedFight({ nav }: { nav: NavFn }) {
 // ─── Event Discovery ──────────────────────────────────────────────────────────
 
 const DISCIPLINES = ['All', 'Boxing', 'Kickboxing', 'Muay Thai', 'MMA', 'BJJ', 'Wrestling']
+const EVENT_IMAGE_POOL = [IMAGES.fight2, IMAGES.ring, IMAGES.crowd, IMAGES.venue, IMAGES.fight1, IMAGES.sparring]
 
-const EVENTS = [
-  { img: IMAGES.fight2, name: 'Fight Night Nürnberg', date: '23 Aug 2026', location: 'Nürnberg, Bayern', discipline: 'Boxing', fights: 8, organizer: 'FC Boxring Nürnberg' },
-  { img: IMAGES.ring, name: 'Open Ring Berlin', date: '6 Sep 2026', location: 'Berlin', discipline: 'Kickboxing', fights: 12, organizer: 'Kampfsport Berlin e.V.' },
-  { img: IMAGES.crowd, name: 'Championship Night Berlin', date: '14 Sep 2026', location: 'Berlin', discipline: 'Boxing', fights: 10, organizer: 'Elite Boxing GmbH' },
-  { img: IMAGES.venue, name: 'Vienna Combat Night', date: '28 Sep 2026', location: 'Wien, Österreich', discipline: 'MMA', fights: 9, organizer: 'MMA Austria GmbH' },
-  { img: IMAGES.fight1, name: 'Zürich Fight League', date: '11 Oct 2026', location: 'Zürich, Schweiz', discipline: 'Muay Thai', fights: 7, organizer: 'Fight League CH' },
-  { img: IMAGES.sparring, name: 'Munich Boxing Gala', date: '18 Oct 2026', location: 'München, Bayern', discipline: 'Boxing', fights: 11, organizer: 'Boxclub München' },
-]
-
-function EventDiscovery({ nav }: { nav: NavFn }) {
+export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: boolean }) {
+  const { t } = useLanguage()
+  const DISCIPLINE_LABELS: Record<string, string> = {
+    All: t('events.discipline.all'), Boxing: t('events.discipline.boxing'), Kickboxing: t('events.discipline.kickboxing'),
+    'Muay Thai': t('events.discipline.muayThai'), MMA: t('events.discipline.mma'), BJJ: t('events.discipline.bjj'), Wrestling: t('events.discipline.wrestling'),
+  }
+  const [searchParams] = useSearchParams()
+  const initialQuery = standalone ? searchParams.get('q') ?? '' : ''
+  const arrivedViaSearch = standalone && searchParams.has('q')
+  const [events, setEvents] = useState<PublicEvent[]>([])
   const [active, setActive] = useState('All')
-  const filtered = active === 'All' ? EVENTS : EVENTS.filter(e => e.discipline === active)
+  const [query, setQuery] = useState(initialQuery)
+  const filtered = events
+    .filter(e => active === 'All' || e.discipline === active)
+    .filter(e => {
+      const q = query.trim().toLowerCase()
+      if (!q) return true
+      return e.name.toLowerCase().includes(q) || e.organizer_name.toLowerCase().includes(q) || e.location.toLowerCase().includes(q)
+    })
+
+  useEffect(() => {
+    apiFetch<{ events: PublicEvent[] }>('/api/public/events').then(r => setEvents(r.events)).catch(() => {})
+  }, [])
 
   return (
     <section style={{ padding: '80px 0', backgroundColor: '#080808' }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '40px', gap: '24px', flexWrap: 'wrap' }}>
           <div>
-            <SectionLabel text="Events" />
+            <SectionLabel text={t('events.label')} />
             <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>
-              FIGHTS & EVENTS<br /><span style={{ color: RED }}>NEAR YOU</span>
+              {t('events.heading1')}<br /><span style={{ color: RED }}>{t('events.heading2')}</span>
             </h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', border: `1px solid ${BORDER}`, padding: '10px 16px', color: MUTED }}>
@@ -231,6 +258,18 @@ function EventDiscovery({ nav }: { nav: NavFn }) {
             <span style={{ fontFamily: DISPLAY, fontSize: '14px', letterSpacing: '0.08em' }}>Nürnberg, Germany</span>
           </div>
         </div>
+
+        {standalone && (
+          <div style={{ marginBottom: '24px' }}>
+            <input
+              autoFocus={arrivedViaSearch}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder={t('events.searchPlaceholder')}
+              style={{ width: '100%', maxWidth: '520px', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff', padding: '13px 16px', fontFamily: "'Inter', sans-serif", fontSize: '14px', outline: 'none' }}
+            />
+          </div>
+        )}
 
         {/* Discipline filters */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '40px' }}>
@@ -245,40 +284,45 @@ function EventDiscovery({ nav }: { nav: NavFn }) {
                 transition: 'all 0.15s',
               }}
             >
-              {d}
+              {DISCIPLINE_LABELS[d] ?? d}
             </button>
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1px', backgroundColor: BORDER }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1px', backgroundColor: BORDER }}>
+          {filtered.length === 0 && (
+            <div style={{ backgroundColor: CARD, padding: '32px 20px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}>
+              {events.length === 0 ? t('events.loading') : t('events.noMatch')}
+            </div>
+          )}
           {filtered.map((ev, i) => (
-            <div key={i} style={{ backgroundColor: CARD, transition: 'background-color 0.15s' }}
+            <div key={ev.id} style={{ backgroundColor: CARD, transition: 'background-color 0.15s' }}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
             >
               <div style={{ position: 'relative', overflow: 'hidden', height: '180px', backgroundColor: '#111' }}>
-                <img src={ev.img} alt={ev.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
+                <img src={EVENT_IMAGE_POOL[i % EVENT_IMAGE_POOL.length]} alt={ev.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
                   onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.03)')}
                   onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
                 />
                 <div style={{ position: 'absolute', bottom: '12px', left: '12px' }}>
-                  <span style={{ backgroundColor: RED, fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', color: '#fff', padding: '4px 10px', textTransform: 'uppercase' }}>{ev.discipline}</span>
+                  <span style={{ backgroundColor: RED, fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', color: '#fff', padding: '4px 10px', textTransform: 'uppercase' }}>{DISCIPLINE_LABELS[ev.discipline] ?? ev.discipline}</span>
                 </div>
               </div>
               <div style={{ padding: '20px' }}>
-                <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase', marginBottom: '6px' }}>{ev.date} · {ev.location}</div>
+                <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase', marginBottom: '6px' }}>{formatDisplayDate(ev.date)} · {ev.location}</div>
                 <div style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 800, textTransform: 'uppercase', lineHeight: 1.1, marginBottom: '12px' }}>{ev.name}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{ev.fights} Fights · {ev.organizer}</div>
+                    <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{ev.fights} {t('events.fights')} · {ev.organizer_name}</div>
                   </div>
                   <button
-                    onClick={() => nav('event')}
+                    onClick={() => nav(`/events/${ev.id}`)}
                     style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', color: RED, textTransform: 'uppercase', transition: 'color 0.15s' }}
                     onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
                     onMouseLeave={e => (e.currentTarget.style.color = RED)}
                   >
-                    View →
+                    {t('common.viewArrow')}
                   </button>
                 </div>
               </div>
@@ -286,16 +330,18 @@ function EventDiscovery({ nav }: { nav: NavFn }) {
           ))}
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '48px' }}>
-          <button
-            onClick={() => nav('event')}
-            style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 40px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
-          >
-            View All Events
-          </button>
-        </div>
+        {!standalone && (
+          <div style={{ textAlign: 'center', marginTop: '48px' }}>
+            <button
+              onClick={() => nav('/events')}
+              style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 40px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
+            >
+              {t('events.viewAllEvents')}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   )
@@ -303,54 +349,63 @@ function EventDiscovery({ nav }: { nav: NavFn }) {
 
 // ─── Fighter Discovery ────────────────────────────────────────────────────────
 
-const FIGHTERS = [
-  { name: 'Marcus Müller', club: 'Boxclub Nürnberg', discipline: 'Boxing', weight: '75 KG', record: '8–2', location: 'Nürnberg', img: IMAGES.fighter1 },
-  { name: 'David Okafor', club: 'FC Ring Fürth', discipline: 'Boxing', weight: '74 KG', record: '6–3', location: 'Fürth', img: IMAGES.fighter2 },
-  { name: 'Julian Reiter', club: 'Kampfsport Berlin', discipline: 'Kickboxing', weight: '70 KG', record: '11–1', location: 'Berlin', img: IMAGES.fighter1 },
-  { name: 'Emre Yildiz', club: 'MMA Stuttgart', discipline: 'MMA', weight: '77 KG', record: '9–4', location: 'Stuttgart', img: IMAGES.fighter2 },
-]
+const FIGHTER_IMAGE_POOL = [IMAGES.fighter1, IMAGES.fighter2]
 
-function FighterDiscovery({ nav }: { nav: NavFn }) {
+export function FighterDiscovery({ nav, standalone }: { nav: NavFn; standalone?: boolean }) {
+  const { t } = useLanguage()
+  const [fighters, setFighters] = useState<PublicFighter[]>([])
+
+  useEffect(() => {
+    apiFetch<{ fighters: PublicFighter[] }>('/api/public/fighters').then(r => setFighters(r.fighters)).catch(() => {})
+  }, [])
+
   return (
     <section style={{ padding: '80px 0', backgroundColor: '#060606' }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '80px', alignItems: 'start' }}>
           <div style={{ position: 'sticky', top: '80px' }}>
-            <SectionLabel text="Fighters" />
+            <SectionLabel text={t('fighters.label')} />
             <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(36px, 4vw, 56px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1, marginBottom: '20px' }}>
-              DISCOVER<br /><span style={{ color: RED }}>FIGHTERS</span>
+              {t('fighters.heading1')}<br /><span style={{ color: RED }}>{t('fighters.heading2')}</span>
             </h2>
             <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#888', marginBottom: '32px' }}>
-              Find fighters by discipline, weight class, experience and location.
+              {t('fighters.subtitle')}
             </p>
 
             {/* Search filters */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {[['Sport', 'Boxing'], ['Weight', '70–80 KG'], ['Experience', 'Amateur'], ['Location', 'Bayern']].map(([label, val]) => (
+              {[[t('fighters.filterSport'), t('events.discipline.boxing')], [t('fighters.filterWeight'), '70–80 KG'], [t('fighters.filterExperience'), 'Amateur'], [t('fighters.filterLocation'), 'Bayern']].map(([label, val]) => (
                 <div key={label} style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: '12px', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase' }}>{label}</span>
                   <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 600, color: '#fff' }}>{val}</span>
                 </div>
               ))}
-              <button
-                onClick={() => nav('club')}
-                style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px', marginTop: '8px', transition: 'background-color 0.15s' }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
-              >
-                Find Fighters
-              </button>
+              {!standalone && (
+                <button
+                  onClick={() => nav('/fighters')}
+                  style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px', marginTop: '8px', transition: 'background-color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
+                >
+                  {t('fighters.findFighters')}
+                </button>
+              )}
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', backgroundColor: BORDER }}>
-            {FIGHTERS.map((f, i) => (
-              <div key={i} style={{ backgroundColor: CARD, overflow: 'hidden' }}
+            {fighters.length === 0 && (
+              <div style={{ backgroundColor: CARD, padding: '32px 20px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}>
+                {t('fighters.loading')}
+              </div>
+            )}
+            {fighters.map((f, i) => (
+              <div key={f.id} style={{ backgroundColor: CARD, overflow: 'hidden' }}
                 onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
               >
                 <div style={{ position: 'relative', height: '260px', backgroundColor: '#111' }}>
-                  <img src={f.img} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', filter: 'grayscale(20%)' }} />
+                  <img src={FIGHTER_IMAGE_POOL[i % FIGHTER_IMAGE_POOL.length]} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', filter: 'grayscale(20%)' }} />
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(8,8,8,0.9) 0%, transparent 60%)' }} />
                   <div style={{ position: 'absolute', bottom: '12px', left: '16px', right: '16px' }}>
                     <div style={{ fontFamily: DISPLAY, fontSize: '24px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>{f.name}</div>
@@ -369,12 +424,12 @@ function FighterDiscovery({ nav }: { nav: NavFn }) {
                 </div>
                 <div style={{ padding: '0 16px 16px' }}>
                   <button
-                    onClick={() => nav('club')}
+                    onClick={() => nav(`/fighters/${f.id}`)}
                     style={{ width: '100%', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = RED)}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
                   >
-                    View Fighter →
+                    {t('fighters.viewFighter')}
                   </button>
                 </div>
               </div>
@@ -402,7 +457,7 @@ function MatchmakingFeature({ nav }: { nav: NavFn }) {
               Organizers can enter their event requirements and discover suitable fighters from clubs across the PUGNA network.
             </p>
             <button
-              onClick={() => nav('organizer')}
+              onClick={() => nav('/organizer')}
               style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 32px', transition: 'background-color 0.15s' }}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
@@ -459,138 +514,335 @@ function MatchmakingFeature({ nav }: { nav: NavFn }) {
 
 // ─── Sparring ─────────────────────────────────────────────────────────────────
 
-const SPARRING_SESSIONS = [
-  { location: 'Nürnberg', day: 'Saturday', time: '14:00', weight: '70–80 KG', level: 'Amateur', spots: 8, discipline: 'Boxing', host: 'Boxclub Nürnberg' },
-  { location: 'München', day: 'Sunday', time: '10:00', weight: '65–75 KG', level: 'All Levels', spots: 12, discipline: 'Kickboxing', host: 'Fight Academy München' },
-  { location: 'Berlin', day: 'Wednesday', time: '19:00', weight: '80–90 KG', level: 'Intermediate', spots: 6, discipline: 'Boxing', host: 'Kampfsport Berlin' },
-  { location: 'Hamburg', day: 'Saturday', time: '11:00', weight: '60–70 KG', level: 'Amateur', spots: 10, discipline: 'Muay Thai', host: 'Thai Boxing HH' },
-]
+type SparringSession = { id: number; club_id: number; location: string; date: string; time: string; weight_range: string; level: string; spots: number; discipline: string; host_name: string; registered_fighters: number }
 
-function SparringSection({ nav }: { nav: NavFn }) {
+const DAY_KEYS = ['day.0', 'day.1', 'day.2', 'day.3', 'day.4', 'day.5', 'day.6'] as const
+
+function dayLabel(isoDate: string, t: ReturnType<typeof useLanguage>['t']): string {
+  const d = new Date(`${isoDate}T00:00:00`)
+  return Number.isNaN(d.getTime()) ? isoDate : t(DAY_KEYS[d.getDay()])
+}
+
+export function SparringSection({ nav, onOpenAuth, standalone }: { nav: NavFn; onOpenAuth: OpenAuthFn; standalone?: boolean }) {
+  const { user } = useAuth()
+  const { t } = useLanguage()
+  const [sessions, setSessions] = useState<SparringSession[]>([])
+  const [ownClubId, setOwnClubId] = useState<number | null>(null)
+  const [joinTarget, setJoinTarget] = useState<SparringSession | null>(null)
+
+  const load = () => apiFetch<{ sessions: SparringSession[] }>('/api/sparring').then(r => setSessions(r.sessions)).catch(() => {})
+
+  useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    if (user?.role !== 'club') { setOwnClubId(null); return }
+    apiFetch<{ club: { id: number } }>('/api/clubs/me').then(r => setOwnClubId(r.club.id)).catch(() => setOwnClubId(null))
+  }, [user])
+
   return (
     <section style={{ padding: '80px 0', backgroundColor: '#060606', borderTop: `1px solid ${BORDER}` }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px', flexWrap: 'wrap', gap: '24px' }}>
           <div>
-            <SectionLabel text="Sparring" />
+            <SectionLabel text={t('sparring.label')} />
             <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(36px, 4.5vw, 56px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>
-              FIND YOUR NEXT<br /><span style={{ color: RED }}>SPARRING SESSION.</span>
+              {t('sparring.heading1')}<br /><span style={{ color: RED }}>{t('sparring.heading2')}</span>
             </h2>
           </div>
           <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#888', maxWidth: '320px' }}>
-            Clubs can host sparring events and connect with suitable fighters from nearby clubs.
+            {t('sparring.subtitle')}
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1px', backgroundColor: BORDER, marginBottom: '40px' }}>
-          {SPARRING_SESSIONS.map((s, i) => (
-            <div key={i} style={{ backgroundColor: CARD, padding: '24px' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                <Tag text={s.discipline} />
-                <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: '#4caf50', textTransform: 'uppercase' }}>
-                  {s.spots} spots
+        {sessions.length === 0 ? (
+          <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '32px 20px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase', textAlign: 'center', marginBottom: '40px' }}>
+            {t('sparring.noSessions')}
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1px', backgroundColor: BORDER, marginBottom: '40px' }}>
+            {sessions.map(s => {
+              const remaining = Math.max(0, s.spots - s.registered_fighters)
+              const isOwn = ownClubId !== null && s.club_id === ownClubId
+              return (
+                <div key={s.id} style={{ backgroundColor: CARD, padding: '24px' }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                    <Tag text={s.discipline} />
+                    <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: remaining > 0 ? '#4caf50' : MUTED, textTransform: 'uppercase' }}>
+                      {remaining > 0 ? `${remaining} ${t('sparring.spotsLeft')}` : t('sparring.full')}
+                    </div>
+                  </div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '26px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1, marginBottom: '4px' }}>{s.location}</div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>
+                    {dayLabel(s.date, t)} · {s.time}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
+                    {s.weight_range && <Tag text={s.weight_range} />}
+                    <Tag text={s.level} />
+                  </div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>
+                    {t('sparring.hostedBy')} {s.host_name}
+                  </div>
+                  {isOwn ? (
+                    <div style={{ width: '100%', textAlign: 'center', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px', border: `1px solid ${BORDER}`, color: MUTED }}>
+                      {t('sparring.yourSession')}
+                    </div>
+                  ) : user && user.role !== 'club' ? (
+                    <div style={{ width: '100%', textAlign: 'center', fontFamily: DISPLAY, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase', padding: '10px', color: MUTED }}>
+                      {t('sparring.clubAccountsOnly')}
+                    </div>
+                  ) : (
+                    <button
+                      disabled={remaining === 0}
+                      onClick={() => (user ? setJoinTarget(s) : onOpenAuth('login', 'club'))}
+                      style={{ width: '100%', backgroundColor: 'transparent', color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px', border: `1px solid ${BORDER}`, transition: 'all 0.15s', opacity: remaining === 0 ? 0.5 : 1 }}
+                      onMouseEnter={e => { if (remaining > 0) { e.currentTarget.style.backgroundColor = RED; e.currentTarget.style.borderColor = RED } }}
+                      onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = BORDER }}
+                    >
+                      {remaining === 0 ? t('sparring.full') : t('sparring.join')}
+                    </button>
+                  )}
                 </div>
-              </div>
-              <div style={{ fontFamily: DISPLAY, fontSize: '26px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1, marginBottom: '4px' }}>{s.location}</div>
-              <div style={{ fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>
-                {s.day} · {s.time}
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
-                <Tag text={s.weight} />
-                <Tag text={s.level} />
-              </div>
-              <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>
-                Hosted by {s.host}
-              </div>
-              <button
-                style={{ width: '100%', backgroundColor: 'transparent', color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px', border: `1px solid ${BORDER}`, transition: 'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.backgroundColor = RED; e.currentTarget.style.borderColor = RED }}
-                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = BORDER }}
-              >
-                Join Sparring
-              </button>
-            </div>
-          ))}
-        </div>
+              )
+            })}
+          </div>
+        )}
 
-        <button
-          onClick={() => nav('sparring')}
-          style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 40px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
-          onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
-          onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
-        >
-          Find Sparring
-        </button>
+        {!standalone && (
+          <button
+            onClick={() => nav('/sparring')}
+            style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 40px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
+          >
+            {t('sparring.findSparring')}
+          </button>
+        )}
       </div>
+
+      {joinTarget && (
+        <JoinSparringModal
+          session={joinTarget}
+          onCancel={() => setJoinTarget(null)}
+          onJoined={() => { setJoinTarget(null); load() }}
+        />
+      )}
     </section>
+  )
+}
+
+function JoinSparringModal({ session, onCancel, onJoined }: { session: SparringSession; onCancel: () => void; onJoined: () => void }) {
+  const { t } = useLanguage()
+  const [fighterCount, setFighterCount] = useState(1)
+  const [weightCategory, setWeightCategory] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fieldInputStyle: React.CSSProperties = {
+    width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff',
+    padding: '11px 14px', fontFamily: "'Inter', sans-serif", fontSize: '14px', outline: 'none',
+  }
+  const fieldLabelStyle: React.CSSProperties = {
+    fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px',
+  }
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!weightCategory.trim()) { setError(t('sparring.errorWeightCategory')); return }
+    setError(null)
+    setSaving(true)
+    try {
+      await apiFetch(`/api/sparring/${session.id}/join`, {
+        method: 'POST',
+        body: JSON.stringify({ fighterCount, weightCategory: weightCategory.trim() }),
+      })
+      onJoined()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('sparring.errorJoin'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={onCancel}>
+      <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, width: '100%', maxWidth: '420px', padding: '32px' }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900, textTransform: 'uppercase' }}>{t('sparring.join')}</h2>
+          <button onClick={onCancel} aria-label={t('common.close')} style={{ color: MUTED, padding: '4px' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '20px' }}>
+          {session.host_name} · {session.location} · {dayLabel(session.date, t)} · {session.time}
+        </div>
+        <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={fieldLabelStyle}>{t('sparring.numberOfFighters')}</label>
+            <input type="number" min={1} style={fieldInputStyle} value={fighterCount} onChange={e => setFighterCount(Number(e.target.value))} />
+          </div>
+          <div>
+            <label style={fieldLabelStyle}>{t('sparring.weightCategory')}</label>
+            <input style={fieldInputStyle} value={weightCategory} onChange={e => setWeightCategory(e.target.value)} placeholder="70–80 KG" />
+          </div>
+          {error && <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: RED }}>{error}</div>}
+          <button type="submit" disabled={saving}
+            style={{ marginTop: '8px', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', opacity: saving ? 0.6 : 1 }}
+          >
+            {saving ? t('sparring.joining') : t('common.confirm')}
+          </button>
+        </form>
+      </div>
+    </div>
   )
 }
 
 // ─── Club Discovery ───────────────────────────────────────────────────────────
 
-const CLUBS = [
-  { name: 'ABC Boxing Nürnberg', disciplines: ['Boxing'], location: 'Nürnberg', fighters: 18, events: 3, img: IMAGES.ring },
-  { name: 'XYZ Fight Academy', disciplines: ['Boxing', 'Kickboxing'], location: 'Fürth', fighters: 32, events: 5, img: IMAGES.fight2 },
-  { name: 'Kampfsport Berlin', disciplines: ['MMA', 'BJJ'], location: 'Berlin', fighters: 45, events: 7, img: IMAGES.venue },
-  { name: 'München Fight Club', disciplines: ['Muay Thai', 'Boxing'], location: 'München', fighters: 27, events: 4, img: IMAGES.crowd },
-]
+const CLUB_IMAGES = [IMAGES.ring, IMAGES.fight2, IMAGES.venue, IMAGES.crowd]
 
-function ClubDiscovery({ nav }: { nav: NavFn }) {
+const RADIUS_OPTIONS = [10, 25, 50, 100, 200]
+
+export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }) {
+  const { t } = useLanguage()
+  const [clubs, setClubs] = useState<PublicClub[]>([])
+  const [loading, setLoading] = useState(false)
+  const [area, setArea] = useState('')
+  const [areaCoords, setAreaCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [radiusKm, setRadiusKm] = useState(50)
+  const [searched, setSearched] = useState(false)
+
+  const loadAll = () => {
+    setLoading(true)
+    apiFetch<{ clubs: PublicClub[] }>('/api/clubs').then(r => setClubs(r.clubs)).catch(() => {}).finally(() => setLoading(false))
+  }
+
+  useEffect(() => { loadAll() }, [])
+
+  const search = () => {
+    if (!areaCoords) return
+    setLoading(true)
+    setSearched(true)
+    apiFetch<{ clubs: PublicClub[] }>(`/api/clubs?lat=${areaCoords.lat}&lng=${areaCoords.lng}&radiusKm=${radiusKm}`)
+      .then(r => setClubs(r.clubs))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }
+
+  const clearSearch = () => {
+    setArea('')
+    setAreaCoords(null)
+    setSearched(false)
+    loadAll()
+  }
+
+  const fieldInputStyle: React.CSSProperties = {
+    width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff',
+    padding: '11px 14px', fontFamily: "'Inter', sans-serif", fontSize: '14px', outline: 'none',
+  }
+
   return (
     <section style={{ padding: '80px 0', backgroundColor: '#080808', borderTop: `1px solid ${BORDER}` }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
-        <div style={{ marginBottom: '48px' }}>
-          <SectionLabel text="Clubs" />
+        <div style={{ marginBottom: '32px' }}>
+          <SectionLabel text={t('clubs.label')} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '24px' }}>
             <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(36px, 4.5vw, 56px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>
-              DISCOVER COMBAT<br /><span style={{ color: RED }}>SPORTS CLUBS</span>
+              {t('clubs.heading1')}<br /><span style={{ color: RED }}>{t('clubs.heading2')}</span>
             </h2>
             <button
-              onClick={() => nav('club')}
+              onClick={() => onOpenAuth('signup', 'club')}
               style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 28px', backgroundColor: 'transparent', color: '#fff', border: `1px solid ${BORDER}`, transition: 'border-color 0.15s', flexShrink: 0 }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
             >
-              Create Club Profile
+              {t('clubs.createProfile')}
             </button>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1px', backgroundColor: BORDER }}>
-          {CLUBS.map((c, i) => (
-            <div key={i} style={{ backgroundColor: CARD, overflow: 'hidden' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: '40px', backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '20px' }}>
+          <div style={{ flex: '1 1 260px', minWidth: '220px' }}>
+            <label style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>{t('clubs.area')}</label>
+            <LocationInput
+              inputStyle={fieldInputStyle}
+              value={area}
+              onChange={v => { setArea(v); setAreaCoords(null) }}
+              onSelect={r => setAreaCoords({ lat: r.lat, lng: r.lon })}
+              placeholder={t('clubs.searchPlaceholder')}
+            />
+          </div>
+          <div style={{ width: '140px' }}>
+            <label style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>{t('clubs.radius')}</label>
+            <select style={fieldInputStyle} value={radiusKm} onChange={e => setRadiusKm(Number(e.target.value))}>
+              {RADIUS_OPTIONS.map(r => <option key={r} value={r}>{r} km</option>)}
+            </select>
+          </div>
+          <button
+            onClick={search}
+            disabled={!areaCoords}
+            style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '11px 24px', opacity: areaCoords ? 1 : 0.5 }}
+          >
+            {t('clubs.search')}
+          </button>
+          {searched && (
+            <button
+              onClick={clearSearch}
+              style={{ backgroundColor: 'transparent', color: MUTED, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '11px 20px', border: `1px solid ${BORDER}` }}
             >
-              <div style={{ position: 'relative', height: '160px', backgroundColor: '#111' }}>
-                <img src={c.img} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(30%)' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,15,15,0.9) 0%, transparent 60%)' }} />
-              </div>
-              <div style={{ padding: '20px' }}>
-                <div style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.1, marginBottom: '8px' }}>{c.name}</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
-                  {c.disciplines.map(d => <Tag key={d} text={d} />)}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    {c.location} · {c.fighters} Fighters · {c.events} Events
-                  </div>
-                  <button
-                    onClick={() => nav('club')}
-                    style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: RED, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-                    onMouseLeave={e => (e.currentTarget.style.color = RED)}
-                  >
-                    View →
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+              {t('clubs.clearSearch')}
+            </button>
+          )}
         </div>
+
+        {loading ? (
+          <div style={{ fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}>{t('common.loading')}</div>
+        ) : clubs.length === 0 ? (
+          <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '32px 20px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase', textAlign: 'center' }}>
+            {searched ? t('clubs.noClubsRadius', { radius: radiusKm, area }) : t('clubs.noClubs')}
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1px', backgroundColor: BORDER }}>
+            {clubs.map((c, i) => (
+              <div key={c.id} style={{ backgroundColor: CARD, overflow: 'hidden', cursor: 'pointer' }}
+                onClick={() => nav(`/clubs/${c.id}`)}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
+              >
+                <div style={{ position: 'relative', height: '160px', backgroundColor: '#111' }}>
+                  <img src={c.cover_url || CLUB_IMAGES[i % CLUB_IMAGES.length]} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(30%)' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,15,15,0.9) 0%, transparent 60%)' }} />
+                  {c.distance_km != null && (
+                    <div style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: 'rgba(8,8,8,0.85)', border: `1px solid ${BORDER}`, padding: '3px 9px', fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, color: RED, textTransform: 'uppercase' }}>
+                      {c.distance_km} km
+                    </div>
+                  )}
+                </div>
+                <div style={{ padding: '20px' }}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.1, marginBottom: '8px' }}>{c.name}</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                    {c.disciplines.map(d => <Tag key={d} text={d} />)}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      {c.location} · {c.member_count} {t('clubs.members')}
+                    </div>
+                    <button
+                      onClick={e => { e.stopPropagation(); nav(`/clubs/${c.id}`) }}
+                      style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: RED, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                      onMouseLeave={e => (e.currentTarget.style.color = RED)}
+                    >
+                      {t('common.viewArrow')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )
@@ -679,7 +931,7 @@ function MarketplacePreview({ nav }: { nav: NavFn }) {
         {/* Category pills */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '40px' }}>
           {['Boxing Gloves', 'Hand Wraps', 'Headgear', 'Shoes', 'Apparel', 'Training Equipment', 'Club Merchandise'].map(cat => (
-            <button key={cat} onClick={() => nav('event')}
+            <button key={cat} onClick={() => nav('/marketplace')}
               style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '6px 14px', border: `1px solid ${BORDER}`, color: MUTED, backgroundColor: 'transparent', transition: 'all 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.color = '#fff' }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = MUTED }}
@@ -687,10 +939,10 @@ function MarketplacePreview({ nav }: { nav: NavFn }) {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1px', backgroundColor: BORDER, marginBottom: '40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1px', backgroundColor: BORDER, marginBottom: '40px' }}>
           {PRODUCTS.map((p, i) => (
             <div key={i} style={{ backgroundColor: CARD, overflow: 'hidden', cursor: 'pointer' }}
-              onClick={() => nav('event')}
+              onClick={() => nav('/marketplace')}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
             >
@@ -713,7 +965,7 @@ function MarketplacePreview({ nav }: { nav: NavFn }) {
 
         <div style={{ textAlign: 'center' }}>
           <button
-            onClick={() => nav('event')}
+            onClick={() => nav('/marketplace')}
             style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 40px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
             onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
             onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
@@ -750,7 +1002,7 @@ function ProFights({ nav }: { nav: NavFn }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', backgroundColor: BORDER }}>
           {PRO_FIGHTS.map((f, i) => (
             <div key={i} style={{ backgroundColor: CARD, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}
-              onClick={() => nav('event')}
+              onClick={() => nav('/events')}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
             >
@@ -780,7 +1032,7 @@ function ProFights({ nav }: { nav: NavFn }) {
 
 // ─── For Clubs ────────────────────────────────────────────────────────────────
 
-function ForClubs({ nav }: { nav: NavFn }) {
+function ForClubs({ onOpenAuth }: { onOpenAuth: OpenAuthFn }) {
   return (
     <section style={{ padding: '100px 0', backgroundColor: '#080808', borderTop: `1px solid ${BORDER}` }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
@@ -808,7 +1060,7 @@ function ForClubs({ nav }: { nav: NavFn }) {
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
-                onClick={() => nav('club')}
+                onClick={() => onOpenAuth('signup', 'club')}
                 style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 28px', transition: 'background-color 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
@@ -855,7 +1107,7 @@ function ForOrganizers({ nav }: { nav: NavFn }) {
             </div>
             <div style={{ marginTop: '36px' }}>
               <button
-                onClick={() => nav('organizer')}
+                onClick={() => nav('/organizer')}
                 style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 32px', transition: 'background-color 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#c9112a')}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
@@ -913,7 +1165,7 @@ function AdvertiseCTA() {
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
 function Footer({ nav }: { nav: NavFn }) {
-  const col = (title: string, links: Array<[string, Page?]>) => (
+  const col = (title: string, links: Array<[string, string?]>) => (
     <div key={title}>
       <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', marginBottom: '16px' }}>{title}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -947,9 +1199,9 @@ function Footer({ nav }: { nav: NavFn }) {
               ))}
             </div>
           </div>
-          {col('Discover', [['Events', 'event'], ['Clubs', 'club'], ['Sparring', 'sparring']])}
-          {col('For Clubs', [['Create Club', 'club'], ['Promote Fighters', 'club'], ['Host Sparring', 'sparring']])}
-          {col('For Organizers', [['Create Event', 'organizer'], ['Matchmaking', 'organizer'], ['Tournaments', 'organizer']])}
+          {col('Discover', [['Events', '/events'], ['Clubs', '/clubs'], ['Sparring', '/sparring']])}
+          {col('For Clubs', [['Create Club', '/clubs'], ['Promote Fighters', '/clubs'], ['Host Sparring', '/sparring']])}
+          {col('For Organizers', [['Create Event', '/organizer'], ['Matchmaking', '/organizer'], ['Tournaments', '/organizer']])}
           {col('Company', [['About'], ['Contact'], ['Careers'], ['Privacy'], ['Terms']])}
         </div>
 
