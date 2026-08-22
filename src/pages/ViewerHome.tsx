@@ -3,8 +3,10 @@ import type { NavFn } from '../App'
 import { useAuth } from '../auth/AuthContext'
 import { useLanguage } from '../i18n/LanguageContext'
 import { apiFetch } from '../lib/api'
+import { formatDisplayDate } from '../lib/date'
 import QrScanner from '../components/QrScanner'
 import Spinner from '../components/Spinner'
+import { FeaturedFight, SparringSection, Footer } from './Home'
 
 const RED = '#0070f3'
 const CARD = '#0f0f0f'
@@ -62,7 +64,6 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
 
   const [scannerOpen, setScannerOpen] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     setLoading(true)
@@ -89,11 +90,6 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
     }
   }
 
-  const submitSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    nav(searchQuery.trim() ? `/events?q=${encodeURIComponent(searchQuery.trim())}` : '/events?q=')
-  }
-
   const region = user?.home_location || FALLBACK_REGION
   const regionMatches = events
     .filter(e => e.location.toLowerCase().includes(region.toLowerCase()))
@@ -103,9 +99,17 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
     .sort((a, b) => a.date.localeCompare(b.date))
   const nearYou = [...regionMatches, ...rest].slice(0, 5)
 
+  // Nearest saved event that's today or still upcoming — the single most
+  // relevant "your next fight" highlight, or none if nothing qualifies.
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const upcomingSaved = savedEvents
+    .filter(e => e.date >= todayIso)
+    .sort((a, b) => a.date.localeCompare(b.date))[0] ?? null
+
   if (!user) return null
 
   return (
+    <>
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
       {/* Sidebar */}
       <aside style={{
@@ -165,43 +169,74 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
         <p style={{ color: MUTED, marginTop: '10px', fontSize: '15px' }}>{t('viewerHome.subtitle')}</p>
       </div>
 
-      {/* Primary actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '56px' }}>
-        <button
-          onClick={() => { setScanError(null); setScannerOpen(true) }}
-          style={{ textAlign: 'left', backgroundColor: CARD, border: `1px solid ${RED}`, borderLeft: `4px solid ${RED}`, padding: '28px', cursor: 'pointer', transition: 'background-color 0.15s' }}
+      {/* Discovery entry points */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+        <div
+          onClick={() => nav('/events?q=')}
+          style={{ textAlign: 'left', backgroundColor: CARD, border: `1px solid ${RED}`, borderLeft: `4px solid ${RED}`, padding: '24px', cursor: 'pointer', transition: 'background-color 0.15s' }}
           onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#181010')}
           onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
         >
-          <div style={{ width: '44px', height: '44px', border: `1px solid ${RED}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={RED} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div style={{ width: '40px', height: '40px', border: `1px solid ${RED}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={RED} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 11h18" /></svg>
+          </div>
+          <div style={{ fontFamily: DISPLAY, fontSize: '19px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '6px' }}>{t('viewerHome.findEvent')}</div>
+          <p style={{ color: MUTED, fontSize: '13px', lineHeight: 1.5, marginBottom: '14px' }}>{t('viewerHome.findEventBody', { region })}</p>
+          <button
+            onClick={e => { e.stopPropagation(); setScanError(null); setScannerOpen(true) }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, color: RED, textTransform: 'uppercase', letterSpacing: '0.08em' }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={RED} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="7" width="4" height="10" /><rect x="9" y="4" width="2" height="16" /><rect x="13" y="4" width="4" height="16" /><rect x="19" y="7" width="2" height="10" />
             </svg>
-          </div>
-          <div style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>{t('viewerHome.scanEvent')}</div>
-          <p style={{ color: MUTED, fontSize: '14px', lineHeight: 1.5 }}>{t('viewerHome.scanEventBody')}</p>
-          <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: RED, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '16px' }}>{t('viewerHome.opensCamera')}</div>
-        </button>
+            {t('viewerHome.orScanQr')}
+          </button>
+        </div>
 
-        <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '28px' }}>
-          <div style={{ width: '44px', height: '44px', border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+        <div
+          onClick={() => nav('/sparring')}
+          style={{ textAlign: 'left', backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px', cursor: 'pointer', transition: 'background-color 0.15s' }}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+          onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
+        >
+          <div style={{ width: '40px', height: '40px', border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" /></svg>
           </div>
-          <div style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>{t('viewerHome.searchEvents')}</div>
-          <p style={{ color: MUTED, fontSize: '14px', lineHeight: 1.5, marginBottom: '16px' }}>{t('viewerHome.searchEventsBody')}</p>
-          <form onSubmit={submitSearch} style={{ display: 'flex', gap: '8px' }}>
-            <input
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder={t('viewerHome.searchEventsPlaceholder')}
-              style={{ flex: 1, backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff', padding: '11px 14px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none' }}
-            />
-            <button type="submit" style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0 18px' }}>
-              {t('common.go')}
-            </button>
-          </form>
+          <div style={{ fontFamily: DISPLAY, fontSize: '19px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '6px' }}>{t('sparring.findSparring')}</div>
+          <p style={{ color: MUTED, fontSize: '13px', lineHeight: 1.5 }}>{t('viewerHome.findSparringBody', { region })}</p>
+        </div>
+
+        <div
+          onClick={() => nav('/clubs')}
+          style={{ textAlign: 'left', backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px', cursor: 'pointer', transition: 'background-color 0.15s' }}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+          onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
+        >
+          <div style={{ width: '40px', height: '40px', border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+          </div>
+          <div style={{ fontFamily: DISPLAY, fontSize: '19px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '6px' }}>{t('viewerHome.findClub')}</div>
+          <p style={{ color: MUTED, fontSize: '13px', lineHeight: 1.5 }}>{t('viewerHome.findClubBody', { region })}</p>
         </div>
       </div>
+
+      {/* Your Next Event — nearest saved event that's today or upcoming, if any */}
+      {upcomingSaved && (
+        <div
+          onClick={() => nav(`/events/${upcomingSaved.id}`)}
+          style={{ backgroundColor: CARD, border: `1px solid ${RED}`, borderLeft: `4px solid ${RED}`, padding: '28px', marginBottom: '48px', cursor: 'pointer', transition: 'background-color 0.15s' }}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#181010')}
+          onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
+        >
+          <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '12px' }}>{t('viewerHome.yourNextEvent')}</div>
+          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.05, marginBottom: '10px' }}>{upcomingSaved.name}</div>
+          <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {formatDisplayDate(upcomingSaved.date)} · {upcomingSaved.location} · {upcomingSaved.organizer_name}
+          </div>
+        </div>
+      )}
+
+      <FeaturedFight nav={nav} />
 
       {/* Upcoming Near You */}
       <div style={{ marginBottom: '48px' }}>
@@ -247,6 +282,8 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
           </div>
         )}
       </div>
+
+      <SparringSection nav={nav} onOpenAuth={() => {}} standalone />
       </div>
 
       {/* Your List — saved events, followed fighters, followed clubs */}
@@ -355,5 +392,8 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
       )}
       </main>
     </div>
+
+    <Footer nav={nav} />
+    </>
   )
 }
