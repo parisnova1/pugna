@@ -40,7 +40,6 @@ export default function Home({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Open
       <Reveal><StatsBar /></Reveal>
       <Reveal><FeaturedFight nav={nav} /></Reveal>
       <Reveal><EventDiscovery nav={nav} /></Reveal>
-      <Reveal><MatchmakingFeature nav={nav} /></Reveal>
       <Reveal><SparringSection nav={nav} onOpenAuth={onOpenAuth} /></Reveal>
       <Reveal><ClubDiscovery nav={nav} onOpenAuth={onOpenAuth} /></Reveal>
       <Reveal><BrandsSection /></Reveal>
@@ -144,7 +143,7 @@ function StatsBar() {
 
 // ─── Featured Fight ───────────────────────────────────────────────────────────
 
-function FeaturedFight({ nav }: { nav: NavFn }) {
+export function FeaturedFight({ nav }: { nav: NavFn }) {
   return (
     <section style={{ padding: '80px 0', backgroundColor: '#000000' }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
@@ -425,77 +424,6 @@ export function FighterDiscovery({ nav, standalone }: { nav: NavFn; standalone?:
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Matchmaking ──────────────────────────────────────────────────────────────
-
-function MatchmakingFeature({ nav }: { nav: NavFn }) {
-  return (
-    <section style={{ padding: '100px 0', backgroundColor: '#000000', borderTop: `1px solid ${BORDER}` }}>
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
-          <div>
-            <SectionLabel text="Matchmaking" />
-            <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(40px, 5vw, 72px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 0.95, marginBottom: '24px' }}>
-              FIND THE RIGHT<br /><span style={{ color: RED }}>OPPONENT.</span>
-            </h2>
-            <p style={{ fontSize: '15px', lineHeight: 1.7, color: '#888', maxWidth: '440px', marginBottom: '36px' }}>
-              Organizers can enter their event requirements and discover suitable fighters from clubs across the PUGNA network.
-            </p>
-            <button
-              onClick={() => nav('/organizer')}
-              style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 32px', transition: 'background-color 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
-            >
-              Find Fighters
-            </button>
-          </div>
-
-          {/* Matchmaking UI mock */}
-          <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}` }}>
-            <div style={{ padding: '20px 24px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: RED }} />
-              <span style={{ fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase' }}>Matchmaking Engine</span>
-            </div>
-
-            <div style={{ padding: '24px' }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: '12px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase', marginBottom: '12px' }}>Requirements</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px', marginBottom: '24px' }}>
-                {[['Sport', 'Boxing'], ['Weight', '75 KG'], ['Level', 'Amateur'], ['Fights', '5–10'], ['Distance', '≤ 150 km']].map(([k, v]) => (
-                  <div key={k} style={{ backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, padding: '10px 14px', display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{k}</span>
-                    <span style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, color: '#fff' }}>{v}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ fontFamily: DISPLAY, fontSize: '12px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase', marginBottom: '12px' }}>Top Matches</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                {[
-                  { match: 92, name: 'Marcus Müller', weight: '75 KG', record: '8–2', location: 'Nürnberg' },
-                  { match: 88, name: 'David Okafor', weight: '74 KG', record: '6–3', location: 'Fürth' },
-                  { match: 81, name: 'Tobias Lang', weight: '76 KG', record: '7–1', location: 'Erlangen' },
-                ].map((m, i) => (
-                  <div key={i} style={{ backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ textAlign: 'center', minWidth: '52px' }}>
-                      <div style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900, color: i === 0 ? RED : '#fff' }}>{m.match}%</div>
-                      <div style={{ fontFamily: DISPLAY, fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Match</div>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: DISPLAY, fontSize: '18px', fontWeight: 800, textTransform: 'uppercase' }}>{m.name}</div>
-                      <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{m.weight} · {m.record} · {m.location}</div>
-                    </div>
-                    <button style={{ fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', color: RED, textTransform: 'uppercase' }}>Select</button>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -1142,7 +1070,7 @@ function FaqSection() {
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
-function Footer({ nav }: { nav: NavFn }) {
+export function Footer({ nav }: { nav: NavFn }) {
   const col = (title: string, links: Array<[string, string?]>) => (
     <div key={title}>
       <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', marginBottom: '16px' }}>{title}</div>
