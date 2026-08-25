@@ -96,6 +96,13 @@ if (!userColumns.includes('role')) {
 if (!userColumns.includes('home_location')) {
   db.exec("ALTER TABLE users ADD COLUMN home_location TEXT NOT NULL DEFAULT ''")
 }
+if (!userColumns.includes('google_id')) {
+  // Nullable — only set for accounts linked to a Google identity. SQLite
+  // treats multiple NULLs in a UNIQUE column as non-conflicting, so this
+  // still enforces one Google account can't be linked to two users.
+  db.exec('ALTER TABLE users ADD COLUMN google_id TEXT')
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id)')
+}
 
 // Backfill qr_token for any event created before this column existed.
 const missingToken = db.prepare('SELECT id FROM events WHERE qr_token IS NULL').all()
