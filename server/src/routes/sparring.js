@@ -29,10 +29,11 @@ const getSession = db.prepare('SELECT * FROM sparring_sessions WHERE id = ?')
 const getClubByOwner = db.prepare('SELECT * FROM clubs WHERE owner_id = ?')
 const getUserById = db.prepare('SELECT id, role FROM users WHERE id = ?')
 const insertSession = db.prepare(`
-  INSERT INTO sparring_sessions (club_id, discipline, location, date, time, weight_range, level, spots)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO sparring_sessions (club_id, discipline, location, date, time, weight_range, level, spots, message)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 `)
 const deleteSession = db.prepare('DELETE FROM sparring_sessions WHERE id = ?')
+const setAcceptingRequests = db.prepare('UPDATE sparring_sessions SET accepting_requests = ? WHERE id = ?')
 
 const listParticipants = db.prepare(`
   SELECT sparring_registrations.*, clubs.name AS club_name
@@ -66,14 +67,22 @@ function requireClub(req, res) {
   return club
 }
 
-function validate({ discipline, location, date, time, spots, level }) {
+function validate({ discipline, location, date, time, spots, levels }) {
   if (!discipline || !DISCIPLINE_SET.has(discipline)) return 'Choose a valid discipline.'
   if (!location?.trim()) return 'Location is required.'
   if (!date?.trim()) return 'Date is required.'
   if (!time?.trim()) return 'Time is required.'
-  if (!Number.isInteger(spots) || spots < 1) return 'Spots must be a positive whole number.'
-  if (level && !LEVELS.has(level)) return 'Invalid level.'
+  // 0 means unlimited — spots is optional, not required to be positive.
+  if (!Number.isInteger(spots) || spots < 0) return 'Spots must be a non-negative whole number.'
+  if (!Array.isArray(levels) || levels.length === 0) return 'Choose at least one level.'
+  if (levels.some(l => !LEVELS.has(l))) return 'Invalid level.'
   return null
+}
+
+// "All Levels" is exclusive — if it's among the selected levels, it replaces
+// the rest rather than combining with them.
+function normalizeLevels(levels) {
+  return levels.includes('All Levels') ? ['All Levels'] : levels
 }
 
 router.get('/', (_req, res) => {
@@ -90,15 +99,31 @@ router.post('/', requireAuth, (req, res) => {
   const club = requireClub(req, res)
   if (!club) return
 
-  const { discipline, location, date, time, weightRange, level, spots } = req.body || {}
-  const error = validate({ discipline, location, date, time, spots, level })
+  const { discipline, location, date, time, weightRange, levels, spots, message } = req.body || {}
+  const normalizedLevels = normalizeLevels(Array.isArray(levels) ? levels : [])
+  const spotsValue = spots === undefined || spots === null || spots === '' ? 0 : Number(spots)
+  const error = validate({ discipline, location, date, time, spots: spotsValue, levels: normalizedLevels })
   if (error) return res.status(400).json({ error })
 
   const info = insertSession.run(
     club.id, discipline, location.trim(), date.trim(), time.trim(),
-    weightRange?.trim() || '', level || 'All Levels', spots,
+    weightRange?.trim() || '', normalizedLevels.join(','), spotsValue, message?.trim() || '',
   )
   res.status(201).json({ session: getSession.get(info.lastInsertRowid) })
+})
+
+router.patch('/:id', requireAuth, (req, res) => {
+  const club = requireClub(req, res)
+  if (!club) return
+
+  const session = getSession.get(req.params.id)
+  if (!session || session.club_id !== club.id) return res.status(404).json({ error: 'Sparring session not found.' })
+
+  const { acceptingRequests } = req.body || {}
+  if (typeof acceptingRequests !== 'boolean') return res.status(400).json({ error: 'acceptingRequests must be a boolean.' })
+
+  setAcceptingRequests.run(acceptingRequests ? 1 : 0, session.id)
+  res.json({ session: getSession.get(session.id) })
 })
 
 router.delete('/:id', requireAuth, (req, res) => {
@@ -125,6 +150,7 @@ router.post('/:id/join', requireAuth, (req, res) => {
   const session = getSession.get(req.params.id)
   if (!session) return res.status(404).json({ error: 'Sparring session not found.' })
   if (session.club_id === club.id) return res.status(400).json({ error: 'You can’t join your own sparring session.' })
+  if (!session.accepting_requests) return res.status(400).json({ error: 'This session is no longer accepting requests.' })
 
   const { fighterCount, weightCategory } = req.body || {}
   if (!Number.isInteger(fighterCount) || fighterCount < 1) {
@@ -132,10 +158,13 @@ router.post('/:id/join', requireAuth, (req, res) => {
   }
   if (!weightCategory?.trim()) return res.status(400).json({ error: 'Weight category is required.' })
 
-  const otherFighters = sumOtherFighters.get(session.id, club.id).n
-  if (otherFighters + fighterCount > session.spots) {
-    const remaining = Math.max(0, session.spots - otherFighters)
-    return res.status(400).json({ error: `Only ${remaining} spot${remaining === 1 ? '' : 's'} left in this session.` })
+  // spots === 0 means unlimited — skip the capacity check entirely.
+  if (session.spots > 0) {
+    const otherFighters = sumOtherFighters.get(session.id, club.id).n
+    if (otherFighters + fighterCount > session.spots) {
+      const remaining = Math.max(0, session.spots - otherFighters)
+      return res.status(400).json({ error: `Only ${remaining} spot${remaining === 1 ? '' : 's'} left in this session.` })
+    }
   }
 
   upsertRegistration.run(session.id, club.id, fighterCount, weightCategory.trim())
