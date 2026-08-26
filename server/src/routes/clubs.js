@@ -107,6 +107,22 @@ router.patch('/me', requireAuth, (req, res) => {
   res.json({ club: serialize(getClub.get(club.id)) })
 })
 
+// Events this club's fighters are competing in, powering the mobile app's
+// Home "LIVE NOW" section and My Events list. Stubbed to an empty list until
+// fighters.club_id exists (Club Command Center plan, Slice 3) — referencing
+// it now would error since the column doesn't exist yet. Once it lands, this
+// becomes a single JOIN (fighters.club_id = this club) with a computed
+// has_live_bout flag, not a fan-out.
+router.get('/me/events', requireAuth, (req, res) => {
+  const user = getUserById.get(req.userId)
+  if (!user || user.role !== 'club') return res.status(403).json({ error: 'Only club accounts can access this.' })
+
+  const club = getClubByOwner.get(req.userId)
+  if (!club) return res.status(404).json({ error: 'Club profile not found.' })
+
+  res.json({ events: [] })
+})
+
 // ── Follow / unfollow ───────────────────────────────────────────────────────
 const listFollowedClubs = db.prepare(`
   SELECT clubs.* FROM club_follows
