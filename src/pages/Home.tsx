@@ -76,7 +76,7 @@ function HeroSection({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }
             </span>
           </div>
 
-          <h1 style={{ fontFamily: DISPLAY, fontSize: 'clamp(64px, 10vw, 120px)', fontWeight: 900, lineHeight: 0.9, textTransform: 'uppercase', letterSpacing: '-0.01em', marginBottom: '28px' }}>
+          <h1 style={{ fontFamily: DISPLAY, fontSize: 'clamp(40px, 10vw, 120px)', fontWeight: 900, lineHeight: 0.9, textTransform: 'uppercase', letterSpacing: '-0.01em', marginBottom: '28px', overflowWrap: 'break-word' }}>
             {t('hero.title1')}<br />
             <span style={{ color: RED }}>{t('hero.title2')}</span><br />
             {t('hero.title3')}<br />
@@ -162,9 +162,9 @@ export function FeaturedFight({ nav }: { nav: NavFn }) {
                 Championship Night Berlin · 14 September 2026
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '24px' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '52px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>Konstantin<br />Braun</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '24px', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center', minWidth: 0 }}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(28px, 9vw, 52px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>Konstantin<br />Braun</div>
                   <div style={{ fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase', marginTop: '4px' }}>GER · 12–2–0</div>
                 </div>
                 <div style={{ textAlign: 'center', flexShrink: 0 }}>
@@ -172,8 +172,8 @@ export function FeaturedFight({ nav }: { nav: NavFn }) {
                   <div style={{ width: '1px', height: '40px', backgroundColor: BORDER, margin: '8px auto' }} />
                   <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase' }}>Super Welterweight</div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '52px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>Artur<br />Wisniewski</div>
+                <div style={{ textAlign: 'center', minWidth: 0 }}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(28px, 9vw, 52px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>Artur<br />Wisniewski</div>
                   <div style={{ fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase', marginTop: '4px' }}>POL · 15–1–0</div>
                 </div>
               </div>
