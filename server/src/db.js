@@ -190,6 +190,17 @@ if (!clubColumns.includes('lng')) {
   db.exec('ALTER TABLE clubs ADD COLUMN lng REAL')
 }
 
+const sparringColumns = columnsOf('sparring_sessions')
+if (!sparringColumns.includes('message')) {
+  db.exec("ALTER TABLE sparring_sessions ADD COLUMN message TEXT NOT NULL DEFAULT ''")
+}
+if (!sparringColumns.includes('accepting_requests')) {
+  db.exec('ALTER TABLE sparring_sessions ADD COLUMN accepting_requests INTEGER NOT NULL DEFAULT 1')
+}
+// spots keeps its NOT NULL constraint (SQLite can't drop it without a table
+// rebuild) — 0 is repurposed to mean "unlimited" so the field can go optional
+// at the application layer without a migration.
+
 // Best-effort backfill for clubs saved (seeded or manually created) before
 // coordinates were captured — matched by exact location text. New clubs get
 // real geocoded coordinates from the location autocomplete going forward.
