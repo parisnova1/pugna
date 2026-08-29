@@ -41,6 +41,7 @@ type WeightClass = {
   rest_minutes: number
   sort_order: number
   fighterCount: number
+  status?: 'open' | 'closed'
 }
 
 type EventFighter = {
@@ -51,6 +52,7 @@ type EventFighter = {
   record: string
   status: string
   weight_class_id: number | null
+  source?: 'manual' | 'walkup' | 'roster'
 }
 
 const inputStyle: React.CSSProperties = {
@@ -389,6 +391,16 @@ function WeightClassesTab({ eventId, discipline, weightClasses, onChange }: { ev
     }
   }
 
+  const toggleStatus = async (wc: WeightClass) => {
+    setBusyId(wc.id)
+    try {
+      await apiFetch(`/api/weight-classes/${wc.id}`, { method: 'PATCH', body: JSON.stringify({ status: wc.status === 'closed' ? 'open' : 'closed' }) })
+      await onChange()
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -414,18 +426,21 @@ function WeightClassesTab({ eventId, discipline, weightClasses, onChange }: { ev
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER }}>
-          <div style={{ backgroundColor: '#060606', padding: '10px 16px', display: 'grid', gridTemplateColumns: '1fr 90px 90px 1fr 90px 100px', gap: '12px' }}>
-            {['Name', 'Age Group', 'Gender', 'Rounds', 'Fighters', ''].map(h => (
+          <div style={{ backgroundColor: '#060606', padding: '10px 16px', display: 'grid', gridTemplateColumns: '1fr 90px 90px 1fr 90px 80px 160px', gap: '12px' }}>
+            {['Name', 'Age Group', 'Gender', 'Rounds', 'Fighters', 'Status', ''].map(h => (
               <div key={h} style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase' }}>{h}</div>
             ))}
           </div>
           {weightClasses.map(wc => (
-            <div key={wc.id} style={{ backgroundColor: CARD, padding: '12px 16px', display: 'grid', gridTemplateColumns: '1fr 90px 90px 1fr 90px 100px', gap: '12px', alignItems: 'center' }}>
+            <div key={wc.id} style={{ backgroundColor: CARD, padding: '12px 16px', display: 'grid', gridTemplateColumns: '1fr 90px 90px 1fr 90px 80px 160px', gap: '12px', alignItems: 'center' }}>
               <div style={{ fontFamily: DISPLAY, fontSize: '16px', fontWeight: 800, textTransform: 'uppercase' }}>{wc.name}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'capitalize' }}>{wc.age_group}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'capitalize' }}>{wc.gender}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>{wc.rounds_count} × {wc.round_minutes} min · {wc.rest_minutes} min rest</div>
               <div style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700 }}>{wc.fighterCount}</div>
+              <button onClick={() => toggleStatus(wc)} disabled={busyId === wc.id} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: wc.status === 'closed' ? MUTED : '#4caf50', textTransform: 'uppercase', opacity: busyId === wc.id ? 0.5 : 1, justifySelf: 'start' }}>
+                {wc.status === 'closed' ? 'Closed' : 'Open'}
+              </button>
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                 <button onClick={() => setClassModal({ wc })} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase' }}>Edit</button>
                 <button onClick={() => deleteClass(wc.id)} disabled={busyId === wc.id} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: RED, textTransform: 'uppercase', opacity: busyId === wc.id ? 0.5 : 1 }}>Delete</button>
@@ -716,7 +731,10 @@ function FightersTab({ eventId, fighters, weightClasses, onChange }: {
           </div>
           {fighters.map(f => (
             <div key={f.id} style={{ backgroundColor: CARD, padding: '12px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr 90px 1fr', gap: '12px', alignItems: 'center' }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: '16px', fontWeight: 800, textTransform: 'uppercase' }}>{f.name}</div>
+              <div>
+                <div style={{ fontFamily: DISPLAY, fontSize: '16px', fontWeight: 800, textTransform: 'uppercase' }}>{f.name}</div>
+                {f.source === 'walkup' && <div style={{ fontFamily: DISPLAY, fontSize: '10px', color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Walk-up</div>}
+              </div>
               <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>{f.club}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: '#eee' }}>{f.weight}</div>
               <select
