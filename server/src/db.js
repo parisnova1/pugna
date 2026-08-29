@@ -67,6 +67,18 @@ if (!fighterColumns.includes('weight_class_id')) {
 if (!fighterColumns.includes('seed')) {
   db.exec('ALTER TABLE fighters ADD COLUMN seed INTEGER')
 }
+if (!fighterColumns.includes('club_id')) {
+  db.exec('ALTER TABLE fighters ADD COLUMN club_id INTEGER REFERENCES clubs(id) ON DELETE SET NULL')
+}
+if (!fighterColumns.includes('source')) {
+  // manual = organizer's own roster (existing rows, unaffected); walkup =
+  // host-added directly at an event with no account; roster = created from
+  // an accepted club nomination (see roster_fighter_id below).
+  db.exec("ALTER TABLE fighters ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'")
+}
+if (!fighterColumns.includes('roster_fighter_id')) {
+  db.exec('ALTER TABLE fighters ADD COLUMN roster_fighter_id INTEGER REFERENCES fighters(id) ON DELETE SET NULL')
+}
 
 const eventColumns = columnsOf('events')
 if (!eventColumns.includes('format')) {
@@ -175,6 +187,27 @@ if (!boutColumns.includes('weight_class_text')) db.exec('ALTER TABLE bouts ADD C
 if (!boutColumns.includes('card_position')) db.exec('ALTER TABLE bouts ADD COLUMN card_position TEXT')
 if (!boutColumns.includes('sort_order')) db.exec('ALTER TABLE bouts ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0')
 if (!boutColumns.includes('rounds')) db.exec('ALTER TABLE bouts ADD COLUMN rounds INTEGER')
+if (!boutColumns.includes('method_note')) db.exec('ALTER TABLE bouts ADD COLUMN method_note TEXT')
+if (!boutColumns.includes('event_day_id')) db.exec('ALTER TABLE bouts ADD COLUMN event_day_id INTEGER REFERENCES event_days(id) ON DELETE SET NULL')
+
+const weightClassColumns = columnsOf('weight_classes')
+if (!weightClassColumns.includes('status')) {
+  // open = still accepting nominations; closed = host locked the class,
+  // ready to generate a bracket/card. Advisory only — not enforced against
+  // nomination inserts, matching this schema's existing permissiveness.
+  db.exec("ALTER TABLE weight_classes ADD COLUMN status TEXT NOT NULL DEFAULT 'open'")
+}
+if (!weightClassColumns.includes('capacity')) {
+  db.exec('ALTER TABLE weight_classes ADD COLUMN capacity INTEGER')
+}
+
+const eventBoxingColumns = columnsOf('events')
+if (!eventBoxingColumns.includes('template_pack_slug')) {
+  db.exec('ALTER TABLE events ADD COLUMN template_pack_slug TEXT')
+}
+if (!eventBoxingColumns.includes('current_bout_id')) {
+  db.exec('ALTER TABLE events ADD COLUMN current_bout_id INTEGER REFERENCES bouts(id) ON DELETE SET NULL')
+}
 
 const clubColumns = columnsOf('clubs')
 if (!clubColumns.includes('logo_url')) {
@@ -284,4 +317,93 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_fighter_follows_user ON fighter_follows(user_id);
+
+  CREATE TABLE IF NOT EXISTS template_packs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug TEXT NOT NULL UNIQUE,
+    discipline TEXT NOT NULL,
+    division TEXT NOT NULL,
+    name TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS template_pack_classes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pack_id INTEGER NOT NULL REFERENCES template_packs(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    gender TEXT NOT NULL DEFAULT 'mixed',
+    rounds_count INTEGER NOT NULL,
+    round_minutes INTEGER NOT NULL,
+    rest_minutes INTEGER NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_template_pack_classes_pack ON template_pack_classes(pack_id);
+
+  -- A club nominates one of its roster fighters into an event's weight
+  -- class; the host accepts/rejects. Accepting copies the fighter into the
+  -- event's own fighters roster (source='roster') rather than mutating this
+  -- row, so a nomination stays a permanent record of what was proposed.
+  CREATE TABLE IF NOT EXISTS nominations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    weight_class_id INTEGER NOT NULL REFERENCES weight_classes(id) ON DELETE CASCADE,
+    club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+    fighter_id INTEGER NOT NULL REFERENCES fighters(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'pending',
+    note TEXT NOT NULL DEFAULT '',
+    decided_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    decided_at TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(fighter_id, weight_class_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_nominations_event ON nominations(event_id);
+  CREATE INDEX IF NOT EXISTS idx_nominations_club ON nominations(club_id);
+
+  -- Only relevant once number_of_days > 1 — a 1-day event never gets rows
+  -- here, and the UI treats "no rows" as an implicit single day.
+  CREATE TABLE IF NOT EXISTS event_days (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    day_index INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    label TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'scheduled',
+    UNIQUE(event_id, day_index)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_event_days_event ON event_days(event_id);
+
+  CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type TEXT NOT NULL,
+    interruption_level TEXT NOT NULL DEFAULT 'active',
+    title TEXT NOT NULL,
+    body TEXT NOT NULL DEFAULT '',
+    event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
+    data TEXT NOT NULL DEFAULT '{}',
+    read_at TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS notification_settings (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    categories TEXT NOT NULL DEFAULT '{}',
+    quiet_hours_start TEXT,
+    quiet_hours_end TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS event_mutes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(user_id, event_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_event_mutes_user ON event_mutes(user_id);
 `)

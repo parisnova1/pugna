@@ -1,9 +1,16 @@
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'node:crypto'
 import { db } from './db.js'
+import { boxingTemplate } from './weightClassTemplate.js'
 
 const countEvents = db.prepare('SELECT COUNT(*) AS n FROM events')
 const countClubs = db.prepare('SELECT COUNT(*) AS n FROM clubs')
+const countTemplatePacks = db.prepare('SELECT COUNT(*) AS n FROM template_packs')
+const insertTemplatePack = db.prepare('INSERT INTO template_packs (slug, discipline, division, name) VALUES (?, ?, ?, ?)')
+const insertTemplatePackClass = db.prepare(`
+  INSERT INTO template_pack_classes (pack_id, name, gender, rounds_count, round_minutes, rest_minutes, sort_order)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+`)
 const insertUser = db.prepare('INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)')
 const insertEvent = db.prepare(`
   INSERT INTO events (organizer_id, name, date, location, discipline, status, fights, fighters, views)
@@ -20,6 +27,7 @@ const insertClub = db.prepare(`
 
 export function seedIfEmpty() {
   seedClubsIfEmpty()
+  seedTemplatePacksIfEmpty()
 
   if (countEvents.get().n > 0) return
 
@@ -75,4 +83,27 @@ function seedClubsIfEmpty() {
   }
 
   console.log('Seeded demo clubs.')
+}
+
+// Runs independently, same reasoning as seedClubsIfEmpty — a database that
+// predates template packs should still get the one built-in pack. Generated
+// from the existing boxingTemplate() rather than hand-duplicating weight
+// labels, so this stays in sync with the manual /weight-classes/template
+// endpoint's class list.
+function seedTemplatePacksIfEmpty() {
+  if (countTemplatePacks.get().n > 0) return
+
+  const packId = insertTemplatePack.run(
+    'boxing.amateur.elite.iba-2024',
+    'Boxing',
+    'elite',
+    'IBA 2024 Elite'
+  ).lastInsertRowid
+
+  const classes = boxingTemplate({ ageGroup: 'adult', gender: 'mixed' })
+  for (const c of classes) {
+    insertTemplatePackClass.run(packId, c.name, c.gender, c.roundsCount, c.roundMinutes, c.restMinutes, c.sortOrder)
+  }
+
+  console.log('Seeded boxing.amateur.elite.iba-2024 template pack.')
 }
