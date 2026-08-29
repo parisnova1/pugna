@@ -31,6 +31,18 @@
   --color-pugna-muted: #555555;
   --color-pugna-subtle: #888888;
   --color-pugna-silver: #aaaaaa;
+
+  /* Liquid Glass tokens — additive only for now. Not yet applied to any
+     page: the full rollout happens in one pass once every net-new sprint
+     screen already exists, to avoid restyling twice. See the boxing-sprint
+     plan's Slice 10. Note --color-pugna-red above is actually blue (brand
+     legacy naming) — --color-live-red is the genuine red for LIVE-only use. */
+  --color-glass-surface: rgba(255, 255, 255, 0.06);
+  --color-glass-border: rgba(255, 255, 255, 0.14);
+  --color-glass-specular: rgba(255, 255, 255, 0.35);
+  --color-live-red: #ff453a;
+  --color-caution-amber: #ff9f0a;
+  --color-positive-green: #30d158;
 }
 
 * {

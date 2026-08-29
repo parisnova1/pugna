@@ -106,9 +106,9 @@ export default function PublicEvent({ token }: { token: string }) {
 
   useEffect(() => {
     if (!event) return
-    const unsubscribe = subscribeToEvent(event.qr_token, weightClassId => {
-      if (weightClassId === selected) {
-        apiFetch<{ bouts: Bout[] }>(`/api/public/weight-classes/${weightClassId}/bracket`)
+    const unsubscribe = subscribeToEvent(event.qr_token, msg => {
+      if (msg.type === 'bracket:update' && msg.weightClassId === selected) {
+        apiFetch<{ bouts: Bout[] }>(`/api/public/weight-classes/${msg.weightClassId}/bracket`)
           .then(r => setBouts(r.bouts))
           .catch(() => {})
       }
