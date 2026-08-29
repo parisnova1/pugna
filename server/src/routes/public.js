@@ -45,6 +45,9 @@ const listSavedEvents = db.prepare(`
 const getEventForSave = db.prepare('SELECT id FROM events WHERE id = ?')
 const insertEventSave = db.prepare('INSERT OR IGNORE INTO event_saves (user_id, event_id) VALUES (?, ?)')
 const deleteEventSave = db.prepare('DELETE FROM event_saves WHERE user_id = ? AND event_id = ?')
+const insertEventMute = db.prepare('INSERT OR IGNORE INTO event_mutes (user_id, event_id) VALUES (?, ?)')
+const deleteEventMute = db.prepare('DELETE FROM event_mutes WHERE user_id = ? AND event_id = ?')
+const listMutedEvents = db.prepare('SELECT event_id FROM event_mutes WHERE user_id = ?')
 
 router.get('/events', (_req, res) => {
   res.json({ events: listPublicEvents.all() })
@@ -65,6 +68,23 @@ router.post('/events/:id/save', requireAuth, (req, res) => {
 
 router.delete('/events/:id/save', requireAuth, (req, res) => {
   deleteEventSave.run(req.userId, req.params.id)
+  res.status(204).end()
+})
+
+// Keep before `/events/:idOrToken` for the same ordering reason as `/saved`.
+router.get('/events/muted', requireAuth, (req, res) => {
+  res.json({ eventIds: listMutedEvents.all(req.userId).map(r => r.event_id) })
+})
+
+router.post('/events/:id/mute', requireAuth, (req, res) => {
+  const event = getEventForSave.get(req.params.id)
+  if (!event) return res.status(404).json({ error: 'Event not found.' })
+  insertEventMute.run(req.userId, event.id)
+  res.status(204).end()
+})
+
+router.delete('/events/:id/mute', requireAuth, (req, res) => {
+  deleteEventMute.run(req.userId, req.params.id)
   res.status(204).end()
 })
 

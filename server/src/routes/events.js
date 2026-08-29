@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto'
 import { db } from '../db.js'
 import { requireAuth } from '../auth.js'
 import { DISCIPLINES as DISCIPLINE_LIST } from '../constants.js'
+import { notifyEventAudience } from '../notifications.js'
 
 const router = Router()
 router.use(requireAuth)
@@ -65,12 +66,22 @@ router.patch('/:id', (req, res) => {
   const error = validate(merged)
   if (error) return res.status(400).json({ error })
 
+  const newLivestreamUrl = merged.livestreamUrl?.trim() ?? merged.livestream_url ?? ''
   updateEvent.run(
     merged.name.trim(), merged.date.trim(), merged.location.trim(), merged.venue?.trim() || '',
-    merged.discipline, merged.livestreamUrl?.trim() ?? merged.livestream_url ?? '', merged.status,
+    merged.discipline, newLivestreamUrl, merged.status,
     merged.numberOfDays, merged.ringCount, req.params.id, req.userId,
   )
-  res.json({ event: getEvent.get(req.params.id, req.userId) })
+  const updated = getEvent.get(req.params.id, req.userId)
+
+  if (existing.status !== 'Active' && updated.status === 'Active') {
+    notifyEventAudience({ eventId: updated.id, type: 'event.live', title: `${updated.name} is live`, body: `${updated.name} just went live.` })
+  }
+  if (updated.status === 'Active' && !existing.livestream_url && newLivestreamUrl) {
+    notifyEventAudience({ eventId: updated.id, type: 'event.stream', title: `${updated.name} stream started`, body: 'Watch now.' })
+  }
+
+  res.json({ event: updated })
 })
 
 // ── Duplicate as template ───────────────────────────────────────────────────
