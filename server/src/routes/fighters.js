@@ -8,9 +8,11 @@ router.use(requireAuth)
 
 const listFighters = db.prepare('SELECT * FROM fighters WHERE organizer_id = ? ORDER BY id DESC')
 const getFighter = db.prepare('SELECT * FROM fighters WHERE id = ? AND organizer_id = ?')
+const getUserRole = db.prepare('SELECT role FROM users WHERE id = ?')
+const getClubByOwner = db.prepare('SELECT id FROM clubs WHERE owner_id = ?')
 const insertFighter = db.prepare(`
-  INSERT INTO fighters (organizer_id, name, club, weight, record, status, discipline, location)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO fighters (organizer_id, club_id, name, club, weight, record, status, discipline, location)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 `)
 const updateFighter = db.prepare(`
   UPDATE fighters SET name = ?, club = ?, weight = ?, record = ?, status = ?, discipline = ?, location = ?
@@ -32,8 +34,14 @@ router.post('/', (req, res) => {
   if (status && !STATUSES.has(status)) return res.status(400).json({ error: 'Invalid status.' })
   if (discipline && !DISCIPLINE_SET.has(discipline)) return res.status(400).json({ error: 'Invalid discipline.' })
 
+  // A club account's own fighters become their reusable nomination roster —
+  // stamping club_id here is what makes this the same "add fighter" endpoint
+  // double as club roster management, no separate roster table needed.
+  const user = getUserRole.get(req.userId)
+  const ownedClub = user?.role === 'club' ? getClubByOwner.get(req.userId) : null
+
   const info = insertFighter.run(
-    req.userId, name.trim(), club.trim(), weight.trim(), record?.trim() || '0–0',
+    req.userId, ownedClub?.id ?? null, name.trim(), club.trim(), weight.trim(), record?.trim() || '0–0',
     status || 'Unmatched', discipline || 'Boxing', location?.trim() || '',
   )
   res.status(201).json({ fighter: getFighter.get(info.lastInsertRowid, req.userId) })

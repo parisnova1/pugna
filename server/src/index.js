@@ -12,6 +12,7 @@ import cardBoutsRoutes from './routes/cardBouts.js'
 import clubsRoutes from './routes/clubs.js'
 import sparringRoutes from './routes/sparring.js'
 import templatePacksRoutes from './routes/templatePacks.js'
+import nominationsRoutes from './routes/nominations.js'
 import { attachWebSocketServer } from './ws.js'
 import { seedIfEmpty } from './seed.js'
 
@@ -32,6 +33,7 @@ app.use('/api/geo', geoRoutes)
 app.use('/api/clubs', clubsRoutes)
 app.use('/api/sparring', sparringRoutes)
 app.use('/api', templatePacksRoutes)
+app.use('/api', nominationsRoutes)
 app.use('/api', tournamentRoutes)
 app.use('/api', cardBoutsRoutes)
 
