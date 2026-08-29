@@ -6,6 +6,7 @@ import { useLanguage } from '../i18n/LanguageContext'
 import { apiFetch } from '../lib/api'
 import { formatDisplayDate } from '../lib/date'
 import BracketView, { type Bout } from '../components/Bracket'
+import DaySwitcher, { type EventDay } from '../components/DaySwitcher'
 import Spinner from '../components/Spinner'
 import CopyButton from '../components/CopyButton'
 import BackButton from '../components/BackButton'
@@ -356,7 +357,7 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
         {tab === 'fightcard' && (
           event.format === 'card'
             ? <CardFightCardTab eventId={eventId!} />
-            : <FightCardTab weightClasses={weightClasses} fighters={fighters} qrToken={event.qr_token} />
+            : <FightCardTab eventId={eventId!} weightClasses={weightClasses} fighters={fighters} qrToken={event.qr_token} />
         )}
         {tab === 'fighters' && <FightersTab nav={nav} fighters={fighters} />}
       </div>
@@ -501,11 +502,13 @@ function OverviewTab({ event, weightClasses }: { event: EventInfo; weightClasses
   )
 }
 
-function FightCardTab({ weightClasses, fighters, qrToken }: { weightClasses: WeightClass[]; fighters: EventFighter[]; qrToken: string }) {
+function FightCardTab({ eventId, weightClasses, fighters, qrToken }: { eventId: string; weightClasses: WeightClass[]; fighters: EventFighter[]; qrToken: string }) {
   const { t } = useLanguage()
   const [selected, setSelected] = useState<number | null>(weightClasses[0]?.id ?? null)
   const [bouts, setBouts] = useState<Bout[]>([])
   const [loading, setLoading] = useState(false)
+  const [days, setDays] = useState<EventDay[]>([])
+  const [selectedDay, setSelectedDay] = useState<number | null>(null)
 
   const fightersById = Object.fromEntries(fighters.map(f => [f.id, { name: f.name, club: f.club }]))
 
@@ -517,6 +520,12 @@ function FightCardTab({ weightClasses, fighters, qrToken }: { weightClasses: Wei
       .catch(() => setBouts([]))
       .finally(() => setLoading(false))
   }, [selected])
+
+  useEffect(() => {
+    apiFetch<{ days: EventDay[] }>(`/api/public/events/${eventId}/days`)
+      .then(r => { setDays(r.days); setSelectedDay(r.days.find(d => d.status === 'live')?.id ?? r.days[0]?.id ?? null) })
+      .catch(() => setDays([]))
+  }, [eventId])
 
   // Keeps results live while a viewer sits on this page during an event —
   // mirrors PublicEvent.tsx's audience-page subscription exactly.
@@ -541,8 +550,16 @@ function FightCardTab({ weightClasses, fighters, qrToken }: { weightClasses: Wei
     )
   }
 
+  const visibleBouts = selectedDay ? bouts.filter(b => b.event_day_id === selectedDay) : bouts
+
   return (
     <div>
+      {days.length > 0 && (
+        <div style={{ marginBottom: '20px' }}>
+          <DaySwitcher days={days} selectedId={selectedDay} onSelect={setSelectedDay} />
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '32px' }}>
         {weightClasses.map(wc => (
           <button key={wc.id} onClick={() => setSelected(wc.id)}
@@ -556,7 +573,7 @@ function FightCardTab({ weightClasses, fighters, qrToken }: { weightClasses: Wei
       {loading ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}><Spinner size={14} /> {t('common.loading')}</div>
       ) : (
-        <BracketView bouts={bouts} fighters={fightersById} />
+        <BracketView bouts={visibleBouts} fighters={fightersById} />
       )}
     </div>
   )
