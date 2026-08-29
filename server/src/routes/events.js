@@ -19,7 +19,7 @@ const updateEvent = db.prepare(`
 `)
 
 const DISCIPLINES = new Set(DISCIPLINE_LIST)
-const STATUSES = new Set(['Draft', 'Active'])
+const STATUSES = new Set(['Draft', 'Open', 'Active'])
 const FORMATS = new Set(['bracket', 'card'])
 
 function validate(body) {

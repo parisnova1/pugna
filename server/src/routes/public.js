@@ -4,12 +4,16 @@ import { requireAuth } from '../auth.js'
 
 const router = Router()
 
+// An event is publicly visible once it's Open (for nominations) or Active
+// (fight night) — only Draft stays hidden from viewers/clubs.
+const PUBLIC_STATUSES = new Set(['Open', 'Active'])
+
 const listPublicEvents = db.prepare(`
   SELECT events.id, events.name, events.date, events.location, events.discipline,
          events.fights, events.fighters, events.views, users.name AS organizer_name
   FROM events
   JOIN users ON users.id = events.organizer_id
-  WHERE events.status = 'Active'
+  WHERE events.status IN ('Open', 'Active')
   ORDER BY events.id DESC
 `)
 
@@ -109,7 +113,7 @@ router.get('/fighters/:id', (req, res) => {
 // Reachable either by plain numeric id (e.g. from the /events/:id detail page)
 // or by an event's qr_token (from a scanned QR / the /e/:token audience page)
 // — both resolve to the same event row and response shape. Gated on
-// status === 'Active' so a Draft event's public page can show a friendly
+// status Open or Active so a Draft event's public page can show a friendly
 // "not public yet" message instead of leaking data.
 
 const EVENT_COLUMNS = `
@@ -142,7 +146,7 @@ const listCardBoutsForEvent = db.prepare(
 router.get('/events/:idOrToken', (req, res) => {
   const event = resolveEvent(req.params.idOrToken)
   if (!event) return res.status(404).json({ error: 'Event not found.' })
-  if (event.status !== 'Active') return res.status(403).json({ error: 'This event is not public yet.' })
+  if (!PUBLIC_STATUSES.has(event.status)) return res.status(403).json({ error: 'This event is not public yet.' })
 
   const weightClasses = listWeightClassesForEvent.all(event.id)
   res.json({ event, weightClasses })
@@ -151,7 +155,7 @@ router.get('/events/:idOrToken', (req, res) => {
 router.get('/events/:idOrToken/fighters', (req, res) => {
   const event = resolveEvent(req.params.idOrToken)
   if (!event) return res.status(404).json({ error: 'Event not found.' })
-  if (event.status !== 'Active') return res.status(403).json({ error: 'This event is not public yet.' })
+  if (!PUBLIC_STATUSES.has(event.status)) return res.status(403).json({ error: 'This event is not public yet.' })
 
   res.json({ fighters: listPublicEventFighters.all(event.id) })
 })
@@ -161,7 +165,7 @@ router.get('/weight-classes/:id/bracket', (req, res) => {
   if (!wc) return res.status(404).json({ error: 'Weight class not found.' })
 
   const event = getEventStatusById.get(wc.event_id)
-  if (!event || event.status !== 'Active') return res.status(403).json({ error: 'This event is not public yet.' })
+  if (!event || !PUBLIC_STATUSES.has(event.status)) return res.status(403).json({ error: 'This event is not public yet.' })
 
   res.json({ bouts: listBoutsForWeightClass.all(wc.id) })
 })
@@ -169,7 +173,7 @@ router.get('/weight-classes/:id/bracket', (req, res) => {
 router.get('/events/:idOrToken/card-bouts', (req, res) => {
   const event = resolveEvent(req.params.idOrToken)
   if (!event) return res.status(404).json({ error: 'Event not found.' })
-  if (event.status !== 'Active') return res.status(403).json({ error: 'This event is not public yet.' })
+  if (!PUBLIC_STATUSES.has(event.status)) return res.status(403).json({ error: 'This event is not public yet.' })
 
   res.json({ bouts: listCardBoutsForEvent.all(event.id) })
 })
