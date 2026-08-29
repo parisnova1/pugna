@@ -89,7 +89,7 @@ function SubmitButton({ children, disabled }: { children: React.ReactNode; disab
   )
 }
 
-type Tab = 'setup' | 'weight-classes' | 'fighters' | 'bracket' | 'fightcard'
+type Tab = 'setup' | 'weight-classes' | 'nominations' | 'fighters' | 'bracket' | 'fightcard'
 
 export default function EventManage({ nav: _nav }: { nav: NavFn }) {
   const { eventId } = useParams<{ eventId: string }>()
@@ -129,7 +129,7 @@ export default function EventManage({ nav: _nav }: { nav: NavFn }) {
 
   const tabs: Array<[Tab, string]> = event?.format === 'card'
     ? [['setup', 'Setup'], ['fightcard', 'Fight Card']]
-    : [['setup', 'Setup'], ['weight-classes', 'Weight Classes'], ['fighters', 'Fighters'], ['bracket', 'Bracket']]
+    : [['setup', 'Setup'], ['weight-classes', 'Weight Classes'], ['nominations', 'Nominations'], ['fighters', 'Fighters'], ['bracket', 'Bracket']]
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 32px 80px' }}>
@@ -165,6 +165,7 @@ export default function EventManage({ nav: _nav }: { nav: NavFn }) {
           {tab === 'weight-classes' && (
             <WeightClassesTab eventId={eventId} discipline={event.discipline} weightClasses={weightClasses} onChange={loadDetail} />
           )}
+          {tab === 'nominations' && <NominationsTab eventId={eventId} onChange={refreshAll} />}
           {tab === 'fighters' && (
             <FightersTab eventId={eventId} fighters={fighters} weightClasses={weightClasses} onChange={refreshAll} />
           )}
@@ -294,6 +295,72 @@ function SetupTab({ event, onSaved }: { event: EventDetail; onSaved: (e: EventDe
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ── Nominations ──────────────────────────────────────────────────────────────
+
+type NominationRow = {
+  id: number
+  status: 'pending' | 'accepted' | 'rejected'
+  club_name: string
+  fighter_name: string
+  fighter_weight: string
+  fighter_record: string
+  weight_class_name: string
+  note: string
+}
+
+function NominationsTab({ eventId, onChange }: { eventId: string; onChange: () => void }) {
+  const [nominations, setNominations] = useState<NominationRow[] | null>(null)
+  const [busyId, setBusyId] = useState<number | null>(null)
+
+  const load = () => apiFetch<{ nominations: NominationRow[] }>(`/api/events/${eventId}/nominations`).then(r => setNominations(r.nominations))
+
+  useEffect(() => { load() }, [eventId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const decide = async (id: number, action: 'accept' | 'reject') => {
+    setBusyId(id)
+    try {
+      await apiFetch(`/api/nominations/${id}/${action}`, { method: 'PATCH' })
+      await load()
+      await onChange()
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  if (nominations === null) return <div style={{ fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}>Loading…</div>
+
+  return (
+    <div>
+      <h2 style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '24px' }}>Nominations</h2>
+      {nominations.length === 0 ? (
+        <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '32px 20px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase', textAlign: 'center' }}>
+          No nominations yet.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER }}>
+          {nominations.map(n => (
+            <div key={n.id} style={{ backgroundColor: CARD, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+              <div>
+                <div style={{ fontFamily: DISPLAY, fontSize: '16px', fontWeight: 800, textTransform: 'uppercase' }}>{n.fighter_name} · {n.weight_class_name}</div>
+                <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase' }}>{n.club_name} · {n.fighter_weight} · {n.fighter_record}</div>
+                {!!n.note && <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, fontStyle: 'italic', marginTop: '4px' }}>{n.note}</div>}
+              </div>
+              {n.status === 'pending' ? (
+                <div style={{ display: 'flex', gap: '12px', flexShrink: 0 }}>
+                  <button onClick={() => decide(n.id, 'accept')} disabled={busyId === n.id} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: RED, textTransform: 'uppercase', opacity: busyId === n.id ? 0.5 : 1 }}>Accept</button>
+                  <button onClick={() => decide(n.id, 'reject')} disabled={busyId === n.id} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', opacity: busyId === n.id ? 0.5 : 1 }}>Reject</button>
+                </div>
+              ) : (
+                <div style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', flexShrink: 0 }}>{n.status}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

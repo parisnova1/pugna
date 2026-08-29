@@ -36,7 +36,7 @@ type EventInfo = {
   organizer_name: string
 }
 
-type WeightClass = { id: number; name: string; age_group: string; gender: string; rounds_count: number; round_minutes: number; rest_minutes: number }
+type WeightClass = { id: number; name: string; age_group: string; gender: string; rounds_count: number; round_minutes: number; rest_minutes: number; status?: string }
 type EventFighter = { id: number; name: string; club: string; weight: string; record: string; weight_class_id: number | null }
 
 type Tab = 'overview' | 'fightcard' | 'fighters'
@@ -104,6 +104,7 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
   const [saved, setSaved] = useState(false)
   const [saveBusy, setSaveBusy] = useState(false)
   const [shareToast, setShareToast] = useState(false)
+  const [nominating, setNominating] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -249,6 +250,15 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 11h18" /></svg>
               {t('eventDetail.addToCalendar')}
             </button>
+            {user?.role === 'club' && event.status === 'Open' && event.format === 'bracket' && (
+              <button
+                onClick={() => setNominating(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '8px 18px', backgroundColor: RED, color: '#fff' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" /></svg>
+                {t('eventDetail.nominate')}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -281,6 +291,106 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
             : <FightCardTab weightClasses={weightClasses} fighters={fighters} qrToken={event.qr_token} />
         )}
         {tab === 'fighters' && <FightersTab nav={nav} fighters={fighters} />}
+      </div>
+
+      {nominating && (
+        <NominateModal eventId={eventId!} weightClasses={weightClasses} onCancel={() => setNominating(false)} onSent={() => setNominating(false)} />
+      )}
+    </div>
+  )
+}
+
+type ClubRosterFighter = { id: number; name: string; weight: string; record: string }
+
+function NominateModal({ eventId, weightClasses, onCancel, onSent }: { eventId: string; weightClasses: WeightClass[]; onCancel: () => void; onSent: () => void }) {
+  const { t } = useLanguage()
+  const openClasses = weightClasses.filter(wc => (wc.status ?? 'open') === 'open')
+  const [rosterFighters, setRosterFighters] = useState<ClubRosterFighter[] | null>(null)
+  const [weightClassId, setWeightClassId] = useState<number | null>(openClasses[0]?.id ?? null)
+  const [fighterId, setFighterId] = useState<number | null>(null)
+  const [note, setNote] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    apiFetch<{ fighters: ClubRosterFighter[] }>(`/api/events/${eventId}/available-club-fighters`)
+      .then(r => { setRosterFighters(r.fighters); setFighterId(r.fighters[0]?.id ?? null) })
+      .catch(() => setRosterFighters([]))
+  }, [eventId])
+
+  const submit = async () => {
+    if (!weightClassId || !fighterId) return
+    setSaving(true)
+    setError(null)
+    try {
+      await apiFetch(`/api/events/${eventId}/weight-classes/${weightClassId}/nominations`, {
+        method: 'POST',
+        body: JSON.stringify({ fighterId, note: note.trim() }),
+      })
+      onSent()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={onCancel}>
+      <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, width: '100%', maxWidth: '480px', padding: '32px', maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <h2 style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '20px' }}>{t('eventDetail.nominateTitle')}</h2>
+
+        {openClasses.length === 0 ? (
+          <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>{t('eventDetail.nominateNoClasses')}</div>
+        ) : (
+          <>
+            <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', marginBottom: '8px' }}>{t('eventDetail.nominateWeightClass')}</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
+              {openClasses.map(wc => (
+                <button key={wc.id} type="button" onClick={() => setWeightClassId(wc.id)}
+                  style={{ padding: '8px 14px', fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', border: `1px solid ${weightClassId === wc.id ? RED : BORDER}`, backgroundColor: weightClassId === wc.id ? '#071a30' : 'transparent', color: weightClassId === wc.id ? '#fff' : MUTED }}
+                >
+                  {wc.name}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', marginBottom: '8px' }}>{t('eventDetail.nominateFighter')}</div>
+            {rosterFighters === null ? (
+              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>Loading…</div>
+            ) : rosterFighters.length === 0 ? (
+              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, marginBottom: '20px' }}>{t('eventDetail.nominateNoFighters')}</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '20px' }}>
+                {rosterFighters.map(f => (
+                  <button key={f.id} type="button" onClick={() => setFighterId(f.id)}
+                    style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', border: `1px solid ${fighterId === f.id ? RED : BORDER}`, backgroundColor: fighterId === f.id ? '#071a30' : 'transparent' }}
+                  >
+                    <span style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, color: '#fff', textTransform: 'uppercase' }}>{f.name}</span>
+                    <span style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED }}>{f.weight} · {f.record}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', marginBottom: '6px' }}>{t('eventDetail.nominateNote')}</div>
+            <textarea
+              value={note} onChange={e => setNote(e.target.value)}
+              style={{ width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff', padding: '11px 14px', fontFamily: DISPLAY, fontSize: '14px', minHeight: '70px', resize: 'vertical', marginBottom: '20px' }}
+            />
+
+            {error && <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: RED, marginBottom: '14px' }}>{error}</div>}
+            <button
+              type="button"
+              onClick={submit}
+              disabled={saving || !weightClassId || !fighterId || (rosterFighters?.length ?? 0) === 0}
+              style={{ width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', opacity: saving ? 0.6 : 1, marginBottom: '10px' }}
+            >
+              {saving ? 'Sending…' : t('eventDetail.nominate')}
+            </button>
+          </>
+        )}
+        <button type="button" onClick={onCancel} style={{ width: '100%', fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase', padding: '10px' }}>Cancel</button>
       </div>
     </div>
   )
