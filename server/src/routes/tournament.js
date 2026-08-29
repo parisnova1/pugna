@@ -3,7 +3,7 @@ import { db } from '../db.js'
 import { requireAuth } from '../auth.js'
 import { boxingTemplate, AGE_GROUPS } from '../weightClassTemplate.js'
 import { persistBracket, advanceWinner } from '../bracket.js'
-import { broadcastBracketUpdate } from '../ws.js'
+import { broadcastBracketUpdate, broadcastBoutResult, broadcastBoutLive } from '../ws.js'
 import { createNotification, notifyEventAudience } from '../notifications.js'
 
 const router = Router()
@@ -288,6 +288,7 @@ router.patch('/bouts/:id/result', (req, res) => {
   }
 
   broadcastBracketUpdate(event.qr_token, bout.weight_class_id)
+  broadcastBoutResult(event.qr_token, { boutId: bout.id, weightClassId: bout.weight_class_id, winnerId, method: method || null })
   notifyEventAudience({
     eventId: event.id,
     type: 'bout.result',
@@ -297,6 +298,38 @@ router.patch('/bouts/:id/result', (req, res) => {
   })
 
   res.json({ bout: getBout.get(bout.id) })
+})
+
+// ── Live pinning ─────────────────────────────────────────────────────────
+// Lets an organizer mark which bout is "on now" for the event's Live page
+// and public audience view. Purely a pointer — doesn't touch bout.status,
+// so it's independent of when a result actually gets recorded.
+const setCurrentBout = db.prepare('UPDATE events SET current_bout_id = ? WHERE id = ?')
+
+router.patch('/events/:id/current-bout', (req, res) => {
+  const event = getEventOwned.get(req.params.id, req.userId)
+  if (!event) return res.status(404).json({ error: 'Event not found.' })
+
+  const { boutId } = req.body || {}
+  const bout = boutId ? getBout.get(boutId) : null
+  if (boutId && (!bout || bout.event_id !== event.id)) {
+    return res.status(400).json({ error: 'Bout not found for this event.' })
+  }
+
+  setCurrentBout.run(boutId || null, event.id)
+
+  if (bout) {
+    broadcastBoutLive(event.qr_token, { boutId: bout.id, weightClassId: bout.weight_class_id })
+    notifyEventAudience({
+      eventId: event.id,
+      type: 'bout.live',
+      title: `Live: ${event.name}`,
+      body: 'A bout just went live.',
+      data: { boutId: bout.id },
+    })
+  }
+
+  res.json({ currentBoutId: boutId || null })
 })
 
 export default router
