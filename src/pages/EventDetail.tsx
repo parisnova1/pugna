@@ -344,9 +344,9 @@ function FightCardTab({ weightClasses, fighters, qrToken }: { weightClasses: Wei
   // mirrors PublicEvent.tsx's audience-page subscription exactly.
   useEffect(() => {
     if (!qrToken) return
-    const unsubscribe = subscribeToEvent(qrToken, weightClassId => {
-      if (weightClassId === selected) {
-        apiFetch<{ bouts: Bout[] }>(`/api/public/weight-classes/${weightClassId}/bracket`)
+    const unsubscribe = subscribeToEvent(qrToken, msg => {
+      if (msg.type === 'bracket:update' && msg.weightClassId === selected) {
+        apiFetch<{ bouts: Bout[] }>(`/api/public/weight-classes/${msg.weightClassId}/bracket`)
           .then(r => setBouts(r.bouts))
           .catch(() => {})
       }
