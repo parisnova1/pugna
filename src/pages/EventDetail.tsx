@@ -105,6 +105,8 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
   const [saveBusy, setSaveBusy] = useState(false)
   const [shareToast, setShareToast] = useState(false)
   const [nominating, setNominating] = useState(false)
+  const [muted, setMuted] = useState(false)
+  const [muteBusy, setMuteBusy] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -128,6 +130,25 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
       .then(r => setSaved(r.events.some(e => e.id === Number(eventId))))
       .catch(() => {})
   }, [eventId, user?.role])
+
+  useEffect(() => {
+    if (!user) return
+    apiFetch<{ eventIds: number[] }>('/api/public/events/muted')
+      .then(r => setMuted(r.eventIds.includes(Number(eventId))))
+      .catch(() => {})
+  }, [eventId, user])
+
+  const toggleMute = async () => {
+    setMuteBusy(true)
+    try {
+      if (muted) { await apiFetch(`/api/public/events/${eventId}/mute`, { method: 'DELETE' }); setMuted(false) }
+      else { await apiFetch(`/api/public/events/${eventId}/mute`, { method: 'POST' }); setMuted(true) }
+    } catch {
+      /* leave state unchanged on failure */
+    } finally {
+      setMuteBusy(false)
+    }
+  }
 
   const handleShare = async () => {
     if (!event) return
@@ -257,6 +278,19 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" /></svg>
                 {t('eventDetail.nominate')}
+              </button>
+            )}
+            {user && (
+              <button
+                onClick={toggleMute}
+                disabled={muteBusy}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '8px 18px', backgroundColor: 'rgba(0,0,0,0.6)', color: '#fff', border: `1px solid ${BORDER}`, opacity: muteBusy ? 0.6 : 1 }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  {muted && <line x1="3" y1="3" x2="21" y2="21" />}
+                </svg>
+                {muted ? 'Unmute' : 'Mute'}
               </button>
             )}
           </div>

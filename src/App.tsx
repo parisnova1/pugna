@@ -14,6 +14,8 @@ import { AuthProvider, useAuth, type Role } from './auth/AuthContext'
 import { LanguageProvider, useLanguage, type Lang } from './i18n/LanguageContext'
 import LoginModal from './components/LoginModal'
 import CookieBanner from './components/CookieBanner'
+import NotificationBell from './components/NotificationBell'
+import NotificationSettings from './pages/NotificationSettings'
 
 export type NavFn = (path: string) => void
 
@@ -77,6 +79,7 @@ function AppShell() {
         <Route path="/organizer" element={<RequireRole role="organizer"><OrganizerDashboard nav={nav} /></RequireRole>} />
         <Route path="/organizer/events/:eventId/manage" element={<RequireRole role="organizer"><EventManage nav={nav} /></RequireRole>} />
         <Route path="/club-dashboard" element={<RequireRole role="club"><ClubDashboard nav={nav} /></RequireRole>} />
+        <Route path="/notification-settings" element={<NotificationSettings nav={nav} />} />
         <Route path="*" element={<NotFound nav={nav} />} />
       </Routes>
       </div>
@@ -266,6 +269,7 @@ function Header({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: (mode: 'login' | 
         {/* Right controls */}
         <div className="hidden md:flex items-center gap-4">
           <LanguageToggle />
+          {user && <NotificationBell nav={nav} />}
           {searchOpen && (
             <input
               autoFocus
