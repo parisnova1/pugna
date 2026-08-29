@@ -5,6 +5,7 @@ import { apiFetch } from '../lib/api'
 import { formatDisplayDate } from '../lib/date'
 import ExcelImport, { type ImportedFighter } from '../components/ExcelImport'
 import BracketView, { type Bout } from '../components/Bracket'
+import DaySwitcher, { type EventDay } from '../components/DaySwitcher'
 import CopyButton from '../components/CopyButton'
 
 const RED = '#0070f3'
@@ -172,7 +173,7 @@ export default function EventManage({ nav: _nav }: { nav: NavFn }) {
           {tab === 'fighters' && (
             <FightersTab eventId={eventId} fighters={fighters} weightClasses={weightClasses} onChange={refreshAll} />
           )}
-          {tab === 'bracket' && <BracketTab eventId={eventId} currentBoutId={event.current_bout_id} weightClasses={weightClasses} fighters={fighters} onChanged={refreshAll} />}
+          {tab === 'bracket' && <BracketTab eventId={eventId} currentBoutId={event.current_bout_id} numberOfDays={event.number_of_days} weightClasses={weightClasses} fighters={fighters} onChanged={refreshAll} />}
           {tab === 'fightcard' && <FightCardTab eventId={eventId} />}
         </>
       )}
@@ -844,7 +845,7 @@ function AddFighterModal({ weightClasses, onCancel, onSave }: {
 
 // ── Bracket ──────────────────────────────────────────────────────────────
 
-function BracketTab({ eventId, currentBoutId, weightClasses, fighters, onChanged }: { eventId: string; currentBoutId: number | null; weightClasses: WeightClass[]; fighters: EventFighter[]; onChanged: () => void }) {
+function BracketTab({ eventId, currentBoutId, numberOfDays, weightClasses, fighters, onChanged }: { eventId: string; currentBoutId: number | null; numberOfDays: number; weightClasses: WeightClass[]; fighters: EventFighter[]; onChanged: () => void }) {
   const [selected, setSelected] = useState<number | null>(weightClasses[0]?.id ?? null)
   const [bouts, setBouts] = useState<Bout[]>([])
   const [loading, setLoading] = useState(false)
@@ -852,6 +853,9 @@ function BracketTab({ eventId, currentBoutId, weightClasses, fighters, onChanged
   const [liveBusy, setLiveBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [resultBout, setResultBout] = useState<Bout | null>(null)
+  const [days, setDays] = useState<EventDay[]>([])
+  const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [daysBusy, setDaysBusy] = useState(false)
 
   const setLive = async (boutId: number | null) => {
     setLiveBusy(true)
@@ -874,12 +878,25 @@ function BracketTab({ eventId, currentBoutId, weightClasses, fighters, onChanged
     else setBouts([])
   }, [selected])
 
+  const loadDays = () => {
+    apiFetch<{ days: EventDay[] }>(`/api/events/${eventId}/days`)
+      .then(r => { setDays(r.days); setSelectedDay(prev => prev ?? r.days[0]?.id ?? null) })
+      .catch(() => setDays([]))
+  }
+
+  useEffect(() => { if (numberOfDays > 1) loadDays() }, [numberOfDays]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const generateDays = async () => {
+    setDaysBusy(true)
+    try { await apiFetch(`/api/events/${eventId}/days`, { method: 'POST' }); loadDays() } finally { setDaysBusy(false) }
+  }
+
   const generate = async () => {
     if (!selected) return
     setGenerating(true)
     setError(null)
     try {
-      await apiFetch(`/api/weight-classes/${selected}/bracket`, { method: 'POST' })
+      await apiFetch(`/api/weight-classes/${selected}/bracket`, { method: 'POST', body: JSON.stringify({ dayId: selectedDay }) })
       loadBracket(selected)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not generate bracket.')
@@ -900,6 +917,19 @@ function BracketTab({ eventId, currentBoutId, weightClasses, fighters, onChanged
 
   return (
     <div>
+      {numberOfDays > 1 && (
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', marginBottom: '10px' }}>Tournament Days</div>
+          {days.length === 0 ? (
+            <button onClick={generateDays} disabled={daysBusy} style={{ border: `1px solid ${BORDER}`, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '10px 18px', opacity: daysBusy ? 0.6 : 1 }}>
+              {daysBusy ? 'Setting up…' : 'Set Up Days'}
+            </button>
+          ) : (
+            <DaySwitcher days={days} selectedId={selectedDay} onSelect={setSelectedDay} />
+          )}
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '28px' }}>
         {weightClasses.map(wc => (
           <button key={wc.id} onClick={() => setSelected(wc.id)}

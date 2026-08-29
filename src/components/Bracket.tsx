@@ -14,6 +14,7 @@ export type Bout = {
   status: string
   winner_id: number | null
   method: string | null
+  event_day_id?: number | null
 }
 
 type FighterLookup = Record<number, { name: string; club: string }>

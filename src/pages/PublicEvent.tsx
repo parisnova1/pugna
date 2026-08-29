@@ -3,6 +3,7 @@ import { apiFetch, ApiError } from '../lib/api'
 import { formatDisplayDate } from '../lib/date'
 import { subscribeToEvent } from '../lib/ws'
 import BracketView, { type Bout } from '../components/Bracket'
+import DaySwitcher, { type EventDay } from '../components/DaySwitcher'
 
 const RED = '#0070f3'
 const CARD = '#0f0f0f'
@@ -78,6 +79,8 @@ export default function PublicEvent({ token }: { token: string }) {
   const [error, setError] = useState<string | null>(null)
   const [notPublic, setNotPublic] = useState(false)
   const [liveBout, setLiveBout] = useState<LiveBout | null>(null)
+  const [days, setDays] = useState<EventDay[]>([])
+  const [selectedDay, setSelectedDay] = useState<number | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -107,6 +110,12 @@ export default function PublicEvent({ token }: { token: string }) {
       .then(r => setBouts(r.bouts))
       .catch(() => setBouts([]))
   }, [selected])
+
+  useEffect(() => {
+    apiFetch<{ days: EventDay[] }>(`/api/public/events/${token}/days`)
+      .then(r => { setDays(r.days); setSelectedDay(r.days.find(d => d.status === 'live')?.id ?? r.days[0]?.id ?? null) })
+      .catch(() => setDays([]))
+  }, [token])
 
   useEffect(() => {
     if (!event) return
@@ -187,8 +196,11 @@ export default function PublicEvent({ token }: { token: string }) {
           </div>
         )}
         {event.number_of_days > 1 && (
-          <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: RED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '24px' }}>
-            {event.number_of_days}-day tournament · {event.ring_count} ring{event.ring_count === 1 ? '' : 's'} · day-by-day schedule coming soon
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: RED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>
+              {event.number_of_days}-day tournament · {event.ring_count} ring{event.ring_count === 1 ? '' : 's'}
+            </div>
+            <DaySwitcher days={days} selectedId={selectedDay} onSelect={setSelectedDay} />
           </div>
         )}
 
@@ -226,7 +238,7 @@ export default function PublicEvent({ token }: { token: string }) {
             )}
 
             <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '20px' }}>Bracket</div>
-            <BracketView bouts={bouts} fighters={fightersById} />
+            <BracketView bouts={selectedDay ? bouts.filter(b => b.event_day_id === selectedDay) : bouts} fighters={fightersById} />
           </>
         )}
       </div>
