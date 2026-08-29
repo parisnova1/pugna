@@ -14,6 +14,7 @@ import sparringRoutes from './routes/sparring.js'
 import templatePacksRoutes from './routes/templatePacks.js'
 import nominationsRoutes from './routes/nominations.js'
 import notificationsRoutes from './routes/notifications.js'
+import eventDaysRoutes from './routes/eventDays.js'
 import { attachWebSocketServer } from './ws.js'
 import { seedIfEmpty } from './seed.js'
 
@@ -36,6 +37,7 @@ app.use('/api/sparring', sparringRoutes)
 app.use('/api', templatePacksRoutes)
 app.use('/api', nominationsRoutes)
 app.use('/api/notifications', notificationsRoutes)
+app.use('/api', eventDaysRoutes)
 app.use('/api', tournamentRoutes)
 app.use('/api', cardBoutsRoutes)
 

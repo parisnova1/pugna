@@ -229,7 +229,8 @@ router.post('/weight-classes/:id/bracket', (req, res) => {
   }
 
   try {
-    const result = persistBracket(db, { eventId: event.id, weightClassId: wc.id, fighterIds })
+    const dayId = req.body?.dayId || null
+    const result = persistBracket(db, { eventId: event.id, weightClassId: wc.id, fighterIds, dayId })
     res.status(201).json({ ...result, bouts: listBoutsForClass.all(wc.id) })
   } catch (err) {
     res.status(400).json({ error: err.message })

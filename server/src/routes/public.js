@@ -180,6 +180,16 @@ router.get('/events/:idOrToken/fighters', (req, res) => {
   res.json({ fighters: listPublicEventFighters.all(event.id) })
 })
 
+const listPublicDaysForEvent = db.prepare('SELECT id, day_index, date, label, status FROM event_days WHERE event_id = ? ORDER BY day_index ASC')
+
+router.get('/events/:idOrToken/days', (req, res) => {
+  const event = resolveEvent(req.params.idOrToken)
+  if (!event) return res.status(404).json({ error: 'Event not found.' })
+  if (!PUBLIC_STATUSES.has(event.status)) return res.status(403).json({ error: 'This event is not public yet.' })
+
+  res.json({ days: listPublicDaysForEvent.all(event.id) })
+})
+
 router.get('/weight-classes/:id/bracket', (req, res) => {
   const wc = getWeightClassById.get(req.params.id)
   if (!wc) return res.status(404).json({ error: 'Weight class not found.' })
