@@ -76,11 +76,12 @@ type SparringSessionRow = {
 
 type Participant = { id: number; club_id: number; club_name: string; fighter_count: number; weight_category: string }
 
-type Tab = 'details' | 'sparring' | 'fighters'
+type Tab = 'details' | 'sparring' | 'myFighters' | 'fighters'
 
 const CLUB_NAV_ITEMS: Array<[Tab, string, string]> = [
   ['details', 'Club Details', 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21v-1a8 8 0 0 1 16 0v1'],
   ['sparring', 'Sparring', 'M3 5h18M3 5v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5M8 3v4M16 3v4M8 13h8M8 17h5'],
+  ['myFighters', 'My Fighters', 'M12 4l2.5 5 5.5.8-4 4 1 5.5-5-2.6-5 2.6 1-5.5-4-4 5.5-.8z'],
   ['fighters', 'Find Fighters', 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'],
 ]
 
@@ -158,6 +159,7 @@ export default function ClubDashboard({ nav }: { nav: NavFn }) {
       <main style={{ flex: 1, minWidth: 0, backgroundColor: '#000000', ...(tab === 'fighters' ? {} : { padding: '40px 48px' }) }}>
         {tab === 'details' && <DetailsTab />}
         {tab === 'sparring' && <SparringTab />}
+        {tab === 'myFighters' && <MyFightersTab />}
         {tab === 'fighters' && <FighterDiscovery nav={nav} standalone />}
       </main>
     </div>
@@ -521,6 +523,156 @@ function AddSparringModal({ onCancel, onSave }: {
         </div>
         {error && <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: RED }}>{error}</div>}
         <SubmitButton disabled={saving}>{saving ? 'Saving…' : 'Add Sparring Session'}</SubmitButton>
+      </form>
+    </Modal>
+  )
+}
+
+// ── My Fighters (roster + nominations) ──────────────────────────────────
+
+type RosterFighter = { id: number; name: string; weight: string; record: string }
+type NominationRow = { id: number; status: 'pending' | 'accepted' | 'rejected'; event_name: string; weight_class_name: string; fighter_name: string }
+
+function MyFightersTab() {
+  const [fighters, setFighters] = useState<RosterFighter[]>([])
+  const [nominations, setNominations] = useState<NominationRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [formTarget, setFormTarget] = useState<RosterFighter | 'new' | null>(null)
+
+  const load = () =>
+    Promise.all([
+      apiFetch<{ fighters: RosterFighter[] }>('/api/fighters'),
+      apiFetch<{ nominations: NominationRow[] }>('/api/clubs/me/nominations'),
+    ]).then(([f, n]) => { setFighters(f.fighters); setNominations(n.nominations) })
+
+  useEffect(() => { load().finally(() => setLoading(false)) }, [])
+
+  const withdraw = async (id: number) => {
+    await apiFetch(`/api/nominations/${id}`, { method: 'DELETE' })
+    await load()
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <h1 style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, textTransform: 'uppercase' }}>My Fighters</h1>
+        <button onClick={() => setFormTarget('new')} style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '12px 24px' }}>
+          + Add Fighter
+        </button>
+      </div>
+      <p style={{ fontFamily: DISPLAY, fontSize: '14px', color: MUTED, marginBottom: '32px' }}>
+        Your roster — nominate these fighters into any event that's open for nominations.
+      </p>
+
+      {loading ? (
+        <div style={{ fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase' }}>Loading…</div>
+      ) : fighters.length === 0 ? (
+        <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '32px 20px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase', textAlign: 'center', maxWidth: '640px' }}>
+          No fighters on your roster yet.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER, maxWidth: '760px' }}>
+          <div style={{ backgroundColor: '#060606', padding: '10px 16px', display: 'grid', gridTemplateColumns: '1fr 120px 120px 80px', gap: '12px' }}>
+            {['Name', 'Weight', 'Record', ''].map(h => (
+              <div key={h} style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase' }}>{h}</div>
+            ))}
+          </div>
+          {fighters.map(f => (
+            <div key={f.id} style={{ backgroundColor: CARD, padding: '12px 16px', display: 'grid', gridTemplateColumns: '1fr 120px 120px 80px', gap: '12px', alignItems: 'center' }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700, textTransform: 'uppercase' }}>{f.name}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>{f.weight}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>{f.record}</div>
+              <button onClick={() => setFormTarget(f)} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', justifySelf: 'end' }}>Edit</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <h2 style={{ fontFamily: DISPLAY, fontSize: '20px', fontWeight: 900, textTransform: 'uppercase', marginTop: '40px', marginBottom: '16px' }}>Your Nominations</h2>
+      {nominations.length === 0 ? (
+        <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase' }}>No nominations sent yet.</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '760px' }}>
+          {nominations.map(n => (
+            <div key={n.id} style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, textTransform: 'uppercase' }}>{n.fighter_name} · {n.weight_class_name}</div>
+                <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase' }}>{n.event_name}</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <span style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase' }}>{n.status}</span>
+                {n.status === 'pending' && (
+                  <button onClick={() => withdraw(n.id)} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: RED, textTransform: 'uppercase' }}>Withdraw</button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {formTarget && (
+        <FighterFormModal
+          initial={formTarget === 'new' ? null : formTarget}
+          onCancel={() => setFormTarget(null)}
+          onSave={async fields => {
+            if (formTarget !== 'new') {
+              await apiFetch(`/api/fighters/${formTarget.id}`, { method: 'PATCH', body: JSON.stringify(fields) })
+            } else {
+              await apiFetch('/api/fighters', { method: 'POST', body: JSON.stringify({ ...fields, club: '', discipline: 'Boxing' }) })
+            }
+            await load()
+            setFormTarget(null)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function FighterFormModal({ initial, onCancel, onSave }: {
+  initial: RosterFighter | null
+  onCancel: () => void
+  onSave: (fields: { name: string; weight: string; record: string }) => Promise<void>
+}) {
+  const [name, setName] = useState(initial?.name ?? '')
+  const [weight, setWeight] = useState(initial?.weight ?? '')
+  const [record, setRecord] = useState(initial?.record ?? '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name.trim() || !weight.trim()) { setError('Name and weight are required.'); return }
+    setError(null)
+    setSaving(true)
+    try {
+      await onSave({ name: name.trim(), weight: weight.trim(), record: record.trim() })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Modal title={initial ? 'Edit Fighter' : 'Add Fighter'} onClose={onCancel}>
+      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div>
+          <label style={labelStyle}>Name</label>
+          <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          <div>
+            <label style={labelStyle}>Weight</label>
+            <input style={inputStyle} value={weight} onChange={e => setWeight(e.target.value)} placeholder="75 KG" />
+          </div>
+          <div>
+            <label style={labelStyle}>Record</label>
+            <input style={inputStyle} value={record} onChange={e => setRecord(e.target.value)} placeholder="0–0" />
+          </div>
+        </div>
+        {error && <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: RED }}>{error}</div>}
+        <SubmitButton disabled={saving}>{saving ? 'Saving…' : 'Save Fighter'}</SubmitButton>
       </form>
     </Modal>
   )
