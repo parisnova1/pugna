@@ -21,7 +21,10 @@ type PublicEventDetail = {
   number_of_days: number
   ring_count: number
   qr_token: string
+  current_bout_id: number | null
 }
+
+type LiveBout = { id: number; weight_class_id: number; fighterRed: { name: string } | null; fighterBlue: { name: string } | null }
 
 type WeightClass = {
   id: number
@@ -74,6 +77,7 @@ export default function PublicEvent({ token }: { token: string }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [notPublic, setNotPublic] = useState(false)
+  const [liveBout, setLiveBout] = useState<LiveBout | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -112,10 +116,23 @@ export default function PublicEvent({ token }: { token: string }) {
           .then(r => setBouts(r.bouts))
           .catch(() => {})
       }
+      if (msg.type === 'bout:live') {
+        setEvent(prev => (prev ? { ...prev, current_bout_id: msg.boutId } : prev))
+      }
+      if (msg.type === 'bout:result' && event.current_bout_id === msg.boutId) {
+        setEvent(prev => (prev ? { ...prev, current_bout_id: null } : prev))
+      }
     })
     return unsubscribe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event, selected])
+
+  useEffect(() => {
+    if (!event?.current_bout_id) { setLiveBout(null); return }
+    apiFetch<{ bout: LiveBout }>(`/api/public/bouts/${event.current_bout_id}`)
+      .then(r => setLiveBout(r.bout))
+      .catch(() => setLiveBout(null))
+  }, [event?.current_bout_id])
 
   const fightersById = useMemo(() => Object.fromEntries(fighters.map(f => [f.id, { name: f.name, club: f.club }])), [fighters])
   const fightersByClass = useMemo(() => {
@@ -159,6 +176,16 @@ export default function PublicEvent({ token }: { token: string }) {
         <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
           {formatDisplayDate(event.date)} · {event.location} · {event.discipline}
         </div>
+
+        {liveBout && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'rgba(0,0,0,0.6)', border: `1px solid ${RED}`, padding: '12px 18px', margin: '16px 0', maxWidth: 'fit-content' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: RED }} />
+            <span style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.1em', color: RED, textTransform: 'uppercase' }}>Live Now</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, color: '#fff', textTransform: 'uppercase' }}>
+              {liveBout.fighterRed?.name ?? '?'} <span style={{ color: MUTED }}>vs</span> {liveBout.fighterBlue?.name ?? '?'}
+            </span>
+          </div>
+        )}
         {event.number_of_days > 1 && (
           <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: RED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '24px' }}>
             {event.number_of_days}-day tournament · {event.ring_count} ring{event.ring_count === 1 ? '' : 's'} · day-by-day schedule coming soon
