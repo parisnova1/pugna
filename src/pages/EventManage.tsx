@@ -163,7 +163,7 @@ export default function EventManage({ nav: _nav }: { nav: NavFn }) {
 
           {tab === 'setup' && <SetupTab event={event} onSaved={setEvent} />}
           {tab === 'weight-classes' && (
-            <WeightClassesTab eventId={eventId} weightClasses={weightClasses} onChange={loadDetail} />
+            <WeightClassesTab eventId={eventId} discipline={event.discipline} weightClasses={weightClasses} onChange={loadDetail} />
           )}
           {tab === 'fighters' && (
             <FightersTab eventId={eventId} fighters={fighters} weightClasses={weightClasses} onChange={refreshAll} />
@@ -306,8 +306,9 @@ const AGE_GROUPS: Array<{ value: AgeGroup; label: string; hint: string }> = [
   { value: 'children', label: 'Children', hint: '3 × 1 min, 1 min rest' },
 ]
 
-function WeightClassesTab({ eventId, weightClasses, onChange }: { eventId: string; weightClasses: WeightClass[]; onChange: () => void }) {
+function WeightClassesTab({ eventId, discipline, weightClasses, onChange }: { eventId: string; discipline: string; weightClasses: WeightClass[]; onChange: () => void }) {
   const [templateOpen, setTemplateOpen] = useState(false)
+  const [packOpen, setPackOpen] = useState(false)
   const [classModal, setClassModal] = useState<{ wc: WeightClass | null } | null>(null)
   const [busyId, setBusyId] = useState<number | null>(null)
 
@@ -329,6 +330,11 @@ function WeightClassesTab({ eventId, weightClasses, onChange }: { eventId: strin
           <button onClick={() => setTemplateOpen(true)} style={{ border: `1px solid ${BORDER}`, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '10px 18px' }}>
             + Boxing Template
           </button>
+          {discipline === 'Boxing' && (
+            <button onClick={() => setPackOpen(true)} style={{ border: `1px solid ${BORDER}`, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '10px 18px' }}>
+              + Template Pack
+            </button>
+          )}
           <button onClick={() => setClassModal({ wc: null })} style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '10px 18px' }}>
             + Add Weight Class
           </button>
@@ -387,7 +393,79 @@ function WeightClassesTab({ eventId, weightClasses, onChange }: { eventId: strin
           }}
         />
       )}
+      {packOpen && (
+        <PackModal
+          discipline={discipline}
+          onCancel={() => setPackOpen(false)}
+          onApply={async packSlug => {
+            await apiFetch(`/api/events/${eventId}/weight-classes/from-pack`, { method: 'POST', body: JSON.stringify({ packSlug }) })
+            await onChange()
+            setPackOpen(false)
+          }}
+        />
+      )}
     </div>
+  )
+}
+
+type TemplatePack = { id: number; slug: string; name: string; division: string; classes: { id: number }[] }
+
+function PackModal({ discipline, onCancel, onApply }: { discipline: string; onCancel: () => void; onApply: (packSlug: string) => Promise<void> }) {
+  const [packs, setPacks] = useState<TemplatePack[] | null>(null)
+  const [selected, setSelected] = useState<string | null>(null)
+  const [applying, setApplying] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    apiFetch<{ packs: TemplatePack[] }>(`/api/template-packs?discipline=${encodeURIComponent(discipline)}`)
+      .then(r => { setPacks(r.packs); setSelected(r.packs[0]?.slug ?? null) })
+      .catch(() => setPacks([]))
+  }, [discipline])
+
+  const apply = async () => {
+    if (!selected) return
+    setApplying(true)
+    setError(null)
+    try {
+      await onApply(selected)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not apply template pack.')
+    } finally {
+      setApplying(false)
+    }
+  }
+
+  return (
+    <Modal title="Use Template Pack" onClose={onCancel}>
+      <p style={{ fontSize: '14px', color: MUTED, lineHeight: 1.6, marginBottom: '20px' }}>
+        Adds a frozen copy of the pack's classes to this event — editing the master pack later won't change this event.
+      </p>
+      {packs === null ? (
+        <p style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>Loading…</p>
+      ) : packs.length === 0 ? (
+        <p style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>No template packs available for this discipline yet.</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '20px' }}>
+          {packs.map(pack => (
+            <button key={pack.slug} type="button" onClick={() => setSelected(pack.slug)}
+              style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', border: `1px solid ${selected === pack.slug ? RED : BORDER}`, backgroundColor: selected === pack.slug ? '#071a30' : 'transparent' }}
+            >
+              <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, color: '#fff', textTransform: 'uppercase' }}>{pack.name}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED }}>{pack.classes.length} classes</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {error && <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: RED, marginBottom: '14px' }}>{error}</div>}
+      <button
+        type="button"
+        onClick={apply}
+        disabled={applying || !selected}
+        style={{ width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', opacity: applying || !selected ? 0.6 : 1 }}
+      >
+        {applying ? 'Applying…' : 'Apply Pack'}
+      </button>
+    </Modal>
   )
 }
 
