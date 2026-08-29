@@ -935,8 +935,8 @@ function BracketTab({ weightClasses, fighters }: { weightClasses: WeightClass[];
           bout={resultBout}
           fighters={fightersById}
           onCancel={() => setResultBout(null)}
-          onSave={async (winnerId, method) => {
-            await apiFetch(`/api/bouts/${resultBout.id}/result`, { method: 'PATCH', body: JSON.stringify({ winnerId, method }) })
+          onSave={async (winnerId, method, methodNote) => {
+            await apiFetch(`/api/bouts/${resultBout.id}/result`, { method: 'PATCH', body: JSON.stringify({ winnerId, method, methodNote }) })
             setResultBout(null)
             if (selected) loadBracket(selected)
           }}
@@ -946,14 +946,17 @@ function BracketTab({ weightClasses, fighters }: { weightClasses: WeightClass[];
   )
 }
 
+const BOUT_METHODS = ['Decision', 'KO', 'TKO', 'RSC', 'Walkover', 'Abd', 'DQ', 'Injury'] as const
+
 function ResultModal({ bout, fighters, onCancel, onSave }: {
   bout: Bout
   fighters: Record<number, { name: string; club: string }>
   onCancel: () => void
-  onSave: (winnerId: number, method: string) => Promise<void>
+  onSave: (winnerId: number, method: string, methodNote: string) => Promise<void>
 }) {
   const [winnerId, setWinnerId] = useState<number | null>(null)
-  const [method, setMethod] = useState('')
+  const [method, setMethod] = useState<typeof BOUT_METHODS[number] | ''>('')
+  const [methodNote, setMethodNote] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -964,10 +967,11 @@ function ResultModal({ bout, fighters, onCancel, onSave }: {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!winnerId) { setError('Pick a winner.'); return }
+    if (!method) { setError('Pick a method.'); return }
     setError(null)
     setSaving(true)
     try {
-      await onSave(winnerId, method.trim())
+      await onSave(winnerId, method, methodNote.trim())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save result.')
     } finally {
@@ -992,8 +996,15 @@ function ResultModal({ bout, fighters, onCancel, onSave }: {
           </div>
         </div>
         <div>
-          <label style={labelStyle}>Method (optional)</label>
-          <input style={inputStyle} value={method} onChange={e => setMethod(e.target.value)} placeholder="TKO R2" />
+          <label style={labelStyle}>Method</label>
+          <select style={inputStyle} value={method} onChange={e => setMethod(e.target.value as typeof BOUT_METHODS[number])}>
+            <option value="" disabled>— Choose a method —</option>
+            {BOUT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={labelStyle}>Note (optional)</label>
+          <input style={inputStyle} value={methodNote} onChange={e => setMethodNote(e.target.value)} placeholder="e.g. R2 1:34" />
         </div>
         {error && <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: RED }}>{error}</div>}
         <SubmitButton disabled={saving}>{saving ? 'Saving…' : 'Record Result'}</SubmitButton>

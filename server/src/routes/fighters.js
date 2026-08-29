@@ -19,7 +19,10 @@ const updateFighter = db.prepare(`
   WHERE id = ? AND organizer_id = ?
 `)
 
-const STATUSES = new Set(['Matched', 'Unmatched'])
+// 'Withdrawn' is written by the injury-result path in tournament.js, not
+// settable directly here — included so a later unrelated PATCH to an
+// already-withdrawn event fighter doesn't fail validation.
+const STATUSES = new Set(['Matched', 'Unmatched', 'Withdrawn'])
 const DISCIPLINE_SET = new Set(DISCIPLINES)
 
 router.get('/', (req, res) => {
