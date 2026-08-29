@@ -16,7 +16,7 @@ const insertWeightClass = db.prepare(`
   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `)
 const updateWeightClass = db.prepare(`
-  UPDATE weight_classes SET name = ?, age_group = ?, gender = ?, rounds_count = ?, round_minutes = ?, rest_minutes = ?, sort_order = ?
+  UPDATE weight_classes SET name = ?, age_group = ?, gender = ?, rounds_count = ?, round_minutes = ?, rest_minutes = ?, sort_order = ?, status = ?, capacity = ?
   WHERE id = ?
 `)
 const deleteWeightClass = db.prepare('DELETE FROM weight_classes WHERE id = ?')
@@ -24,9 +24,11 @@ const countFightersInClass = db.prepare('SELECT COUNT(*) AS n FROM fighters WHER
 
 const listEventFighters = db.prepare('SELECT * FROM fighters WHERE event_id = ? ORDER BY id DESC')
 const getEventFighter = db.prepare('SELECT * FROM fighters WHERE id = ? AND event_id = ?')
+// Fighters added directly by the host (not via an accepted nomination) are
+// tagged 'walkup' — no account required, added straight into the roster.
 const insertEventFighter = db.prepare(`
-  INSERT INTO fighters (organizer_id, event_id, weight_class_id, name, club, weight, record, status, discipline, location)
-  VALUES (?, ?, ?, ?, ?, ?, ?, 'Unmatched', ?, ?)
+  INSERT INTO fighters (organizer_id, event_id, weight_class_id, source, name, club, weight, record, status, discipline, location)
+  VALUES (?, ?, ?, 'walkup', ?, ?, ?, ?, 'Unmatched', ?, ?)
 `)
 const setFighterWeightClass = db.prepare('UPDATE fighters SET weight_class_id = ? WHERE id = ? AND event_id = ?')
 
@@ -38,6 +40,7 @@ const getBout = db.prepare('SELECT * FROM bouts WHERE id = ?')
 
 const AGE_GROUP_SET = new Set(AGE_GROUPS)
 const GENDERS = new Set(['male', 'female', 'mixed'])
+const WC_STATUSES = new Set(['open', 'closed'])
 
 function ownedEventOr404(req, res) {
   const event = getEventOwned.get(req.params.eventId, req.userId)
@@ -129,11 +132,14 @@ router.patch('/weight-classes/:id', (req, res) => {
   const roundMinutes = body.roundMinutes ?? wc.round_minutes
   const restMinutes = body.restMinutes ?? wc.rest_minutes
   const sortOrder = body.sortOrder ?? wc.sort_order
+  const status = body.status ?? wc.status
+  const capacity = body.capacity !== undefined ? body.capacity : wc.capacity
 
   const error = validateWeightClass({ name, ageGroup, gender, roundsCount, roundMinutes, restMinutes })
   if (error) return res.status(400).json({ error })
+  if (!WC_STATUSES.has(status)) return res.status(400).json({ error: 'Invalid status.' })
 
-  updateWeightClass.run(name.trim(), ageGroup, gender, roundsCount, roundMinutes, restMinutes, sortOrder, req.params.id)
+  updateWeightClass.run(name.trim(), ageGroup, gender, roundsCount, roundMinutes, restMinutes, sortOrder, status, capacity ?? null, req.params.id)
   res.json({ weightClass: getWeightClass.get(req.params.id) })
 })
 
