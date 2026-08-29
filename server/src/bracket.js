@@ -67,14 +67,14 @@ export function advanceWinner(db, { boutId, winnerId, method = null, methodNote 
  * next_bout_id/next_bout_slot for advancement, and auto-resolves round-1
  * byes (a single present fighter auto-advances without a recorded fight).
  */
-export function persistBracket(db, { eventId, weightClassId, fighterIds }) {
+export function persistBracket(db, { eventId, weightClassId, fighterIds, dayId = null }) {
   db.prepare('DELETE FROM bouts WHERE weight_class_id = ?').run(weightClassId)
 
   const { rounds } = computeBracket(fighterIds)
 
   const insertBout = db.prepare(`
-    INSERT INTO bouts (event_id, weight_class_id, round, slot, fighter_red_id, fighter_blue_id, status)
-    VALUES (?, ?, ?, ?, ?, ?, 'scheduled')
+    INSERT INTO bouts (event_id, weight_class_id, round, slot, fighter_red_id, fighter_blue_id, status, event_day_id)
+    VALUES (?, ?, ?, ?, ?, ?, 'scheduled', ?)
   `)
   const setNextBout = db.prepare('UPDATE bouts SET next_bout_id = ?, next_bout_slot = ? WHERE id = ?')
 
@@ -84,7 +84,7 @@ export function persistBracket(db, { eventId, weightClassId, fighterIds }) {
   for (let r = 0; r < rounds.length; r++) {
     const ids = []
     for (const m of rounds[r]) {
-      const info = insertBout.run(eventId, weightClassId, r + 1, m.slot, m.fighterRed, m.fighterBlue)
+      const info = insertBout.run(eventId, weightClassId, r + 1, m.slot, m.fighterRed, m.fighterBlue, dayId)
       ids.push(Number(info.lastInsertRowid))
     }
     roundIds.push(ids)
