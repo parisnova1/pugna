@@ -4,6 +4,7 @@ import { requireAuth } from '../auth.js'
 import { boxingTemplate, AGE_GROUPS } from '../weightClassTemplate.js'
 import { persistBracket, advanceWinner } from '../bracket.js'
 import { broadcastBracketUpdate } from '../ws.js'
+import { createNotification, notifyEventAudience } from '../notifications.js'
 
 const router = Router()
 router.use(requireAuth)
@@ -43,6 +44,8 @@ const GENDERS = new Set(['male', 'female', 'mixed'])
 const WC_STATUSES = new Set(['open', 'closed'])
 const BOUT_METHODS = new Set(['Decision', 'KO', 'TKO', 'RSC', 'Walkover', 'Abd', 'DQ', 'Injury'])
 const setFighterStatus = db.prepare('UPDATE fighters SET status = ? WHERE id = ?')
+const getFighterOnly = db.prepare('SELECT * FROM fighters WHERE id = ?')
+const getClubByIdForNotify = db.prepare('SELECT * FROM clubs WHERE id = ?')
 
 function ownedEventOr404(req, res) {
   const event = getEventOwned.get(req.params.eventId, req.userId)
@@ -269,9 +272,29 @@ router.patch('/bouts/:id/result', (req, res) => {
   if (method === 'Injury') {
     const loserId = winnerId === bout.fighter_red_id ? bout.fighter_blue_id : bout.fighter_red_id
     setFighterStatus.run('Withdrawn', loserId)
+
+    const loser = getFighterOnly.get(loserId)
+    const loserClub = loser?.club_id ? getClubByIdForNotify.get(loser.club_id) : null
+    if (loserClub?.owner_id) {
+      createNotification({
+        userId: loserClub.owner_id,
+        type: 'nomination.injured',
+        title: `${loser.name} pulled out`,
+        body: `${event.name} · injury · bout vacant. Nominate a replacement.`,
+        eventId: event.id,
+        data: { fighterId: loser.id, boutId: bout.id },
+      })
+    }
   }
 
   broadcastBracketUpdate(event.qr_token, bout.weight_class_id)
+  notifyEventAudience({
+    eventId: event.id,
+    type: 'bout.result',
+    title: `Result: ${event.name}`,
+    body: method ? `Winner by ${method}.` : 'A result was just recorded.',
+    data: { boutId: bout.id, winnerId },
+  })
 
   res.json({ bout: getBout.get(bout.id) })
 })

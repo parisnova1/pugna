@@ -1,12 +1,14 @@
 import { Router } from 'express'
 import { db } from '../db.js'
 import { requireAuth } from '../auth.js'
+import { createNotification } from '../notifications.js'
 
 const router = Router()
 router.use(requireAuth)
 
 const getUserById = db.prepare('SELECT id, role FROM users WHERE id = ?')
 const getClubByOwner = db.prepare('SELECT * FROM clubs WHERE owner_id = ?')
+const getClubById = db.prepare('SELECT * FROM clubs WHERE id = ?')
 const getEventOwned = db.prepare('SELECT * FROM events WHERE id = ? AND organizer_id = ?')
 const getEvent = db.prepare('SELECT * FROM events WHERE id = ?')
 const getWeightClass = db.prepare('SELECT * FROM weight_classes WHERE id = ?')
@@ -136,6 +138,18 @@ router.patch('/nominations/:id/accept', (req, res) => {
     fighter.location || event.location,
   )
   setNominationStatus.run('accepted', req.userId, nomination.id)
+
+  const club = getClubById.get(nomination.club_id)
+  if (club?.owner_id) {
+    createNotification({
+      userId: club.owner_id,
+      type: 'nomination.accepted',
+      title: `${fighter.name} accepted`,
+      body: `${event.name} · ${fighter.name} is in.`,
+      eventId: event.id,
+      data: { nominationId: nomination.id, fighterId: fighter.id },
+    })
+  }
 
   res.json({ nomination: getNomination.get(nomination.id) })
 })
