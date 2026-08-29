@@ -318,8 +318,11 @@ router.patch('/events/:id/current-bout', (req, res) => {
 
   setCurrentBout.run(boutId || null, event.id)
 
+  // Always broadcast, even when clearing (boutId null) — an already-connected
+  // viewer needs to know live just ended, not only when it started.
+  broadcastBoutLive(event.qr_token, { boutId: bout ? bout.id : null, weightClassId: bout ? bout.weight_class_id : null })
+
   if (bout) {
-    broadcastBoutLive(event.qr_token, { boutId: bout.id, weightClassId: bout.weight_class_id })
     notifyEventAudience({
       eventId: event.id,
       type: 'bout.live',

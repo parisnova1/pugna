@@ -34,9 +34,11 @@ type EventInfo = {
   fighters: number
   views: number
   organizer_name: string
+  current_bout_id: number | null
 }
 
 type WeightClass = { id: number; name: string; age_group: string; gender: string; rounds_count: number; round_minutes: number; rest_minutes: number; status?: string }
+type LiveBout = { id: number; weight_class_id: number; fighterRed: { name: string } | null; fighterBlue: { name: string } | null }
 type EventFighter = { id: number; name: string; club: string; weight: string; record: string; weight_class_id: number | null }
 
 type Tab = 'overview' | 'fightcard' | 'fighters'
@@ -107,6 +109,7 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
   const [nominating, setNominating] = useState(false)
   const [muted, setMuted] = useState(false)
   const [muteBusy, setMuteBusy] = useState(false)
+  const [liveBout, setLiveBout] = useState<LiveBout | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -137,6 +140,27 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
       .then(r => setMuted(r.eventIds.includes(Number(eventId))))
       .catch(() => {})
   }, [eventId, user])
+
+  useEffect(() => {
+    if (!event?.current_bout_id) { setLiveBout(null); return }
+    apiFetch<{ bout: LiveBout }>(`/api/public/bouts/${event.current_bout_id}`)
+      .then(r => setLiveBout(r.bout))
+      .catch(() => setLiveBout(null))
+  }, [event?.current_bout_id])
+
+  useEffect(() => {
+    if (!event?.qr_token) return
+    const unsubscribe = subscribeToEvent(event.qr_token, msg => {
+      if (msg.type === 'bout:live') {
+        setEvent(prev => (prev ? { ...prev, current_bout_id: msg.boutId } : prev))
+      }
+      if (msg.type === 'bout:result' && msg.boutId === event.current_bout_id) {
+        setEvent(prev => (prev ? { ...prev, current_bout_id: null } : prev))
+      }
+    })
+    return unsubscribe
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event?.qr_token, event?.current_bout_id])
 
   const toggleMute = async () => {
     setMuteBusy(true)
@@ -294,6 +318,16 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
               </button>
             )}
           </div>
+
+          {liveBout && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'rgba(0,0,0,0.6)', border: `1px solid ${RED}`, padding: '12px 18px', marginTop: '16px', maxWidth: 'fit-content' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: RED }} />
+              <span style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.1em', color: RED, textTransform: 'uppercase' }}>Live Now</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, color: '#fff', textTransform: 'uppercase' }}>
+                {liveBout.fighterRed?.name ?? '?'} <span style={{ color: MUTED }}>vs</span> {liveBout.fighterBlue?.name ?? '?'}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

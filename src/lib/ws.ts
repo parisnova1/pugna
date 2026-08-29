@@ -6,7 +6,7 @@ const WS_BASE = API_BASE.replace(/^http/, 'ws')
 // the backend's ws.js gains a new broadcast* function.
 export type EventMessage =
   | { type: 'bracket:update'; weightClassId: number }
-  | { type: 'bout:live'; boutId: number; weightClassId: number }
+  | { type: 'bout:live'; boutId: number | null; weightClassId: number | null }
   | { type: 'bout:result'; boutId: number; weightClassId: number; winnerId: number; method: string }
   | { type: 'event:status'; status: string }
 
