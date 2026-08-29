@@ -916,6 +916,10 @@ function BracketTab({ weightClasses, fighters }: { weightClasses: WeightClass[];
         </div>
       )}
 
+      {currentClass && currentClass.fighterCount >= 2 && currentClass.status === 'closed' && bouts.length === 0 && (
+        <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: '#4caf50', marginBottom: '16px', textTransform: 'uppercase' }}>Class closed — ready to generate.</div>
+      )}
+
       {error && <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: RED, marginBottom: '16px' }}>{error}</div>}
 
       {loading ? (
