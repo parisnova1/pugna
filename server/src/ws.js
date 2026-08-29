@@ -35,11 +35,27 @@ export function attachWebSocketServer(httpServer) {
   return wss
 }
 
-export function broadcastBracketUpdate(token, weightClassId) {
+function broadcast(token, payload) {
   const set = rooms.get(token)
   if (!set) return
-  const payload = JSON.stringify({ type: 'bracket:update', weightClassId })
+  const message = JSON.stringify(payload)
   for (const ws of set) {
-    if (ws.readyState === ws.OPEN) ws.send(payload)
+    if (ws.readyState === ws.OPEN) ws.send(message)
   }
+}
+
+export function broadcastBracketUpdate(token, weightClassId) {
+  broadcast(token, { type: 'bracket:update', weightClassId })
+}
+
+export function broadcastBoutResult(token, { boutId, weightClassId, winnerId, method }) {
+  broadcast(token, { type: 'bout:result', boutId, weightClassId, winnerId, method })
+}
+
+export function broadcastBoutLive(token, { boutId, weightClassId }) {
+  broadcast(token, { type: 'bout:live', boutId, weightClassId })
+}
+
+export function broadcastEventStatus(token, status) {
+  broadcast(token, { type: 'event:status', status })
 }

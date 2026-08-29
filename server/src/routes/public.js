@@ -139,7 +139,7 @@ router.get('/fighters/:id', (req, res) => {
 const EVENT_COLUMNS = `
   events.id, events.name, events.date, events.location, events.venue, events.discipline, events.status,
   events.format, events.livestream_url, events.number_of_days, events.ring_count, events.qr_token,
-  events.fights, events.fighters, events.views, users.name AS organizer_name
+  events.fights, events.fighters, events.views, events.current_bout_id, users.name AS organizer_name
 `
 const getEventById = db.prepare(`SELECT ${EVENT_COLUMNS} FROM events JOIN users ON users.id = events.organizer_id WHERE events.id = ?`)
 const getEventByToken = db.prepare(`SELECT ${EVENT_COLUMNS} FROM events JOIN users ON users.id = events.organizer_id WHERE events.qr_token = ?`)
@@ -188,6 +188,28 @@ router.get('/weight-classes/:id/bracket', (req, res) => {
   if (!event || !PUBLIC_STATUSES.has(event.status)) return res.status(403).json({ error: 'This event is not public yet.' })
 
   res.json({ bouts: listBoutsForWeightClass.all(wc.id) })
+})
+
+// Powers the "Live Now" pinned-bout display: looks up one bout by id plus
+// its two fighters' names, gated the same way as every other public
+// endpoint (event must be Open/Active).
+const getBoutById = db.prepare('SELECT * FROM bouts WHERE id = ?')
+const getFighterNameById = db.prepare('SELECT id, name, club FROM fighters WHERE id = ?')
+
+router.get('/bouts/:id', (req, res) => {
+  const bout = getBoutById.get(req.params.id)
+  if (!bout) return res.status(404).json({ error: 'Bout not found.' })
+
+  const event = getEventStatusById.get(bout.event_id)
+  if (!event || !PUBLIC_STATUSES.has(event.status)) return res.status(403).json({ error: 'This event is not public yet.' })
+
+  res.json({
+    bout: {
+      ...bout,
+      fighterRed: bout.fighter_red_id ? getFighterNameById.get(bout.fighter_red_id) : null,
+      fighterBlue: bout.fighter_blue_id ? getFighterNameById.get(bout.fighter_blue_id) : null,
+    },
+  })
 })
 
 router.get('/events/:idOrToken/card-bouts', (req, res) => {
