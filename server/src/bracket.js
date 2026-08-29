@@ -52,9 +52,9 @@ export function computeBracket(fighterIds) {
  * (PATCH /api/bouts/:id/result) — both are the same "advance winner"
  * operation, just triggered differently.
  */
-export function advanceWinner(db, { boutId, winnerId, method = null }) {
+export function advanceWinner(db, { boutId, winnerId, method = null, methodNote = null }) {
   const bout = db.prepare('SELECT * FROM bouts WHERE id = ?').get(boutId)
-  db.prepare("UPDATE bouts SET status = 'completed', winner_id = ?, method = ? WHERE id = ?").run(winnerId, method, boutId)
+  db.prepare("UPDATE bouts SET status = 'completed', winner_id = ?, method = ?, method_note = ? WHERE id = ?").run(winnerId, method, methodNote, boutId)
 
   if (bout.next_bout_id) {
     const column = bout.next_bout_slot === 'red' ? 'fighter_red_id' : 'fighter_blue_id'

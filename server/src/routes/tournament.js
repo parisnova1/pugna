@@ -41,6 +41,8 @@ const getBout = db.prepare('SELECT * FROM bouts WHERE id = ?')
 const AGE_GROUP_SET = new Set(AGE_GROUPS)
 const GENDERS = new Set(['male', 'female', 'mixed'])
 const WC_STATUSES = new Set(['open', 'closed'])
+const BOUT_METHODS = new Set(['Decision', 'KO', 'TKO', 'RSC', 'Walkover', 'Abd', 'DQ', 'Injury'])
+const setFighterStatus = db.prepare('UPDATE fighters SET status = ? WHERE id = ?')
 
 function ownedEventOr404(req, res) {
   const event = getEventOwned.get(req.params.eventId, req.userId)
@@ -250,12 +252,25 @@ router.patch('/bouts/:id/result', (req, res) => {
     return res.status(400).json({ error: 'Both fighters must be set before recording a result.' })
   }
 
-  const { winnerId, method } = req.body || {}
+  const { winnerId, method, methodNote } = req.body || {}
   if (winnerId !== bout.fighter_red_id && winnerId !== bout.fighter_blue_id) {
     return res.status(400).json({ error: 'Winner must be one of the two fighters in this bout.' })
   }
+  if (method && !BOUT_METHODS.has(method)) {
+    return res.status(400).json({ error: 'Invalid method.' })
+  }
 
-  advanceWinner(db, { boutId: bout.id, winnerId, method: method?.trim() || null })
+  advanceWinner(db, { boutId: bout.id, winnerId, method: method || null, methodNote: methodNote?.trim() || null })
+
+  // An injury/withdrawal pulls the losing fighter out — mark them Withdrawn
+  // so the club can see it and (once nominations reopen the class) submit a
+  // replacement. No automatic bracket re-wiring: the organizer regenerates
+  // manually via the existing bracket endpoint.
+  if (method === 'Injury') {
+    const loserId = winnerId === bout.fighter_red_id ? bout.fighter_blue_id : bout.fighter_red_id
+    setFighterStatus.run('Withdrawn', loserId)
+  }
+
   broadcastBracketUpdate(event.qr_token, bout.weight_class_id)
 
   res.json({ bout: getBout.get(bout.id) })
