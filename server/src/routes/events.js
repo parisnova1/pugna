@@ -10,6 +10,24 @@ router.use(requireAuth)
 
 const listEvents = db.prepare('SELECT * FROM events WHERE organizer_id = ? ORDER BY id DESC')
 const getEvent = db.prepare('SELECT * FROM events WHERE id = ? AND organizer_id = ?')
+const deleteEvent = db.prepare('DELETE FROM events WHERE id = ? AND organizer_id = ?')
+// node:sqlite's DatabaseSync doesn't enable foreign-key enforcement by
+// default (no `PRAGMA foreign_keys = ON` anywhere in this file), so the
+// `ON DELETE CASCADE` clauses on these tables' event_id columns are
+// declarative only — deleting an event directly would silently orphan
+// every row below. Deleted in dependency order (bouts before the
+// weight_classes/fighters they reference) inside a transaction so a
+// failure partway through doesn't leave a half-deleted event.
+const DELETE_CHILDREN = [
+  'DELETE FROM bouts WHERE event_id = ?',
+  'DELETE FROM weight_classes WHERE event_id = ?',
+  'DELETE FROM fighters WHERE event_id = ?',
+  'DELETE FROM nominations WHERE event_id = ?',
+  'DELETE FROM event_days WHERE event_id = ?',
+  'DELETE FROM event_saves WHERE event_id = ?',
+  'DELETE FROM event_mutes WHERE event_id = ?',
+  'DELETE FROM notifications WHERE event_id = ?',
+].map(sql => db.prepare(sql))
 const insertEvent = db.prepare(`
   INSERT INTO events (organizer_id, name, date, location, venue, discipline, format, livestream_url, status, fights, fighters, views, number_of_days, ring_count, qr_token)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -82,6 +100,23 @@ router.patch('/:id', (req, res) => {
   }
 
   res.json({ event: updated })
+})
+
+router.delete('/:id', (req, res) => {
+  const existing = getEvent.get(req.params.id, req.userId)
+  if (!existing) return res.status(404).json({ error: 'Event not found.' })
+
+  db.exec('BEGIN')
+  try {
+    for (const stmt of DELETE_CHILDREN) stmt.run(req.params.id)
+    deleteEvent.run(req.params.id, req.userId)
+    db.exec('COMMIT')
+  } catch (err) {
+    db.exec('ROLLBACK')
+    throw err
+  }
+
+  res.status(204).end()
 })
 
 // ── Duplicate as template ───────────────────────────────────────────────────
