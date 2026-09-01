@@ -150,7 +150,19 @@ export default function EventManage({ nav: _nav }: { nav: NavFn }) {
         <div style={{ fontFamily: DISPLAY, fontSize: '14px', color: RED }}>{loadError || 'Event not found.'}</div>
       ) : (
         <>
-          <h1 style={{ fontFamily: DISPLAY, fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '4px' }}>{event.name}</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
+            <h1 style={{ fontFamily: DISPLAY, fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900, textTransform: 'uppercase', marginBottom: '4px' }}>{event.name}</h1>
+            <button
+              onClick={async () => {
+                if (!window.confirm(`Delete "${event.name}"? This permanently deletes the event, its weight classes, bouts, and nominations. This can't be undone.`)) return
+                await apiFetch(`/api/events/${eventId}`, { method: 'DELETE' })
+                navigate('/organizer')
+              }}
+              style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: '#e5484d', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0, marginTop: '10px' }}
+            >
+              Delete Event
+            </button>
+          </div>
           <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '28px' }}>
             {formatDisplayDate(event.date)} · {event.location} · {event.discipline}
           </div>

@@ -14,7 +14,7 @@ const DISCIPLINES = ['Boxing', 'Kickboxing', 'Muay Thai', 'MMA', 'BJJ', 'Wrestli
 
 type DashView = 'overview' | 'events' | 'fighters' | 'matchmaking' | 'results' | 'analytics'
 
-type EventRow = { id: number; name: string; date: string; location: string; venue: string; discipline: string; format: 'bracket' | 'card'; livestream_url: string; fights: number; fighters: number; status: 'Active' | 'Draft'; views: number }
+type EventRow = { id: number; name: string; date: string; location: string; venue: string; discipline: string; format: 'bracket' | 'card'; livestream_url: string; fights: number; fighters: number; status: 'Active' | 'Draft' | 'Open'; views: number }
 type FighterRow = { id: number; name: string; club: string; weight: string; record: string; status: 'Matched' | 'Unmatched'; discipline: string; location: string }
 type EventFields = { name: string; date: string; location: string; venue: string; discipline: string; format?: EventRow['format']; livestreamUrl: string; status: EventRow['status'] }
 type FighterFields = { name: string; club: string; weight: string; record: string; status: FighterRow['status']; discipline: string; location: string }
@@ -96,6 +96,13 @@ export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
     const { event } = await apiFetch<{ event: EventRow }>(`/api/events/${id}/duplicate`, { method: 'POST' })
     setEvents(prev => [event, ...prev])
     nav(`/organizer/events/${event.id}/manage`)
+  }
+
+  const deleteEvent = async (id: number) => {
+    const target = events.find(e => e.id === id)
+    if (!window.confirm(`Delete "${target?.name ?? 'this event'}"? This permanently deletes the event, its weight classes, bouts, and nominations. This can't be undone.`)) return
+    await apiFetch(`/api/events/${id}`, { method: 'DELETE' })
+    setEvents(prev => prev.filter(e => e.id !== id))
   }
 
   const addFighter = async (fields: FighterFields) => {
@@ -205,7 +212,7 @@ export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
         ) : (
           <>
             {view === 'overview' && <OverviewView events={events} fighters={fighters} onEdit={id => setEventModal({ id })} />}
-            {view === 'events' && <EventsView events={events} onCreate={() => setEventModal({ id: null })} onEdit={id => setEventModal({ id })} onManage={id => nav(`/organizer/events/${id}/manage`)} onDuplicate={duplicateEvent} />}
+            {view === 'events' && <EventsView events={events} onCreate={() => setEventModal({ id: null })} onEdit={id => setEventModal({ id })} onManage={id => nav(`/organizer/events/${id}/manage`)} onDuplicate={duplicateEvent} onDelete={deleteEvent} />}
             {view === 'fighters' && <FightersView fighters={fighters} onAddFighter={() => setFighterModalOpen(true)} />}
             {view === 'matchmaking' && <MatchmakingView />}
             {view === 'results' && <ResultsView />}
@@ -289,6 +296,7 @@ function EventModal({ initial, onCancel, onSave }: { initial: EventRow | null; o
             <label style={labelStyle}>Status</label>
             <select style={inputStyle} value={status} onChange={e => setStatus(e.target.value as EventRow['status'])}>
               <option value="Draft">Draft</option>
+              <option value="Open">Open for nominations</option>
               <option value="Active">Active</option>
             </select>
           </div>
@@ -481,7 +489,7 @@ function OverviewView({ events, fighters, onEdit }: { events: EventRow[]; fighte
   )
 }
 
-function EventsView({ events, onCreate, onEdit, onManage, onDuplicate }: { events: EventRow[]; onCreate: () => void; onEdit: (id: number) => void; onManage: (id: number) => void; onDuplicate: (id: number) => void }) {
+function EventsView({ events, onCreate, onEdit, onManage, onDuplicate, onDelete }: { events: EventRow[]; onCreate: () => void; onEdit: (id: number) => void; onManage: (id: number) => void; onDuplicate: (id: number) => void; onDelete: (id: number) => void }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
@@ -507,7 +515,7 @@ function EventsView({ events, onCreate, onEdit, onManage, onDuplicate }: { event
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
                   <div style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900, textTransform: 'uppercase' }}>{e.name}</div>
-                  <span style={{ fontFamily: DISPLAY, fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '3px 8px', border: `1px solid ${e.status === 'Active' ? '#4caf50' : BORDER}`, color: e.status === 'Active' ? '#4caf50' : MUTED }}>
+                  <span style={{ fontFamily: DISPLAY, fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '3px 8px', border: `1px solid ${e.status === 'Active' ? '#4caf50' : e.status === 'Open' ? RED : BORDER}`, color: e.status === 'Active' ? '#4caf50' : e.status === 'Open' ? RED : MUTED }}>
                     {e.status}
                   </span>
                 </div>
@@ -522,6 +530,7 @@ function EventsView({ events, onCreate, onEdit, onManage, onDuplicate }: { event
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
                 <button onClick={e2 => { e2.stopPropagation(); onEdit(e.id) }} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Edit</button>
                 <button onClick={e2 => { e2.stopPropagation(); onDuplicate(e.id) }} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Duplicate</button>
+                <button onClick={e2 => { e2.stopPropagation(); onDelete(e.id) }} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: '#e5484d', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Delete</button>
                 <button onClick={e2 => { e2.stopPropagation(); onManage(e.id) }} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: RED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Manage →</button>
               </div>
             </div>
