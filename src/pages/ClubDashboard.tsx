@@ -6,17 +6,14 @@ import { formatDisplayDate } from '../lib/date'
 import LocationInput from '../components/LocationInput'
 import { FighterDiscovery } from './Home'
 
-const RED = '#0070f3'
-const CARD = '#0f0f0f'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, BG, ACCENT_SOFT, POSITIVE_GREEN, FONT_BODY as DISPLAY } from '../theme'
+
 const DISCIPLINES = ['Boxing', 'Kickboxing', 'Muay Thai', 'MMA', 'BJJ', 'Wrestling']
 const LEVELS = ['Amateur', 'Intermediate', 'Advanced', 'All Levels'] as const
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff',
-  padding: '11px 14px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none',
+  width: '100%', backgroundColor: '#F7F5F0', border: `1px solid ${BORDER}`, color: TEXT,
+  padding: '11px 14px', fontFamily: DISPLAY, fontSize: '14px', outline: 'none',
 }
 const labelStyle: React.CSSProperties = {
   fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px',
@@ -41,7 +38,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 function SubmitButton({ children, disabled }: { children: React.ReactNode; disabled?: boolean }) {
   return (
     <button type="submit" disabled={disabled}
-      style={{ marginTop: '8px', width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', opacity: disabled ? 0.6 : 1 }}
+      style={{ marginTop: '8px', width: '100%', backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', opacity: disabled ? 0.6 : 1 }}
     >
       {children}
     </button>
@@ -93,7 +90,7 @@ export default function ClubDashboard({ nav }: { nav: NavFn }) {
   return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
       <aside style={{
-        width: collapsed ? '76px' : '240px', flexShrink: 0, backgroundColor: '#060606', borderRight: `1px solid ${BORDER}`,
+        width: collapsed ? '76px' : '240px', flexShrink: 0, backgroundColor: BG, borderRight: `1px solid ${BORDER}`,
         padding: '20px 0', position: 'sticky', top: '64px', height: 'calc(100vh - 64px)', overflowY: 'auto', overflowX: 'hidden',
         display: 'flex', flexDirection: 'column', transition: 'width 0.2s ease',
       }}>
@@ -103,7 +100,7 @@ export default function ClubDashboard({ nav }: { nav: NavFn }) {
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             style={{ color: MUTED, padding: '8px', transition: 'color 0.15s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+            onMouseEnter={e => (e.currentTarget.style.color = TEXT)}
             onMouseLeave={e => (e.currentTarget.style.color = MUTED)}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
@@ -128,9 +125,9 @@ export default function ClubDashboard({ nav }: { nav: NavFn }) {
                 display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left',
                 padding: collapsed ? '12px' : '12px 24px', justifyContent: collapsed ? 'center' : 'flex-start',
                 fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
-                color: tab === v ? '#fff' : MUTED,
+                color: tab === v ? TEXT : MUTED,
                 borderLeft: collapsed ? '2px solid transparent' : (tab === v ? `2px solid ${RED}` : '2px solid transparent'),
-                backgroundColor: tab === v ? '#0f0f0f' : 'transparent',
+                backgroundColor: tab === v ? CARD : 'transparent',
               }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}><path d={icon} /></svg>
@@ -146,7 +143,7 @@ export default function ClubDashboard({ nav }: { nav: NavFn }) {
             onClick={() => { logout(); nav('/') }}
             title={collapsed ? 'Log Out' : undefined}
             style={{ width: '100%', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED, padding: collapsed ? '10px 0' : '10px', border: `1px solid ${BORDER}`, transition: 'color 0.15s, border-color 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#fff' }}
+            onMouseEnter={e => { e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = TEXT }}
             onMouseLeave={e => { e.currentTarget.style.color = MUTED; e.currentTarget.style.borderColor = BORDER }}
           >
             {collapsed ? (
@@ -156,7 +153,7 @@ export default function ClubDashboard({ nav }: { nav: NavFn }) {
         </div>
       </aside>
 
-      <main style={{ flex: 1, minWidth: 0, backgroundColor: '#000000', ...(tab === 'fighters' ? {} : { padding: '40px 48px' }) }}>
+      <main style={{ flex: 1, minWidth: 0, backgroundColor: BG, ...(tab === 'fighters' ? {} : { padding: '40px 48px' }) }}>
         {tab === 'details' && <DetailsTab />}
         {tab === 'sparring' && <SparringTab />}
         {tab === 'myFighters' && <MyFightersTab />}
@@ -266,7 +263,7 @@ function DetailsTab() {
               onSelect={r => setCoords({ lat: r.lat, lng: r.lon })}
               placeholder="Nürnberg, Bayern"
             />
-            <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: coords ? '#4caf50' : MUTED, marginTop: '6px' }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: coords ? POSITIVE_GREEN : MUTED, marginTop: '6px' }}>
               {coords ? 'Location pinned — clubs can find you in radius search.' : 'Pick a suggestion from the list so clubs can find you in radius search.'}
             </div>
           </div>
@@ -276,7 +273,7 @@ function DetailsTab() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {DISCIPLINES.map(d => (
                 <button key={d} type="button" onClick={() => toggleDiscipline(d)}
-                  style={{ padding: '9px 16px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${disciplines.includes(d) ? RED : BORDER}`, backgroundColor: disciplines.includes(d) ? '#071a30' : 'transparent', color: disciplines.includes(d) ? '#fff' : MUTED }}
+                  style={{ padding: '9px 16px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${disciplines.includes(d) ? RED : BORDER}`, backgroundColor: disciplines.includes(d) ? ACCENT_SOFT : 'transparent', color: disciplines.includes(d) ? TEXT : MUTED }}
                 >
                   {d}
                 </button>
@@ -314,7 +311,7 @@ function DetailsTab() {
 
           {error && <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: RED }}>{error}</div>}
           <button type="submit" disabled={saving}
-            style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '14px', opacity: saving ? 0.6 : 1, alignSelf: 'flex-start', minWidth: '200px' }}
+            style={{ backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '14px', opacity: saving ? 0.6 : 1, alignSelf: 'flex-start', minWidth: '200px' }}
           >
             {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save Club Details'}
           </button>
@@ -356,7 +353,7 @@ function SparringTab() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <h1 style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, textTransform: 'uppercase' }}>Sparring</h1>
-        <button onClick={() => setAddOpen(true)} style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '12px 24px' }}>
+        <button onClick={() => setAddOpen(true)} style={{ backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '12px 24px' }}>
           + Add Sparring Session
         </button>
       </div>
@@ -374,20 +371,20 @@ function SparringTab() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER, maxWidth: '980px' }}>
-          <div style={{ backgroundColor: '#060606', padding: '10px 16px', display: 'grid', gridTemplateColumns: '100px 1fr 100px 70px 90px 90px 80px 170px', gap: '12px' }}>
+          <div style={{ backgroundColor: BG, padding: '10px 16px', display: 'grid', gridTemplateColumns: '100px 1fr 100px 70px 90px 90px 80px 170px', gap: '12px' }}>
             {['Discipline', 'Location', 'Date', 'Time', 'Weight', 'Level', 'Joined', ''].map(h => (
               <div key={h} style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase' }}>{h}</div>
             ))}
           </div>
           {sessions.map(s => (
             <div key={s.id} style={{ backgroundColor: CARD, padding: '12px 16px', display: 'grid', gridTemplateColumns: '100px 1fr 100px 70px 90px 90px 80px 170px', gap: '12px', alignItems: 'center' }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: '#eee' }}>{s.discipline}</div>
-              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: '#eee' }}>{s.location}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: TEXT }}>{s.discipline}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: TEXT }}>{s.location}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>{formatDisplayDate(s.date)}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>{s.time}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>{s.weight_range || '—'}</div>
               <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>{s.level}</div>
-              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: s.registered_fighters > 0 ? '#4caf50' : MUTED }}>{s.registered_fighters}/{s.spots}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: s.registered_fighters > 0 ? POSITIVE_GREEN : MUTED }}>{s.registered_fighters}/{s.spots}</div>
               <div style={{ display: 'flex', gap: '14px', justifySelf: 'end' }}>
                 <button onClick={() => setParticipantsFor(s)} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase' }}>
                   Participants
@@ -442,7 +439,7 @@ function ParticipantsModal({ session, onClose }: { session: SparringSessionRow; 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {participants.map(p => (
             <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', border: `1px solid ${BORDER}` }}>
-              <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, color: '#fff', textTransform: 'uppercase' }}>{p.club_name}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, color: TEXT, textTransform: 'uppercase' }}>{p.club_name}</span>
               <span style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase' }}>{p.fighter_count} fighter{p.fighter_count === 1 ? '' : 's'} · {p.weight_category}</span>
             </div>
           ))}
@@ -556,7 +553,7 @@ function MyFightersTab() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <h1 style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, textTransform: 'uppercase' }}>My Fighters</h1>
-        <button onClick={() => setFormTarget('new')} style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '12px 24px' }}>
+        <button onClick={() => setFormTarget('new')} style={{ backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '12px 24px' }}>
           + Add Fighter
         </button>
       </div>
@@ -572,7 +569,7 @@ function MyFightersTab() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER, maxWidth: '760px' }}>
-          <div style={{ backgroundColor: '#060606', padding: '10px 16px', display: 'grid', gridTemplateColumns: '1fr 120px 120px 80px', gap: '12px' }}>
+          <div style={{ backgroundColor: BG, padding: '10px 16px', display: 'grid', gridTemplateColumns: '1fr 120px 120px 80px', gap: '12px' }}>
             {['Name', 'Weight', 'Record', ''].map(h => (
               <div key={h} style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase' }}>{h}</div>
             ))}
