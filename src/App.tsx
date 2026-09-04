@@ -42,6 +42,12 @@ function AppShell() {
   const navigate = useNavigate()
   const nav: NavFn = path => navigate(path)
   const { user } = useAuth()
+  const location = useLocation()
+  // The marketing landing page ("/") is a deliberately separate visual
+  // surface (editorial paper, its own floating nav) from the rest of this
+  // dark-glass app — per the product spec, the two must not mix, so it opts
+  // out of the app-wide dark Header entirely rather than restyling it.
+  const isMarketing = location.pathname === '/'
   const [authModal, setAuthModal] = useState<'login' | 'signup' | null>(null)
   const [authRole, setAuthRole] = useState<Role>('viewer')
 
@@ -64,8 +70,8 @@ function AppShell() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#000000', color: '#fff', fontFamily: "'Geist Sans', sans-serif" }}>
-      <Header nav={nav} onOpenAuth={openAuth} />
-      <div style={{ paddingTop: '64px' }}>
+      {!isMarketing && <Header nav={nav} onOpenAuth={openAuth} />}
+      <div style={{ paddingTop: isMarketing ? 0 : '64px' }}>
       <Routes>
         <Route path="/" element={<Home nav={nav} onOpenAuth={openAuth} />} />
         <Route path="/home" element={<RequireRole role="viewer"><ViewerHome nav={nav} /></RequireRole>} />

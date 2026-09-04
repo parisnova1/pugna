@@ -43,23 +43,6 @@ export const en = {
   'cookie.accept': 'Accept',
   'cookie.decline': 'Decline',
 
-  // ── FAQ ───────────────────────────────────────────────────────────────
-  'faq.label': 'Questions',
-  'faq.heading1': 'Frequently Asked',
-  'faq.heading2': 'Questions',
-  'faq.q1': 'What is Pugna?',
-  'faq.a1': 'Pugna is a combat sports platform connecting event organizers, clubs and fans across the DACH region. Organizers run fight cards and brackets, clubs host sparring sessions, and fans discover events, fighters and clubs near them.',
-  'faq.q2': 'Is Pugna free to use?',
-  'faq.a2': 'Yes — browsing events, fighters and clubs is completely free for fans. Organizer and club tools are also free to use.',
-  'faq.q3': 'How do I find events near me?',
-  'faq.a3': 'Browse the Events page and filter by discipline, or use the search bar in the header to search events, fighters and clubs at once.',
-  'faq.q4': 'Can I host a sparring session?',
-  'faq.a4': 'Sparring sessions are hosted by club accounts. Sign up or log in as a club to list a session, and other clubs can request to join.',
-  'faq.q5': 'How does the bracket system work?',
-  'faq.a5': 'Organizers set up weight classes and register fighters, and Pugna seeds the bracket automatically. Fans can scan a QR code at the venue to follow results live, with no login required.',
-  'faq.q6': 'Which regions does Pugna cover?',
-  'faq.a6': "We're focused on Bayern first, with coverage expanding across Germany and the wider DACH region.",
-
   // ── Roles ─────────────────────────────────────────────────────────────
   'role.organizer': 'organizer',
   'role.club': 'club',
@@ -94,23 +77,6 @@ export const en = {
   'login.errorPassword': 'Password must be at least 6 characters.',
   'login.errorName': 'Enter your name.',
   'login.errorGeneric': 'Something went wrong.',
-
-  // ── Hero ──────────────────────────────────────────────────────────────
-  'hero.eyebrow': 'DACH · Boxing · Kickboxing · MMA · BJJ',
-  'hero.title1': 'Where',
-  'hero.title2': 'Combat',
-  'hero.title3': 'Sports',
-  'hero.title4': 'Connect.',
-  'hero.subtitle': 'Discover fights, find fighters, connect with clubs, organize events and shop combat sports equipment — all in one place.',
-  'hero.exploreEvents': 'Explore Events',
-  'hero.joinPugna': 'Join Pugna',
-  'hero.scroll': 'Scroll',
-
-  // ── Stats bar ─────────────────────────────────────────────────────────
-  'stats.clubs': 'Clubs',
-  'stats.fighters': 'Fighters',
-  'stats.events': 'Events',
-  'stats.region': 'Region',
 
   // ── Event discovery ───────────────────────────────────────────────────
   'events.label': 'Events',
@@ -318,21 +284,6 @@ export const de: Record<TranslationKey, string> = {
   'cookie.accept': 'Akzeptieren',
   'cookie.decline': 'Ablehnen',
 
-  'faq.label': 'Fragen',
-  'faq.heading1': 'Häufig gestellte',
-  'faq.heading2': 'Fragen',
-  'faq.q1': 'Was ist Pugna?',
-  'faq.a1': 'Pugna ist eine Kampfsport-Plattform, die Veranstalter, Vereine und Fans im DACH-Raum verbindet. Veranstalter erstellen Kampfkarten und Turnierbäume, Vereine bieten Sparring-Termine an, und Fans entdecken Events, Kämpfer und Vereine in ihrer Nähe.',
-  'faq.q2': 'Ist Pugna kostenlos?',
-  'faq.a2': 'Ja — das Durchstöbern von Events, Kämpfern und Vereinen ist für Fans komplett kostenlos. Auch die Werkzeuge für Veranstalter und Vereine sind kostenlos nutzbar.',
-  'faq.q3': 'Wie finde ich Events in meiner Nähe?',
-  'faq.a3': 'Durchsuchen Sie die Events-Seite und filtern Sie nach Disziplin, oder nutzen Sie die Suche im Header, um Events, Kämpfer und Vereine gleichzeitig zu durchsuchen.',
-  'faq.q4': 'Kann ich ein Sparring anbieten?',
-  'faq.a4': 'Sparring-Termine werden von Vereinskonten angeboten. Melden Sie sich als Verein an, um einen Termin zu erstellen — andere Vereine können sich dann dafür anmelden.',
-  'faq.q5': 'Wie funktioniert das Turnierbaum-System?',
-  'faq.a5': 'Veranstalter legen Gewichtsklassen fest und registrieren Kämpfer, Pugna erstellt den Turnierbaum automatisch. Fans können vor Ort einen QR-Code scannen und die Ergebnisse live verfolgen — ganz ohne Anmeldung.',
-  'faq.q6': 'Welche Regionen deckt Pugna ab?',
-  'faq.a6': 'Wir konzentrieren uns zunächst auf Bayern, mit wachsender Abdeckung in ganz Deutschland und dem DACH-Raum.',
 
   'role.organizer': 'Veranstalter',
   'role.club': 'Verein',
@@ -365,21 +316,6 @@ export const de: Record<TranslationKey, string> = {
   'login.errorPassword': 'Das Passwort muss mindestens 6 Zeichen lang sein.',
   'login.errorName': 'Gib deinen Namen ein.',
   'login.errorGeneric': 'Etwas ist schiefgelaufen.',
-
-  'hero.eyebrow': 'DACH · Boxen · Kickboxen · MMA · BJJ',
-  'hero.title1': 'Wo',
-  'hero.title2': 'Kampfsport',
-  'hero.title3': 'Zusammen-',
-  'hero.title4': 'kommt.',
-  'hero.subtitle': 'Entdecke Kämpfe, finde Kämpfer, vernetze dich mit Vereinen, organisiere Events und kaufe Kampfsportausrüstung — alles an einem Ort.',
-  'hero.exploreEvents': 'Events entdecken',
-  'hero.joinPugna': 'Bei Pugna registrieren',
-  'hero.scroll': 'Scrollen',
-
-  'stats.clubs': 'Vereine',
-  'stats.fighters': 'Kämpfer',
-  'stats.events': 'Events',
-  'stats.region': 'Region',
 
   'events.label': 'Events',
   'events.heading1': 'Kämpfe & Events',

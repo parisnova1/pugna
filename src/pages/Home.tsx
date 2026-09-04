@@ -33,111 +33,251 @@ type PublicClub = { id: number; name: string; location: string; disciplines: str
 
 type OpenAuthFn = (mode: 'login' | 'signup', role?: Role) => void
 
+// ─── Marketing surface — editorial paper, boxing first ─────────────────────
+// Separate visual language from the dark-glass app surface below (Serus-
+// inspired per the product spec): warm canvas, serif display type, dust
+// lilac reserved for marketing CTAs only. Never reuse MKT_LILAC/MKT_SERIF
+// inside the app views further down this file — the spec is explicit that
+// the two surfaces must not mix.
+const MKT_CANVAS = '#EFEDE8'
+const MKT_INK = '#111114'
+const MKT_INK_MUTED = 'rgba(17,17,20,0.62)'
+const MKT_NAV_BG = '#0A0A0A'
+const MKT_LILAC = '#C5B4E3'
+const MKT_LILAC_SOFT = '#DCD1EC'
+const MKT_LINE = 'rgba(17,17,20,0.12)'
+const MKT_SERIF = "'Newsreader', Georgia, 'Times New Roman', serif"
+const MKT_SANS = "'Geist Sans', sans-serif"
+
+function scrollToMarketingId(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 export default function Home({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }) {
   return (
-    <main>
-      <HeroSection nav={nav} onOpenAuth={onOpenAuth} />
-      <Reveal><StatsBar /></Reveal>
-      <Reveal><FeaturedFight nav={nav} /></Reveal>
-      <Reveal><EventDiscovery nav={nav} /></Reveal>
-      <Reveal><SparringSection nav={nav} onOpenAuth={onOpenAuth} /></Reveal>
-      <Reveal><ClubDiscovery nav={nav} onOpenAuth={onOpenAuth} /></Reveal>
-      <Reveal><BrandsSection /></Reveal>
-      <Reveal><ProFights nav={nav} /></Reveal>
-      <Reveal><ForClubs onOpenAuth={onOpenAuth} /></Reveal>
-      <Reveal><ForOrganizers nav={nav} /></Reveal>
-      <Reveal><AdvertiseCTA /></Reveal>
-      <Reveal><FaqSection /></Reveal>
-      <Footer nav={nav} />
+    <main style={{ backgroundColor: MKT_CANVAS, color: MKT_INK, minHeight: '100vh' }}>
+      <MarketingNav nav={nav} onOpenAuth={onOpenAuth} />
+      <MarketingHero />
+      <Reveal><MarketingForClubs onOpenAuth={onOpenAuth} /></Reveal>
+      <Reveal><MarketingForOrganizers onOpenAuth={onOpenAuth} /></Reveal>
+      <MarketingFooter />
     </main>
   )
 }
 
-// ─── Hero ───────────────────────────────────────────────────────────────────
+// ─── Marketing nav — floating black pill capsule ───────────────────────────
 
-function HeroSection({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }) {
-  const { t } = useLanguage()
+function MarketingNav({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }) {
+  const { user } = useAuth()
+
+  const goLogin = () => {
+    if (user) nav(user.role === 'club' ? '/club-dashboard' : user.role === 'organizer' ? '/organizer' : '/home')
+    else onOpenAuth('login')
+  }
+
+  const linkStyle: React.CSSProperties = {
+    fontFamily: MKT_SANS, fontSize: '13px', fontWeight: 500, color: 'rgba(255,255,255,0.75)',
+    padding: '8px 14px', whiteSpace: 'nowrap', transition: 'color 0.15s',
+  }
+
   return (
-    <section style={{ position: 'relative', height: '100vh', minHeight: '640px', overflow: 'hidden', display: 'flex', alignItems: 'flex-end' }}>
-      <img src={IMAGES.hero} alt="Boxing ring" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #000000 0%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0.2) 100%)' }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, transparent 60%)' }} />
+    <div style={{ position: 'sticky', top: '16px', zIndex: 50, display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
+      <nav style={{
+        display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: MKT_NAV_BG,
+        borderRadius: '9999px', padding: '6px 8px 6px 20px', maxWidth: '1100px', width: '100%',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+      }}>
+        <button onClick={() => nav('/')} style={{ fontFamily: MKT_SANS, fontSize: '15px', fontWeight: 700, letterSpacing: '0.14em', color: '#fff', marginRight: '8px', flexShrink: 0 }}>
+          PUGNA
+        </button>
+        <button className="hidden sm:inline" onClick={() => scrollToMarketingId('mkt-for-clubs')}
+          style={linkStyle} onMouseEnter={e => (e.currentTarget.style.color = '#fff')} onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
+        >For Clubs</button>
+        <button className="hidden sm:inline" onClick={() => scrollToMarketingId('mkt-for-organizers')}
+          style={linkStyle} onMouseEnter={e => (e.currentTarget.style.color = '#fff')} onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
+        >For Organizers</button>
+        <button className="hidden lg:inline" onClick={() => nav('/events')}
+          style={linkStyle} onMouseEnter={e => (e.currentTarget.style.color = '#fff')} onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
+        >Events</button>
+        <button className="hidden lg:inline" onClick={() => scrollToMarketingId('mkt-footer')}
+          style={linkStyle} onMouseEnter={e => (e.currentTarget.style.color = '#fff')} onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
+        >About</button>
+        <div style={{ flex: 1 }} />
+        <button onClick={goLogin} style={{ backgroundColor: '#fff', color: MKT_NAV_BG, fontFamily: MKT_SANS, fontSize: '13px', fontWeight: 600, padding: '9px 20px', borderRadius: '9999px', flexShrink: 0 }}>
+          Log in
+        </button>
+      </nav>
+    </div>
+  )
+}
 
-      {/* Red accent line */}
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '3px', height: '100%', backgroundColor: RED }} />
+// ─── Marketing hero — one thesis, one photo ────────────────────────────────
 
-      <div style={{ position: 'relative', maxWidth: '1440px', margin: '0 auto', padding: '0 32px 80px', width: '100%' }}>
-        <div style={{ maxWidth: '740px' }}>
-          {/* Label */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-            <div style={{ width: '32px', height: '2px', backgroundColor: RED }} />
-            <span style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 600, letterSpacing: '0.2em', color: RED, textTransform: 'uppercase' }}>
-              {t('hero.eyebrow')}
-            </span>
-          </div>
-
-          <h1 style={{ fontFamily: DISPLAY, fontSize: 'clamp(64px, 10vw, 120px)', fontWeight: 900, lineHeight: 0.9, textTransform: 'uppercase', letterSpacing: '-0.01em', marginBottom: '28px' }}>
-            {t('hero.title1')}<br />
-            <span style={{ color: RED }}>{t('hero.title2')}</span><br />
-            {t('hero.title3')}<br />
-            {t('hero.title4')}
+function MarketingHero() {
+  return (
+    <section style={{ maxWidth: '1200px', margin: '0 auto', padding: '56px 24px 96px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: '56px', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ fontFamily: MKT_SERIF, fontSize: 'clamp(40px, 7vw, 88px)', fontWeight: 400, lineHeight: 1.02, letterSpacing: '-0.01em', margin: 0 }}>
+            The card,<br />live.
           </h1>
-
-          <p style={{ fontSize: '16px', lineHeight: 1.6, color: '#aaaaaa', maxWidth: '520px', marginBottom: '40px' }}>
-            {t('hero.subtitle')}
+          <div style={{ width: '56px', height: '3px', backgroundColor: MKT_LILAC, margin: '28px 0' }} />
+          <p style={{ fontFamily: MKT_SANS, fontSize: '17px', lineHeight: 1.6, color: MKT_INK_MUTED, maxWidth: '420px', margin: '0 0 28px' }}>
+            Pugna is the private network for amateur boxing. Create events. Fill cards. Keep control.
           </p>
-
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => nav('/events')}
-              style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 32px', transition: 'background-color 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
-            >
-              {t('hero.exploreEvents')}
-            </button>
-            <button
-              onClick={() => onOpenAuth('signup', 'viewer')}
-              style={{ backgroundColor: 'transparent', color: '#fff', fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 32px', border: '1px solid rgba(255,255,255,0.3)', transition: 'border-color 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)')}
-            >
-              {t('hero.joinPugna')}
-            </button>
+          <div style={{ fontFamily: MKT_SANS, fontSize: '12px', fontWeight: 600, letterSpacing: '0.2em', color: MKT_INK, textTransform: 'uppercase' }}>
+            Boxing first
           </div>
         </div>
-      </div>
-
-      {/* Scroll hint */}
-      <div style={{ position: 'absolute', bottom: '32px', right: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', writingMode: 'vertical-rl' }}>{t('hero.scroll')}</span>
-        <div style={{ width: '1px', height: '40px', backgroundColor: MUTED }} />
+        <div style={{ position: 'relative', borderRadius: '28px', overflow: 'hidden', aspectRatio: '4 / 5', backgroundColor: '#1a1a1a' }}>
+          <img src={IMAGES.fighter1} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(100%) contrast(1.05)' }} />
+        </div>
       </div>
     </section>
   )
 }
 
-// ─── Stats Bar ───────────────────────────────────────────────────────────────
+// ─── For clubs — photo + lilac overlay card (container-query positioned) ──
 
-function StatsBar() {
-  const { t } = useLanguage()
-  const stats = [
-    { value: '100+', label: t('stats.clubs') },
-    { value: '1,000+', label: t('stats.fighters') },
-    { value: '50+', label: t('stats.events') },
-    { value: 'DACH', label: t('stats.region') },
+const MKT_BULLET_ICONS: Record<string, React.ReactNode> = {
+  home: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={MKT_INK} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 11l9-7 9 7" /><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" />
+    </svg>
+  ),
+  person: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={MKT_INK} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+    </svg>
+  ),
+  calendar: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={MKT_INK} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" />
+    </svg>
+  ),
+}
+
+function MarketingForClubs({ onOpenAuth }: { onOpenAuth: OpenAuthFn }) {
+  const bullets: Array<[keyof typeof MKT_BULLET_ICONS, string]> = [
+    ['home', 'Verein anlegen & verwalten'],
+    ['person', 'Boxer einladen & organisieren'],
+    ['calendar', 'Kämpfe matchen & Karten planen'],
   ]
   return (
-    <div style={{ borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, backgroundColor: '#0a0a0a' }}>
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
-        {stats.map((s, i) => (
-          <div key={i} style={{ padding: '24px 0', borderRight: i < 3 ? `1px solid ${BORDER}` : 'none', paddingLeft: i > 0 ? '32px' : '0' }}>
-            <div style={{ fontFamily: DISPLAY, fontSize: '36px', fontWeight: 800, letterSpacing: '-0.01em', color: '#fff' }}>{s.value}</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase', marginTop: '2px' }}>{s.label}</div>
+    <section id="mkt-for-clubs" style={{ maxWidth: '1200px', margin: '0 auto', padding: '56px 24px', borderTop: `1px solid ${MKT_LINE}` }}>
+      <style>{`
+        .mkt-clubphoto { container-type: inline-size; }
+        .mkt-clubphoto .mkt-overlay { position: static; margin-top: 16px; border-radius: 16px; }
+        @container (min-width: 420px) {
+          .mkt-clubphoto .mkt-overlay { position: absolute; bottom: 16px; right: 16px; left: auto; margin-top: 0; width: min(260px, calc(100% - 32px)); border-radius: 20px; }
+        }
+      `}</style>
+      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: '56px', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontFamily: MKT_SANS, fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', color: MKT_LILAC, textTransform: 'uppercase', marginBottom: '16px' }}>For clubs</div>
+          <h2 style={{ fontFamily: MKT_SERIF, fontSize: 'clamp(30px, 4vw, 44px)', fontWeight: 400, lineHeight: 1.1, margin: '0 0 20px' }}>
+            More than a roster.<br />A home for your gym.
+          </h2>
+          <p style={{ fontFamily: MKT_SANS, fontSize: '15px', lineHeight: 1.65, color: MKT_INK_MUTED, marginBottom: '28px', maxWidth: '440px' }}>
+            Create your Verein. Manage your boxers. Build your cards. Keep your club in control.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {bullets.map(([icon, label]) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '9999px', border: `1px solid ${MKT_LINE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {MKT_BULLET_ICONS[icon]}
+                </div>
+                <span style={{ fontFamily: MKT_SANS, fontSize: '15px', color: MKT_INK }}>{label}</span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+        <div className="mkt-clubphoto" style={{ position: 'relative', borderRadius: '28px', overflow: 'hidden', aspectRatio: '4 / 3', backgroundColor: '#1a1a1a' }}>
+          <img src={IMAGES.ring} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(100%) contrast(1.05)' }} />
+          <div className="mkt-overlay" style={{ backgroundColor: MKT_LILAC_SOFT, padding: '20px' }}>
+            <div style={{ fontFamily: MKT_SERIF, fontSize: '22px', color: MKT_INK, marginBottom: '8px' }}>Verein anlegen</div>
+            <p style={{ fontFamily: MKT_SANS, fontSize: '13px', lineHeight: 1.5, color: MKT_INK_MUTED, margin: '0 0 16px' }}>
+              Starte deinen Club auf Pugna und lade dein Team ein.
+            </p>
+            <button onClick={() => onOpenAuth('signup', 'club')} aria-label="Verein anlegen" style={{ width: '36px', height: '36px', borderRadius: '9999px', backgroundColor: MKT_LILAC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={MKT_INK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
+  )
+}
+
+// ─── For organizers — solid lilac panel, no photo ──────────────────────────
+
+function MarketingForOrganizers({ onOpenAuth }: { onOpenAuth: OpenAuthFn }) {
+  const checklist = [
+    'Event-Vorlagen für jeden Anlass',
+    'Einladungen, Wiegen & Kampfpaarungen',
+    'Teilen & Teilnehmer managen',
+    'Privat, sicher und datenschutzbewusst',
+  ]
+  return (
+    <section id="mkt-for-organizers" style={{ maxWidth: '1200px', margin: '0 auto', padding: '56px 24px 96px', borderTop: `1px solid ${MKT_LINE}` }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: '56px', alignItems: 'stretch' }}>
+        <div>
+          <div style={{ fontFamily: MKT_SANS, fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', color: MKT_LILAC, textTransform: 'uppercase', marginBottom: '16px' }}>For organizers</div>
+          <h2 style={{ fontFamily: MKT_SERIF, fontSize: 'clamp(30px, 4vw, 44px)', fontWeight: 400, lineHeight: 1.1, margin: '0 0 20px' }}>
+            Templates for events<br />that run themselves.
+          </h2>
+          <p style={{ fontFamily: MKT_SANS, fontSize: '15px', lineHeight: 1.65, color: MKT_INK_MUTED, marginBottom: '28px', maxWidth: '440px' }}>
+            From invitations to weigh-ins to fight cards. Use proven templates. Customize. Publish. Focus on the fights.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {checklist.map(label => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={MKT_INK} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <circle cx="12" cy="12" r="9" /><path d="M8.5 12.5l2.5 2.5 5-5" />
+                </svg>
+                <span style={{ fontFamily: MKT_SANS, fontSize: '15px', color: MKT_INK }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ backgroundColor: MKT_LILAC_SOFT, borderRadius: '28px', padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '260px' }}>
+          <div>
+            <h3 style={{ fontFamily: MKT_SERIF, fontSize: '32px', fontWeight: 400, color: MKT_INK, margin: '0 0 16px' }}>Event erstellen.</h3>
+            <p style={{ fontFamily: MKT_SANS, fontSize: '15px', lineHeight: 1.6, color: MKT_INK_MUTED, margin: 0, maxWidth: '320px' }}>
+              Wähle eine Vorlage, passe sie an und erstelle dein Event in Minuten.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '28px' }}>
+            <button onClick={() => onOpenAuth('signup', 'organizer')} style={{ fontFamily: MKT_SANS, fontSize: '14px', fontWeight: 600, color: MKT_INK, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Jetzt Event erstellen <span aria-hidden>→</span>
+            </button>
+            <div style={{ width: '44px', height: '44px', borderRadius: '9999px', border: `1px solid ${MKT_INK}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={MKT_INK} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Marketing footer — minimal, "Pugna · Boxing first" ────────────────────
+
+function MarketingFooter() {
+  return (
+    <footer id="mkt-footer" style={{ borderTop: `1px solid ${MKT_LINE}` }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '28px 24px', display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontFamily: MKT_SANS, fontSize: '14px', color: MKT_INK }}>Pugna · Boxing first</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
+          <span style={{ fontFamily: MKT_SANS, fontSize: '13px', color: MKT_INK_MUTED }}>Datenschutz</span>
+          <span style={{ fontFamily: MKT_SANS, fontSize: '13px', color: MKT_INK_MUTED }}>Nutzungsbedingungen</span>
+          <span style={{ fontFamily: MKT_SANS, fontSize: '13px', color: MKT_INK_MUTED }}>Kontakt</span>
+          <span style={{ fontFamily: MKT_SANS, fontSize: '13px', color: MKT_INK_MUTED }}>© 2026 Pugna</span>
+        </div>
+      </div>
+    </footer>
   )
 }
 
@@ -762,307 +902,6 @@ export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Ope
             ))}
           </div>
         )}
-      </div>
-    </section>
-  )
-}
-
-// ─── Brands / Advertising ─────────────────────────────────────────────────────
-
-function BrandsSection() {
-  return (
-    <section style={{ padding: '100px 0', backgroundColor: '#060606', borderTop: `1px solid ${BORDER}` }}>
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
-          <div>
-            <SectionLabel text="For Brands" />
-            <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(36px, 4.5vw, 64px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 0.95, marginBottom: '24px' }}>
-              BUILT FOR THE<br />COMBAT SPORTS<br /><span style={{ color: RED }}>INDUSTRY.</span>
-            </h2>
-            <p style={{ fontSize: '15px', lineHeight: 1.7, color: '#888', marginBottom: '36px' }}>
-              Brands, products, clubs, promoters and professional fights can reach a highly targeted combat-sports audience across DACH.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {['Featured Brand', 'Featured Event', 'Featured Fighter', 'Professional Fight Campaign', 'Sponsorship'].map(item => (
-                <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0', borderBottom: `1px solid ${BORDER}` }}>
-                  <div style={{ width: '4px', height: '4px', backgroundColor: RED, flexShrink: 0 }} />
-                  <span style={{ fontFamily: DISPLAY, fontSize: '16px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#aaa' }}>{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Featured brand card */}
-          <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}` }}>
-            <div style={{ padding: '12px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase' }}>Featured Brand</span>
-              <span style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase' }}>Sponsored</span>
-            </div>
-            <div style={{ position: 'relative', height: '220px', backgroundColor: '#111', overflow: 'hidden' }}>
-              <img src={IMAGES.sparring} alt="Rival Boxing" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,15,15,1) 0%, rgba(15,15,15,0.3) 60%, transparent 100%)' }} />
-            </div>
-            <div style={{ padding: '24px' }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', marginBottom: '8px' }}>Boxing Equipment</div>
-              <div style={{ fontFamily: DISPLAY, fontSize: '32px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>RIVAL BOXING</div>
-              <div style={{ fontSize: '14px', color: '#888', marginBottom: '16px' }}>Professional Boxing Gloves — 12 oz / 14 oz / 16 oz</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontFamily: DISPLAY, fontSize: '28px', fontWeight: 800 }}>€179</div>
-                <button
-                  style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '10px 24px', transition: 'background-color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
-                >
-                  Shop Now
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Professional Fights ──────────────────────────────────────────────────────
-
-const PRO_FIGHTS = [
-  { a: 'Braun', b: 'Wisniewski', event: 'Championship Night Berlin', date: '14 Sep 2026', weight: 'Super Welterweight', promo: 'Elite Boxing GmbH', img: IMAGES.fight1 },
-  { a: 'Rodriguez', b: 'Schäfer', event: 'Fight Night Hamburg', date: '21 Sep 2026', weight: 'Middleweight', promo: 'Top Rank DE', img: IMAGES.fight2 },
-  { a: 'Hamed', b: 'Petrov', event: 'Vienna Grand Prix', date: '5 Oct 2026', weight: 'Heavyweight', promo: 'MMA Austria', img: IMAGES.venue },
-]
-
-function ProFights({ nav }: { nav: NavFn }) {
-  return (
-    <section style={{ padding: '80px 0', backgroundColor: '#060606', borderTop: `1px solid ${BORDER}` }}>
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '48px', flexWrap: 'wrap', gap: '24px' }}>
-          <div>
-            <SectionLabel text="Professional Fights" />
-            <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(36px, 4.5vw, 56px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>
-              THE BIG <span style={{ color: RED }}>FIGHTS</span>
-            </h2>
-          </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', backgroundColor: BORDER }}>
-          {PRO_FIGHTS.map((f, i) => (
-            <div key={i} style={{ backgroundColor: CARD, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}
-              onClick={() => nav('/events')}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
-            >
-              <div style={{ position: 'relative', height: '240px' }}>
-                <img src={f.img} alt={`${f.a} vs ${f.b}`} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(20%)' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,15,15,1) 0%, rgba(15,15,15,0.4) 50%, transparent 100%)' }} />
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', backgroundColor: RED }} />
-              </div>
-              <div style={{ padding: '20px' }}>
-                <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: RED, textTransform: 'uppercase', marginBottom: '8px' }}>
-                  {f.weight} · {f.date}
-                </div>
-                <div style={{ fontFamily: DISPLAY, fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1, marginBottom: '4px' }}>
-                  {f.a} <span style={{ color: MUTED }}>vs</span> {f.b}
-                </div>
-                <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  {f.event} · {f.promo}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── For Clubs ────────────────────────────────────────────────────────────────
-
-function ForClubs({ onOpenAuth }: { onOpenAuth: OpenAuthFn }) {
-  return (
-    <section style={{ padding: '100px 0', backgroundColor: '#000000', borderTop: `1px solid ${BORDER}` }}>
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
-          <div style={{ position: 'relative', height: '420px', backgroundColor: '#111', overflow: 'hidden' }}>
-            <img src={IMAGES.ring} alt="Boxing ring" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(0,112,243,0.15) 0%, transparent 60%)' }} />
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '3px', height: '100%', backgroundColor: RED }} />
-          </div>
-          <div>
-            <SectionLabel text="For Clubs" />
-            <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(36px, 4.5vw, 64px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 0.95, marginBottom: '24px' }}>
-              PUT YOUR CLUB<br /><span style={{ color: RED }}>ON THE MAP.</span>
-            </h2>
-            <p style={{ fontSize: '15px', lineHeight: 1.7, color: '#888', marginBottom: '32px' }}>
-              Create your PUGNA club profile, showcase your fighters, promote your events and connect with other combat-sports clubs across DACH.
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px', marginBottom: '36px' }}>
-              {['Club Profile', 'Fighter Profiles', 'Promote Events', 'Host Sparring', 'Find Opponents', 'Reach New Members'].map(b => (
-                <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0', borderBottom: `1px solid ${BORDER}` }}>
-                  <div style={{ width: '6px', height: '6px', backgroundColor: RED, flexShrink: 0 }} />
-                  <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#aaa' }}>{b}</span>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={() => onOpenAuth('signup', 'club')}
-                style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 28px', transition: 'background-color 0.15s' }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
-              >
-                Create Club Profile
-              </button>
-              <button
-                style={{ backgroundColor: 'transparent', color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 28px', border: `1px solid ${BORDER}`, transition: 'border-color 0.15s' }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
-              >
-                Learn More
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── For Organizers ───────────────────────────────────────────────────────────
-
-function ForOrganizers({ nav }: { nav: NavFn }) {
-  return (
-    <section style={{ padding: '100px 0', backgroundColor: '#060606', borderTop: `1px solid ${BORDER}` }}>
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
-          <div>
-            <SectionLabel text="For Organizers" />
-            <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(36px, 4.5vw, 64px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 0.95, marginBottom: '24px' }}>
-              RUN YOUR NEXT<br />EVENT WITH<br /><span style={{ color: RED }}>PUGNA.</span>
-            </h2>
-            <p style={{ fontSize: '15px', lineHeight: 1.7, color: '#888', marginBottom: '32px' }}>
-              The complete platform for running amateur and professional combat sports events across Germany, Austria and Switzerland.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-              {['Create Tournaments', 'Register Fighters', 'Find Opponents via Matchmaking', 'Build Fight Cards', 'Publish Events', 'Track Results & Analytics'].map((b, i) => (
-                <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px 0', borderBottom: `1px solid ${BORDER}` }}>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, minWidth: '24px', fontWeight: 700 }}>{String(i + 1).padStart(2, '0')}</div>
-                  <span style={{ fontFamily: DISPLAY, fontSize: '18px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#ddd' }}>{b}</span>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: '36px' }}>
-              <button
-                onClick={() => nav('/organizer')}
-                style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 32px', transition: 'background-color 0.15s' }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
-              >
-                Create an Event
-              </button>
-            </div>
-          </div>
-
-          <div style={{ position: 'relative', height: '420px', backgroundColor: '#111', overflow: 'hidden' }}>
-            <img src={IMAGES.crowd} alt="Event crowd" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, transparent 60%, rgba(0,0,0,0.8) 100%)' }} />
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Advertise CTA ────────────────────────────────────────────────────────────
-
-function AdvertiseCTA() {
-  return (
-    <section style={{ padding: '100px 0', backgroundColor: '#000000', borderTop: `1px solid ${BORDER}`, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: 0 }}>
-        <img src={IMAGES.venue} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.08 }} />
-      </div>
-      <div style={{ position: 'relative', maxWidth: '1440px', margin: '0 auto', padding: '0 32px', textAlign: 'center' }}>
-        <SectionLabel text="Advertising" centered />
-        <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(40px, 6vw, 80px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 0.95, marginBottom: '24px' }}>
-          REACH THE COMBAT<br /><span style={{ color: RED }}>SPORTS COMMUNITY.</span>
-        </h2>
-        <p style={{ fontSize: '16px', lineHeight: 1.7, color: '#888', maxWidth: '560px', margin: '0 auto 48px' }}>
-          Promote your brand, product, club, professional fight or event to a highly targeted combat-sports audience.
-        </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '48px' }}>
-          {['Featured Product', 'Featured Brand', 'Featured Fighter', 'Fight Campaign', 'Sponsorship'].map(opt => (
-            <div key={opt} style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '8px 16px', border: `1px solid ${BORDER}`, color: MUTED }}>
-              {opt}
-            </div>
-          ))}
-        </div>
-        <button
-          style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '16px 48px', transition: 'background-color 0.15s' }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
-          onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
-        >
-          Advertise With PUGNA
-        </button>
-      </div>
-    </section>
-  )
-}
-
-// ─── FAQ ────────────────────────────────────────────────────────────────────
-
-const FAQ_KEYS = ['faq.q1', 'faq.q2', 'faq.q3', 'faq.q4', 'faq.q5', 'faq.q6'] as const
-const FAQ_ANSWER_KEYS = ['faq.a1', 'faq.a2', 'faq.a3', 'faq.a4', 'faq.a5', 'faq.a6'] as const
-
-function FaqSection() {
-  const { t } = useLanguage()
-  const [openIndex, setOpenIndex] = useState<number | null>(0)
-
-  return (
-    <section style={{ padding: '80px 0', backgroundColor: '#000000', borderTop: `1px solid ${BORDER}` }}>
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <SectionLabel text={t('faq.label')} centered />
-          <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(32px, 4.5vw, 48px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>
-            {t('faq.heading1')} <span style={{ color: RED }}>{t('faq.heading2')}</span>
-          </h2>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER, border: `1px solid ${BORDER}` }}>
-          {FAQ_KEYS.map((qKey, i) => {
-            const isOpen = openIndex === i
-            return (
-              <div key={qKey} style={{ backgroundColor: CARD }}>
-                <button
-                  onClick={() => setOpenIndex(isOpen ? null : i)}
-                  aria-expanded={isOpen}
-                  style={{
-                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
-                    padding: '22px 24px', textAlign: 'left', backgroundColor: 'transparent', transition: 'background-color 0.15s',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-                >
-                  <span style={{ fontFamily: DISPLAY, fontSize: '17px', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
-                    {t(qKey)}
-                  </span>
-                  <span style={{
-                    flexShrink: 0, width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: isOpen ? RED : MUTED, transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform 0.2s, color 0.15s',
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                  </span>
-                </button>
-                <div style={{ display: 'grid', gridTemplateRows: isOpen ? '1fr' : '0fr', transition: 'grid-template-rows 0.25s ease' }}>
-                  <div style={{ overflow: 'hidden' }}>
-                    <p style={{ margin: 0, padding: '0 24px 22px', fontSize: '14px', lineHeight: 1.7, color: '#999' }}>
-                      {t(FAQ_ANSWER_KEYS[i])}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
       </div>
     </section>
   )
