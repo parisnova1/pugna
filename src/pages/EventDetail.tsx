@@ -12,11 +12,7 @@ import CopyButton from '../components/CopyButton'
 import BackButton from '../components/BackButton'
 import { subscribeToEvent } from '../lib/ws'
 
-const RED = '#0070f3'
-const CARD = '#0f0f0f'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, ON_ACCENT, CARD, LINE as BORDER, MUTED, TEXT, BG, ACCENT_SOFT, FONT_BODY as DISPLAY } from '../theme'
 
 const HERO_IMG = 'https://images.unsplash.com/photo-1546711076-85a7923432ab?w=1440&h=600&fit=crop&auto=format'
 
@@ -333,17 +329,17 @@ export default function EventDetail({ nav }: { nav: NavFn }) {
       </div>
 
       {/* Tabs */}
-      <div style={{ borderBottom: `1px solid ${BORDER}`, backgroundColor: '#000000', position: 'sticky', top: '64px', zIndex: 50 }}>
+      <div style={{ borderBottom: `1px solid ${BORDER}`, backgroundColor: BG, position: 'sticky', top: '64px', zIndex: 50 }}>
         <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px', display: 'flex', gap: '0' }}>
           {(event.format === 'card' ? (['overview', 'fightcard'] as const) : (['overview', 'fightcard', 'fighters'] as const)).map(tabKey => (
             <button key={tabKey} onClick={() => setTab(tabKey)}
               style={{
                 fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-                padding: '18px 24px', color: tab === tabKey ? '#fff' : MUTED,
+                padding: '18px 24px', color: tab === tabKey ? TEXT : MUTED,
                 borderBottom: tab === tabKey ? `2px solid ${RED}` : '2px solid transparent',
                 transition: 'color 0.15s',
               }}
-              onMouseEnter={e => { if (tab !== tabKey) (e.currentTarget.style.color = '#ddd') }}
+              onMouseEnter={e => { if (tab !== tabKey) (e.currentTarget.style.color = TEXT) }}
               onMouseLeave={e => { if (tab !== tabKey) (e.currentTarget.style.color = MUTED) }}
             >
               {t(TAB_LABEL_KEYS[tabKey])}
@@ -417,7 +413,7 @@ function NominateModal({ eventId, weightClasses, onCancel, onSent }: { eventId: 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
               {openClasses.map(wc => (
                 <button key={wc.id} type="button" onClick={() => setWeightClassId(wc.id)}
-                  style={{ padding: '8px 14px', fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', border: `1px solid ${weightClassId === wc.id ? RED : BORDER}`, backgroundColor: weightClassId === wc.id ? '#071a30' : 'transparent', color: weightClassId === wc.id ? '#fff' : MUTED }}
+                  style={{ padding: '8px 14px', fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', border: `1px solid ${weightClassId === wc.id ? RED : BORDER}`, backgroundColor: weightClassId === wc.id ? ACCENT_SOFT : 'transparent', color: weightClassId === wc.id ? TEXT : MUTED }}
                 >
                   {wc.name}
                 </button>
@@ -433,9 +429,9 @@ function NominateModal({ eventId, weightClasses, onCancel, onSent }: { eventId: 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '20px' }}>
                 {rosterFighters.map(f => (
                   <button key={f.id} type="button" onClick={() => setFighterId(f.id)}
-                    style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', border: `1px solid ${fighterId === f.id ? RED : BORDER}`, backgroundColor: fighterId === f.id ? '#071a30' : 'transparent' }}
+                    style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', border: `1px solid ${fighterId === f.id ? RED : BORDER}`, backgroundColor: fighterId === f.id ? ACCENT_SOFT : 'transparent' }}
                   >
-                    <span style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, color: '#fff', textTransform: 'uppercase' }}>{f.name}</span>
+                    <span style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, color: TEXT, textTransform: 'uppercase' }}>{f.name}</span>
                     <span style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED }}>{f.weight} · {f.record}</span>
                   </button>
                 ))}
@@ -445,7 +441,7 @@ function NominateModal({ eventId, weightClasses, onCancel, onSent }: { eventId: 
             <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', marginBottom: '6px' }}>{t('eventDetail.nominateNote')}</div>
             <textarea
               value={note} onChange={e => setNote(e.target.value)}
-              style={{ width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff', padding: '11px 14px', fontFamily: DISPLAY, fontSize: '14px', minHeight: '70px', resize: 'vertical', marginBottom: '20px' }}
+              style={{ width: '100%', backgroundColor: '#F7F5F0', border: `1px solid ${BORDER}`, color: TEXT, padding: '11px 14px', fontFamily: DISPLAY, fontSize: '14px', minHeight: '70px', resize: 'vertical', marginBottom: '20px' }}
             />
 
             {error && <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: RED, marginBottom: '14px' }}>{error}</div>}
@@ -453,7 +449,7 @@ function NominateModal({ eventId, weightClasses, onCancel, onSent }: { eventId: 
               type="button"
               onClick={submit}
               disabled={saving || !weightClassId || !fighterId || (rosterFighters?.length ?? 0) === 0}
-              style={{ width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', opacity: saving ? 0.6 : 1, marginBottom: '10px' }}
+              style={{ width: '100%', backgroundColor: RED, color: ON_ACCENT, fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', opacity: saving ? 0.6 : 1, marginBottom: '10px' }}
             >
               {saving ? 'Sending…' : t('eventDetail.nominate')}
             </button>
@@ -472,7 +468,7 @@ function OverviewTab({ event, weightClasses }: { event: EventInfo; weightClasses
       <div>
         <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '12px' }}>{t('eventDetail.about')}</div>
         <h2 style={{ fontFamily: DISPLAY, fontSize: '36px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '20px' }}>{event.name}</h2>
-        <p style={{ fontSize: '15px', lineHeight: 1.8, color: '#888' }}>
+        <p style={{ fontSize: '15px', lineHeight: 1.8, color: MUTED }}>
           {t('eventDetail.aboutBody', { discipline: event.discipline.toLowerCase(), organizer: event.organizer_name, location: event.location, date: formatDisplayDate(event.date) })}
           {event.format === 'bracket' && weightClasses.length > 0 && t(weightClasses.length === 1 ? 'eventDetail.weightClassesSuffixOne' : 'eventDetail.weightClassesSuffixMany', { count: weightClasses.length })}
         </p>
@@ -493,7 +489,7 @@ function OverviewTab({ event, weightClasses }: { event: EventInfo; weightClasses
           ].map(([k, v]) => (
             <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: `1px solid ${BORDER}` }}>
               <span style={{ fontFamily: DISPLAY, fontSize: '12px', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase' }}>{k}</span>
-              <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 600, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{v}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 600, color: TEXT, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{v}</span>
             </div>
           ))}
         </div>
@@ -563,7 +559,7 @@ function FightCardTab({ eventId, weightClasses, fighters, qrToken }: { eventId: 
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '32px' }}>
         {weightClasses.map(wc => (
           <button key={wc.id} onClick={() => setSelected(wc.id)}
-            style={{ padding: '10px 18px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', border: `1px solid ${selected === wc.id ? RED : BORDER}`, backgroundColor: selected === wc.id ? '#071a30' : 'transparent', color: selected === wc.id ? '#fff' : MUTED }}
+            style={{ padding: '10px 18px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', border: `1px solid ${selected === wc.id ? RED : BORDER}`, backgroundColor: selected === wc.id ? ACCENT_SOFT : 'transparent', color: selected === wc.id ? TEXT : MUTED }}
           >
             {wc.name}
           </button>
@@ -663,12 +659,12 @@ function FightersTab({ nav, fighters }: { nav: NavFn; fighters: EventFighter[] }
       {fighters.map(f => (
         <div key={f.id} style={{ backgroundColor: CARD, overflow: 'hidden', cursor: 'pointer', padding: '20px' }}
           onClick={() => nav(`/fighters/${f.id}`)}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F2F0EA')}
           onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
         >
           <div style={{ fontFamily: DISPLAY, fontSize: '20px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.1 }}>{f.name}</div>
           <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>{f.club} · {f.weight}</div>
-          <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: '#ccc', marginTop: '8px' }}>{f.record}</div>
+          <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, marginTop: '8px' }}>{f.record}</div>
         </div>
       ))}
     </div>
