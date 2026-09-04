@@ -8,11 +8,7 @@ import QrScanner from '../components/QrScanner'
 import Spinner from '../components/Spinner'
 import { FeaturedFight, SparringSection, Footer } from './Home'
 
-const RED = '#0070f3'
-const CARD = '#0f0f0f'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, BG, ACCENT_SOFT, FONT_BODY as DISPLAY } from '../theme'
 
 // Falls back to the platform's Bayern-first go-to-market region for viewers
 // who haven't set a home city (or signed up before this field existed).
@@ -42,8 +38,8 @@ function EmptyState({ message, ctaLabel, onClick }: { message: string; ctaLabel:
       <p style={{ fontFamily: DISPLAY, fontSize: '14px', color: MUTED, marginBottom: '18px' }}>{message}</p>
       <button
         onClick={onClick}
-        style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '10px 24px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
-        onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
+        style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '10px 24px', border: `1px solid ${BORDER}`, color: TEXT, backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
+        onMouseEnter={e => (e.currentTarget.style.borderColor = TEXT)}
         onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
       >
         {ctaLabel}
@@ -113,7 +109,7 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
       {/* Sidebar */}
       <aside style={{
-        width: collapsed ? '76px' : '240px', flexShrink: 0, backgroundColor: '#060606', borderRight: `1px solid ${BORDER}`,
+        width: collapsed ? '76px' : '240px', flexShrink: 0, backgroundColor: BG, borderRight: `1px solid ${BORDER}`,
         padding: '20px 0', position: 'sticky', top: '64px', height: 'calc(100vh - 64px)', overflowY: 'auto', overflowX: 'hidden',
         display: 'flex', flexDirection: 'column', transition: 'width 0.2s ease',
       }}>
@@ -123,7 +119,7 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             style={{ color: MUTED, padding: '8px', transition: 'color 0.15s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+            onMouseEnter={e => (e.currentTarget.style.color = TEXT)}
             onMouseLeave={e => (e.currentTarget.style.color = MUTED)}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
@@ -147,7 +143,7 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
             onClick={() => { logout(); nav('/') }}
             title={collapsed ? t('header.logOut') : undefined}
             style={{ width: '100%', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED, padding: collapsed ? '10px 0' : '10px', border: `1px solid ${BORDER}`, transition: 'color 0.15s, border-color 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#fff' }}
+            onMouseEnter={e => { e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = TEXT }}
             onMouseLeave={e => { e.currentTarget.style.color = MUTED; e.currentTarget.style.borderColor = BORDER }}
           >
             {collapsed ? (
@@ -174,7 +170,7 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
         <div
           onClick={() => nav('/events?q=')}
           style={{ textAlign: 'left', backgroundColor: CARD, border: `1px solid ${RED}`, borderLeft: `4px solid ${RED}`, padding: '24px', cursor: 'pointer', transition: 'background-color 0.15s' }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#181010')}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = ACCENT_SOFT)}
           onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
         >
           <div style={{ width: '40px', height: '40px', border: `1px solid ${RED}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
@@ -196,11 +192,11 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
         <div
           onClick={() => nav('/sparring')}
           style={{ textAlign: 'left', backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px', cursor: 'pointer', transition: 'background-color 0.15s' }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F2F0EA')}
           onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
         >
           <div style={{ width: '40px', height: '40px', border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" /></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" /></svg>
           </div>
           <div style={{ fontFamily: DISPLAY, fontSize: '19px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '6px' }}>{t('sparring.findSparring')}</div>
           <p style={{ color: MUTED, fontSize: '13px', lineHeight: 1.5 }}>{t('viewerHome.findSparringBody', { region })}</p>
@@ -209,11 +205,11 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
         <div
           onClick={() => nav('/clubs')}
           style={{ textAlign: 'left', backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px', cursor: 'pointer', transition: 'background-color 0.15s' }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F2F0EA')}
           onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
         >
           <div style={{ width: '40px', height: '40px', border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
           </div>
           <div style={{ fontFamily: DISPLAY, fontSize: '19px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '6px' }}>{t('viewerHome.findClub')}</div>
           <p style={{ color: MUTED, fontSize: '13px', lineHeight: 1.5 }}>{t('viewerHome.findClubBody', { region })}</p>
@@ -225,7 +221,7 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
         <div
           onClick={() => nav(`/events/${upcomingSaved.id}`)}
           style={{ backgroundColor: CARD, border: `1px solid ${RED}`, borderLeft: `4px solid ${RED}`, padding: '28px', marginBottom: '48px', cursor: 'pointer', transition: 'background-color 0.15s' }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#181010')}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = ACCENT_SOFT)}
           onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
         >
           <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '12px' }}>{t('viewerHome.yourNextEvent')}</div>
@@ -261,7 +257,7 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
               return (
                 <div key={ev.id} style={{ backgroundColor: CARD, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'background-color 0.15s' }}
                   onClick={() => nav(`/events/${ev.id}`)}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F2F0EA')}
                   onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
                 >
                   <div style={{ width: '52px', textAlign: 'center', flexShrink: 0 }}>
@@ -273,7 +269,7 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
                     <div style={{ fontFamily: DISPLAY, fontSize: '17px', fontWeight: 800, textTransform: 'uppercase' }}>{ev.name}</div>
                     <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>{ev.location} · {ev.organizer_name}</div>
                   </div>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: '#fff', border: '1px solid #3a3a3a', padding: '8px 16px', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: TEXT, border: `1px solid ${BORDER}`, padding: '8px 16px', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', flexShrink: 0 }}>
                     {t('common.viewCard')}
                   </div>
                 </div>
@@ -301,10 +297,10 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
             {savedEvents.map(ev => {
               const { day, mon } = dateBadge(ev.date)
               return (
-                <div key={ev.id} style={{ backgroundColor: '#0a0a0a', padding: '14px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: 'background-color 0.15s' }}
+                <div key={ev.id} style={{ backgroundColor: CARD, padding: '14px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: 'background-color 0.15s' }}
                   onClick={() => nav(`/events/${ev.id}`)}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#0a0a0a')}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F2F0EA')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
                 >
                   <div style={{ width: '40px', textAlign: 'center', flexShrink: 0 }}>
                     <div style={{ fontFamily: DISPLAY, fontSize: '16px', fontWeight: 900, color: RED, lineHeight: 1 }}>{day}</div>
@@ -332,12 +328,12 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
               const initials = f.name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
               return (
                 <button key={f.id} onClick={() => nav(`/fighters/${f.id}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, padding: '8px 14px 8px 8px', borderRadius: '30px', textAlign: 'left' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '8px 14px 8px 8px', borderRadius: '30px', textAlign: 'left' }}
                 >
-                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#0a1f33', color: RED, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: DISPLAY, fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
+                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: ACCENT_SOFT, color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: DISPLAY, fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
                     {initials || '?'}
                   </div>
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name} <span style={{ color: MUTED }}>· {f.weight}</span></span>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name} <span style={{ color: MUTED }}>· {f.weight}</span></span>
                 </button>
               )
             })}
@@ -356,12 +352,12 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
               const initials = c.name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
               return (
                 <button key={c.id} onClick={() => nav(`/clubs/${c.id}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, padding: '8px 14px 8px 8px', borderRadius: '30px', textAlign: 'left' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '8px 14px 8px 8px', borderRadius: '30px', textAlign: 'left' }}
                 >
-                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#0a1f33', color: RED, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: DISPLAY, fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
+                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: ACCENT_SOFT, color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: DISPLAY, fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
                     {initials || '?'}
                   </div>
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
                 </button>
               )
             })}
@@ -380,10 +376,10 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
             <div style={{ fontFamily: DISPLAY, fontSize: '20px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '10px' }}>{t('viewerHome.unrecognizedCode')}</div>
             <p style={{ color: MUTED, fontSize: '14px', lineHeight: 1.6, marginBottom: '24px' }}>{scanError}</p>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setScanError(null)} style={{ flex: 1, padding: '12px', border: `1px solid ${BORDER}`, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <button onClick={() => setScanError(null)} style={{ flex: 1, padding: '12px', border: `1px solid ${BORDER}`, color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 {t('common.tryAgain')}
               </button>
-              <button onClick={() => { setScanError(null); nav('/events?q=') }} style={{ flex: 1, padding: '12px', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <button onClick={() => { setScanError(null); nav('/events?q=') }} style={{ flex: 1, padding: '12px', backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 {t('common.searchInstead')}
               </button>
             </div>
