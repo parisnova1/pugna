@@ -5,11 +5,7 @@ import { apiFetch } from '../lib/api'
 import { formatDisplayDate } from '../lib/date'
 import BackButton from '../components/BackButton'
 
-const RED = '#0070f3'
-const CARD = '#0f0f0f'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, FONT_BODY as DISPLAY } from '../theme'
 
 type EventResult = { id: number; name: string; date: string; location: string; discipline: string; organizer_name: string }
 type FighterResult = { id: number; name: string; club: string; weight: string; record: string; discipline: string; location: string }
@@ -126,13 +122,13 @@ function ResultCard({ eyebrow, title, sub, tag, onClick }: { eyebrow: string; ti
   return (
     <div style={{ backgroundColor: CARD, padding: '20px', cursor: 'pointer' }}
       onClick={onClick}
-      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F2F0EA')}
       onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
     >
       {eyebrow && <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: RED, textTransform: 'uppercase', marginBottom: '8px' }}>{eyebrow}</div>}
-      <div style={{ fontFamily: DISPLAY, fontSize: '20px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.1, marginBottom: '6px' }}>{title}</div>
+      <div style={{ fontFamily: DISPLAY, fontSize: '20px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1.1, marginBottom: '6px', color: TEXT }}>{title}</div>
       <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{sub}</div>
-      {tag && <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: '#ccc', marginTop: '8px' }}>{tag}</div>}
+      {tag && <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, marginTop: '8px' }}>{tag}</div>}
     </div>
   )
 }

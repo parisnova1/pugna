@@ -8,11 +8,7 @@ import Spinner from '../components/Spinner'
 import CopyButton from '../components/CopyButton'
 import BackButton from '../components/BackButton'
 
-const RED = '#0070f3'
-const CARD = '#0f0f0f'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, ON_ACCENT, CARD, LINE as BORDER, MUTED, TEXT, BG, FONT_BODY as DISPLAY } from '../theme'
 
 const COVER = 'https://images.unsplash.com/photo-1509563268479-0f004cf3f58b?w=1440&h=500&fit=crop&auto=format'
 
@@ -99,7 +95,7 @@ export default function ClubProfile({ nav: _nav }: { nav: NavFn }) {
       </div>
 
       {/* Club header */}
-      <div style={{ backgroundColor: '#000000', borderBottom: `1px solid ${BORDER}` }}>
+      <div style={{ backgroundColor: BG, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '32px 32px', display: 'flex', alignItems: 'flex-end', gap: '32px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '24px' }}>
             <div style={{ width: '80px', height: '80px', backgroundColor: CARD, border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
@@ -118,7 +114,7 @@ export default function ClubProfile({ nav: _nav }: { nav: NavFn }) {
               </h1>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {club.disciplines.map(d => (
-                  <span key={d} style={{ fontFamily: DISPLAY, fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase', padding: '3px 8px', border: `1px solid #2a2a2a` }}>{d}</span>
+                  <span key={d} style={{ fontFamily: DISPLAY, fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase', padding: '3px 8px', border: `1px solid ${BORDER}` }}>{d}</span>
                 ))}
               </div>
             </div>
@@ -133,7 +129,7 @@ export default function ClubProfile({ nav: _nav }: { nav: NavFn }) {
                 style={{
                   fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
                   padding: '12px 28px', opacity: followBusy ? 0.6 : 1, transition: 'all 0.15s',
-                  backgroundColor: following ? 'transparent' : RED, color: '#fff',
+                  backgroundColor: following ? 'transparent' : RED, color: following ? TEXT : ON_ACCENT,
                   border: `1px solid ${following ? BORDER : RED}`,
                 }}
               >
@@ -161,7 +157,7 @@ export default function ClubProfile({ nav: _nav }: { nav: NavFn }) {
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '48px 32px', display: 'grid', gridTemplateColumns: '1fr 360px', gap: '48px' }}>
         <div>
           <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '12px' }}>{t('clubProfile.about')}</div>
-          <p style={{ fontSize: '15px', lineHeight: 1.8, color: '#888' }}>
+          <p style={{ fontSize: '15px', lineHeight: 1.8, color: MUTED }}>
             {club.description || t('clubProfile.noDescription')}
           </p>
         </div>
@@ -179,7 +175,7 @@ export default function ClubProfile({ nav: _nav }: { nav: NavFn }) {
             ].map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: `1px solid ${BORDER}` }}>
                 <span style={{ fontFamily: DISPLAY, fontSize: '12px', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase' }}>{k}</span>
-                <span style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 600, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>{v}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 600, color: TEXT, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>{v}</span>
               </div>
             ))}
           </div>

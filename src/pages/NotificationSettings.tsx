@@ -3,11 +3,7 @@ import { useAuth } from '../auth/AuthContext'
 import { apiFetch } from '../lib/api'
 import BackButton from '../components/BackButton'
 
-const RED = '#0070f3'
-const CARD = '#0f0f0f'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, FONT_BODY as DISPLAY } from '../theme'
 
 const NOTIFICATION_TYPES: Array<[string, string]> = [
   ['event.live', 'Event goes live'],
@@ -61,14 +57,14 @@ export default function NotificationSettings({ nav }: { nav: (path: string) => v
                 onClick={() => toggle(type)}
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: CARD, padding: '16px 18px' }}
               >
-                <span style={{ fontFamily: DISPLAY, fontSize: '14px', color: '#fff' }}>{label}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: '14px', color: TEXT }}>{label}</span>
                 <span style={{
                   width: '40px', height: '22px', borderRadius: '11px', backgroundColor: categories[type] !== false ? RED : BORDER,
                   position: 'relative', transition: 'background-color 0.15s',
                 }}>
                   <span style={{
                     position: 'absolute', top: '2px', left: categories[type] !== false ? '20px' : '2px',
-                    width: '18px', height: '18px', borderRadius: '9px', backgroundColor: '#fff', transition: 'left 0.15s',
+                    width: '18px', height: '18px', borderRadius: '9px', backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', transition: 'left 0.15s',
                   }} />
                 </span>
               </button>
@@ -82,7 +78,7 @@ export default function NotificationSettings({ nav }: { nav: (path: string) => v
               onChange={e => setQuietStart(e.target.value)}
               onBlur={() => save(categories)}
               placeholder="22:00"
-              style={{ width: '100px', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff', padding: '10px 12px', fontFamily: DISPLAY, fontSize: '14px', textAlign: 'center' }}
+              style={{ width: '100px', backgroundColor: '#F7F5F0', border: `1px solid ${BORDER}`, color: TEXT, padding: '10px 12px', fontFamily: DISPLAY, fontSize: '14px', textAlign: 'center' }}
             />
             <span style={{ color: MUTED }}>–</span>
             <input
@@ -90,7 +86,7 @@ export default function NotificationSettings({ nav }: { nav: (path: string) => v
               onChange={e => setQuietEnd(e.target.value)}
               onBlur={() => save(categories)}
               placeholder="08:00"
-              style={{ width: '100px', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff', padding: '10px 12px', fontFamily: DISPLAY, fontSize: '14px', textAlign: 'center' }}
+              style={{ width: '100px', backgroundColor: '#F7F5F0', border: `1px solid ${BORDER}`, color: TEXT, padding: '10px 12px', fontFamily: DISPLAY, fontSize: '14px', textAlign: 'center' }}
             />
           </div>
         </>
