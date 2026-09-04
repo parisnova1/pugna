@@ -1,9 +1,6 @@
-const RED = '#0070f3'
-const CARD = '#0f0f0f'
-const BORDER = '#333333'
-const BORDER2 = '#2a2a2a'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, POSITIVE_GREEN, ACCENT_SOFT, FONT_BODY as DISPLAY } from '../theme'
+
+const BORDER2 = 'rgba(17,17,20,0.22)'
 
 export type Bout = {
   id: number
@@ -94,7 +91,7 @@ export default function Bracket({ bouts, fighters, onBoutClick }: { bouts: Bout[
                 <div
                   key={m.id}
                   onClick={isClickable ? () => onBoutClick!(m) : undefined}
-                  onMouseEnter={isClickable ? e => { e.currentTarget.style.borderColor = RED; e.currentTarget.style.backgroundColor = '#071a30' } : undefined}
+                  onMouseEnter={isClickable ? e => { e.currentTarget.style.borderColor = RED; e.currentTarget.style.backgroundColor = ACCENT_SOFT } : undefined}
                   onMouseLeave={isClickable ? e => { e.currentTarget.style.borderColor = BORDER2; e.currentTarget.style.backgroundColor = CARD } : undefined}
                   title={isClickable ? 'Click to record a result' : undefined}
                   style={{
@@ -111,13 +108,13 @@ export default function Bracket({ bouts, fighters, onBoutClick }: { bouts: Bout[
                         style={{
                           flex: 1, display: 'flex', alignItems: 'center', padding: '0 10px',
                           borderBottom: side === 'red' ? `1px solid ${BORDER}` : 'none',
-                          backgroundColor: isWinner ? 'rgba(76,175,80,0.08)' : 'transparent',
+                          backgroundColor: isWinner ? 'rgba(48,209,88,0.1)' : 'transparent',
                         }}
                       >
                         <span
                           style={{
                             fontFamily: DISPLAY, fontSize: '13px', fontWeight: isWinner ? 800 : 500,
-                            color: fid === null ? MUTED : isWinner ? '#4caf50' : '#eee',
+                            color: fid === null ? MUTED : isWinner ? POSITIVE_GREEN : TEXT,
                             textTransform: fid === null ? 'uppercase' : 'none',
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                           }}
@@ -128,7 +125,7 @@ export default function Bracket({ bouts, fighters, onBoutClick }: { bouts: Bout[
                     )
                   })}
                   {!isBye && m.status === 'completed' && m.method && (
-                    <div style={{ position: 'absolute', right: -4, top: -10, backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, padding: '1px 6px', fontFamily: DISPLAY, fontSize: '10px', color: MUTED, textTransform: 'uppercase' }}>
+                    <div style={{ position: 'absolute', right: -4, top: -10, backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '1px 6px', fontFamily: DISPLAY, fontSize: '10px', color: MUTED, textTransform: 'uppercase' }}>
                       {m.method}
                     </div>
                   )}

@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import type * as XLSXType from 'xlsx'
-
-const RED = '#0070f3'
-const CARD = '#0f0f0f'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, ON_ACCENT, CARD, LINE as BORDER, MUTED, TEXT, FONT_BODY as DISPLAY } from '../theme'
 
 export type ImportedFighter = { name: string; club: string; weight: string; record?: string }
 
@@ -87,7 +82,7 @@ export default function ExcelImport({ onCancel, onImport }: { onCancel: () => vo
       style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
       onClick={onCancel}
     >
-      <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, width: '100%', maxWidth: '640px', padding: '32px', maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: '20px', color: TEXT, width: '100%', maxWidth: '640px', padding: '32px', maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 style={{ fontFamily: DISPLAY, fontSize: '24px', fontWeight: 900, textTransform: 'uppercase' }}>Import Fighters from Excel</h2>
           <button onClick={onCancel} aria-label="Close" style={{ color: MUTED, padding: '4px' }}>
@@ -104,7 +99,7 @@ export default function ExcelImport({ onCancel, onImport }: { onCancel: () => vo
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', border: `1px dashed ${BORDER}`, padding: '40px 20px', cursor: 'pointer', textAlign: 'center' }}
             >
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" color={MUTED}><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
-              <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#fff' }}>Choose a file</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: TEXT }}>Choose a file</span>
               <span style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED }}>.xlsx, .xls or .csv</span>
               <input
                 type="file"
@@ -122,16 +117,16 @@ export default function ExcelImport({ onCancel, onImport }: { onCancel: () => vo
               {fileName} · {rows.length} fighter{rows.length === 1 ? '' : 's'} found
             </div>
             <div style={{ border: `1px solid ${BORDER}`, marginBottom: '20px', maxHeight: '320px', overflowY: 'auto' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 90px 90px', backgroundColor: '#060606', padding: '10px 14px', position: 'sticky', top: 0 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 90px 90px', backgroundColor: '#F2F0EA', padding: '10px 14px', position: 'sticky', top: 0 }}>
                 {['Name', 'Club', 'Weight', 'Record'].map(h => (
                   <div key={h} style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase' }}>{h}</div>
                 ))}
               </div>
               {rows.map((r, i) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 90px 90px', padding: '8px 14px', borderTop: `1px solid ${BORDER}` }}>
-                  <div style={{ fontSize: '13px', color: '#eee' }}>{r.name}</div>
+                  <div style={{ fontSize: '13px', color: TEXT }}>{r.name}</div>
                   <div style={{ fontSize: '13px', color: MUTED }}>{r.club || '—'}</div>
-                  <div style={{ fontSize: '13px', color: '#eee' }}>{r.weight}</div>
+                  <div style={{ fontSize: '13px', color: TEXT }}>{r.weight}</div>
                   <div style={{ fontSize: '13px', color: MUTED }}>{r.record || '—'}</div>
                 </div>
               ))}
@@ -140,7 +135,7 @@ export default function ExcelImport({ onCancel, onImport }: { onCancel: () => vo
               <button
                 type="button"
                 onClick={() => { setRows(null); setFileName('') }}
-                style={{ flex: 1, padding: '13px', border: `1px solid ${BORDER}`, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ flex: 1, padding: '13px', border: `1px solid ${BORDER}`, borderRadius: '9999px', color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}
               >
                 Choose Different File
               </button>
@@ -148,7 +143,7 @@ export default function ExcelImport({ onCancel, onImport }: { onCancel: () => vo
                 type="button"
                 onClick={confirmImport}
                 disabled={importing}
-                style={{ flex: 1, padding: '13px', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', opacity: importing ? 0.6 : 1 }}
+                style={{ flex: 1, padding: '13px', backgroundColor: RED, color: ON_ACCENT, borderRadius: '9999px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', opacity: importing ? 0.6 : 1 }}
               >
                 {importing ? 'Importing…' : `Import ${rows.length} Fighter${rows.length === 1 ? '' : 's'}`}
               </button>
