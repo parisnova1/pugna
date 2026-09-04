@@ -1,20 +1,15 @@
 import { useState } from 'react'
 import { useAuth, type Role } from '../auth/AuthContext'
 import { useLanguage } from '../i18n/LanguageContext'
-
-const RED = '#0070f3'
-const CARD = '#0f0f0f'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, ON_ACCENT, CARD, LINE as BORDER, MUTED, TEXT, FONT_BODY as DISPLAY } from '../theme'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  backgroundColor: '#0a0a0a',
+  backgroundColor: '#F7F5F0',
   border: `1px solid ${BORDER}`,
-  color: '#fff',
+  color: TEXT,
   padding: '12px 14px',
-  fontFamily: "'Geist Sans', sans-serif",
+  fontFamily: DISPLAY,
   fontSize: '14px',
   outline: 'none',
 }
@@ -68,7 +63,7 @@ export default function LoginModal({ initialMode = 'login', initialRole = 'viewe
       onClick={onClose}
     >
       <div
-        style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, width: '100%', maxWidth: '420px', padding: '36px' }}
+        style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: '20px', color: TEXT, width: '100%', maxWidth: '420px', padding: '36px' }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
@@ -114,9 +109,9 @@ export default function LoginModal({ initialMode = 'login', initialRole = 'viewe
           <button
             type="submit"
             disabled={loading}
-            style={{ marginTop: '8px', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '14px', opacity: loading ? 0.6 : 1, transition: 'background-color 0.15s' }}
-            onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = '#0058cc' }}
-            onMouseLeave={e => { if (!loading) e.currentTarget.style.backgroundColor = RED }}
+            style={{ marginTop: '8px', backgroundColor: RED, color: ON_ACCENT, fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '14px', borderRadius: '9999px', opacity: loading ? 0.6 : 1, transition: 'opacity 0.15s' }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.85' }}
+            onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = '1' }}
           >
             {loading ? t('login.pleaseWait') : mode === 'login' ? t('login.logIn') : t('login.createAccount')}
           </button>
@@ -127,7 +122,7 @@ export default function LoginModal({ initialMode = 'login', initialRole = 'viewe
           <button
             type="button"
             onClick={() => { setError(null); setMode(mode === 'login' ? 'signup' : 'login') }}
-            style={{ color: '#fff', fontWeight: 700, textDecoration: 'underline' }}
+            style={{ color: TEXT, fontWeight: 700, textDecoration: 'underline' }}
           >
             {mode === 'login' ? t('login.signUp') : t('login.logInLink')}
           </button>

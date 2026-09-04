@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { apiFetch } from '../lib/api'
-
-const BORDER = '#333333'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { CARD, TEXT, LINE as BORDER, FONT_BODY as DISPLAY } from '../theme'
 
 type GeoResult = { label: string; lat: string; lon: string }
 
@@ -43,14 +41,14 @@ export default function LocationInput({ value, onChange, onSelect, placeholder, 
         autoComplete="off"
       />
       {open && results.length > 0 && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, zIndex: 20, maxHeight: '220px', overflowY: 'auto' }}>
+        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: '12px', overflow: 'hidden', zIndex: 20, maxHeight: '220px', overflowY: 'auto' }}>
           {results.map((r, i) => (
             <button
               key={i}
               type="button"
               onMouseDown={() => { onChange(r.label); onSelect?.({ label: r.label, lat: Number(r.lat), lon: Number(r.lon) }); setOpen(false); setResults([]) }}
-              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', fontFamily: DISPLAY, fontSize: '13px', color: '#ccc', letterSpacing: '0.02em', borderBottom: `1px solid ${BORDER}` }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#161616')}
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', fontFamily: DISPLAY, fontSize: '13px', color: TEXT, letterSpacing: '0.02em', borderBottom: `1px solid ${BORDER}` }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F2F0EA')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
             >
               {r.label}

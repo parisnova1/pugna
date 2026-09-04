@@ -1,6 +1,8 @@
-const RED = '#0070f3'
+import { TEXT } from '../theme'
 
-export default function Spinner({ size = 16, color = RED }: { size?: number; color?: string }) {
+// Defaults to ink rather than the lilac accent — a pale lilac stroke has too
+// little contrast against the canvas background to read as a loading spinner.
+export default function Spinner({ size = 16, color = TEXT }: { size?: number; color?: string }) {
   return (
     <svg
       width={size}

@@ -9,11 +9,7 @@ import LocationInput from '../components/LocationInput'
 import Spinner from '../components/Spinner'
 import Reveal from '../components/Reveal'
 
-const RED = '#0070f3'
-const CARD = '#0f0f0f'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, ACCENT, ON_ACCENT, CARD, LINE as BORDER, MUTED, FONT_BODY as DISPLAY, FONT_DISPLAY, BG, TEXT, ACCENT_SOFT } from '../theme'
 
 const IMAGES = {
   hero: 'https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?w=1920&h=1080&fit=crop&auto=format',
@@ -34,80 +30,17 @@ type PublicClub = { id: number; name: string; location: string; disciplines: str
 type OpenAuthFn = (mode: 'login' | 'signup', role?: Role) => void
 
 // ─── Marketing surface — editorial paper, boxing first ─────────────────────
-// Separate visual language from the dark-glass app surface below (Serus-
-// inspired per the product spec): warm canvas, serif display type, dust
-// lilac reserved for marketing CTAs only. Never reuse MKT_LILAC/MKT_SERIF
-// inside the app views further down this file — the spec is explicit that
-// the two surfaces must not mix.
-const MKT_CANVAS = '#EFEDE8'
-const MKT_INK = '#111114'
-const MKT_INK_MUTED = 'rgba(17,17,20,0.62)'
-const MKT_NAV_BG = '#0A0A0A'
-const MKT_LILAC = '#C5B4E3'
-const MKT_LILAC_SOFT = '#DCD1EC'
-const MKT_LINE = 'rgba(17,17,20,0.12)'
-const MKT_SERIF = "'Newsreader', Georgia, 'Times New Roman', serif"
-const MKT_SANS = "'Geist Sans', sans-serif"
-
-function scrollToMarketingId(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
+// The app-wide theme (see ../theme.ts) originated here, then got promoted to
+// a shared module once the rest of the app adopted the same look. Nav is now
+// the app-wide Header (see App.tsx) — this page no longer renders its own.
 export default function Home({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }) {
   return (
-    <main style={{ backgroundColor: MKT_CANVAS, color: MKT_INK, minHeight: '100vh' }}>
-      <MarketingNav nav={nav} onOpenAuth={onOpenAuth} />
+    <main style={{ backgroundColor: BG, color: TEXT, minHeight: '100vh' }}>
       <MarketingHero />
       <Reveal><MarketingForClubs onOpenAuth={onOpenAuth} /></Reveal>
       <Reveal><MarketingForOrganizers onOpenAuth={onOpenAuth} /></Reveal>
       <MarketingFooter />
     </main>
-  )
-}
-
-// ─── Marketing nav — floating black pill capsule ───────────────────────────
-
-function MarketingNav({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }) {
-  const { user } = useAuth()
-
-  const goLogin = () => {
-    if (user) nav(user.role === 'club' ? '/club-dashboard' : user.role === 'organizer' ? '/organizer' : '/home')
-    else onOpenAuth('login')
-  }
-
-  const linkStyle: React.CSSProperties = {
-    fontFamily: MKT_SANS, fontSize: '13px', fontWeight: 500, color: 'rgba(255,255,255,0.75)',
-    padding: '8px 14px', whiteSpace: 'nowrap', transition: 'color 0.15s',
-  }
-
-  return (
-    <div style={{ position: 'sticky', top: '16px', zIndex: 50, display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-      <nav style={{
-        display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: MKT_NAV_BG,
-        borderRadius: '9999px', padding: '6px 8px 6px 20px', maxWidth: '1100px', width: '100%',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-      }}>
-        <button onClick={() => nav('/')} style={{ fontFamily: MKT_SANS, fontSize: '15px', fontWeight: 700, letterSpacing: '0.14em', color: '#fff', marginRight: '8px', flexShrink: 0 }}>
-          PUGNA
-        </button>
-        <button className="hidden sm:inline" onClick={() => scrollToMarketingId('mkt-for-clubs')}
-          style={linkStyle} onMouseEnter={e => (e.currentTarget.style.color = '#fff')} onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
-        >For Clubs</button>
-        <button className="hidden sm:inline" onClick={() => scrollToMarketingId('mkt-for-organizers')}
-          style={linkStyle} onMouseEnter={e => (e.currentTarget.style.color = '#fff')} onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
-        >For Organizers</button>
-        <button className="hidden lg:inline" onClick={() => nav('/events')}
-          style={linkStyle} onMouseEnter={e => (e.currentTarget.style.color = '#fff')} onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
-        >Events</button>
-        <button className="hidden lg:inline" onClick={() => scrollToMarketingId('mkt-footer')}
-          style={linkStyle} onMouseEnter={e => (e.currentTarget.style.color = '#fff')} onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
-        >About</button>
-        <div style={{ flex: 1 }} />
-        <button onClick={goLogin} style={{ backgroundColor: '#fff', color: MKT_NAV_BG, fontFamily: MKT_SANS, fontSize: '13px', fontWeight: 600, padding: '9px 20px', borderRadius: '9999px', flexShrink: 0 }}>
-          Log in
-        </button>
-      </nav>
-    </div>
   )
 }
 
@@ -118,14 +51,14 @@ function MarketingHero() {
     <section style={{ maxWidth: '1200px', margin: '0 auto', padding: '56px 24px 96px' }}>
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: '56px', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontFamily: MKT_SERIF, fontSize: 'clamp(40px, 7vw, 88px)', fontWeight: 400, lineHeight: 1.02, letterSpacing: '-0.01em', margin: 0 }}>
+          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(40px, 7vw, 88px)', fontWeight: 400, lineHeight: 1.02, letterSpacing: '-0.01em', margin: 0 }}>
             The card,<br />live.
           </h1>
-          <div style={{ width: '56px', height: '3px', backgroundColor: MKT_LILAC, margin: '28px 0' }} />
-          <p style={{ fontFamily: MKT_SANS, fontSize: '17px', lineHeight: 1.6, color: MKT_INK_MUTED, maxWidth: '420px', margin: '0 0 28px' }}>
+          <div style={{ width: '56px', height: '3px', backgroundColor: ACCENT, margin: '28px 0' }} />
+          <p style={{ fontFamily: DISPLAY, fontSize: '17px', lineHeight: 1.6, color: MUTED, maxWidth: '420px', margin: '0 0 28px' }}>
             Pugna is the private network for amateur boxing. Create events. Fill cards. Keep control.
           </p>
-          <div style={{ fontFamily: MKT_SANS, fontSize: '12px', fontWeight: 600, letterSpacing: '0.2em', color: MKT_INK, textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 600, letterSpacing: '0.2em', color: TEXT, textTransform: 'uppercase' }}>
             Boxing first
           </div>
         </div>
@@ -139,32 +72,32 @@ function MarketingHero() {
 
 // ─── For clubs — photo + lilac overlay card (container-query positioned) ──
 
-const MKT_BULLET_ICONS: Record<string, React.ReactNode> = {
+const BULLET_ICONS: Record<string, React.ReactNode> = {
   home: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={MKT_INK} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 11l9-7 9 7" /><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" />
     </svg>
   ),
   person: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={MKT_INK} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
     </svg>
   ),
   calendar: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={MKT_INK} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" />
     </svg>
   ),
 }
 
 function MarketingForClubs({ onOpenAuth }: { onOpenAuth: OpenAuthFn }) {
-  const bullets: Array<[keyof typeof MKT_BULLET_ICONS, string]> = [
+  const bullets: Array<[keyof typeof BULLET_ICONS, string]> = [
     ['home', 'Verein anlegen & verwalten'],
     ['person', 'Boxer einladen & organisieren'],
     ['calendar', 'Kämpfe matchen & Karten planen'],
   ]
   return (
-    <section id="mkt-for-clubs" style={{ maxWidth: '1200px', margin: '0 auto', padding: '56px 24px', borderTop: `1px solid ${MKT_LINE}` }}>
+    <section id="mkt-for-clubs" style={{ maxWidth: '1200px', margin: '0 auto', padding: '56px 24px', borderTop: `1px solid ${BORDER}` }}>
       <style>{`
         .mkt-clubphoto { container-type: inline-size; }
         .mkt-clubphoto .mkt-overlay { position: static; margin-top: 16px; border-radius: 16px; }
@@ -174,33 +107,33 @@ function MarketingForClubs({ onOpenAuth }: { onOpenAuth: OpenAuthFn }) {
       `}</style>
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: '56px', alignItems: 'center' }}>
         <div>
-          <div style={{ fontFamily: MKT_SANS, fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', color: MKT_LILAC, textTransform: 'uppercase', marginBottom: '16px' }}>For clubs</div>
-          <h2 style={{ fontFamily: MKT_SERIF, fontSize: 'clamp(30px, 4vw, 44px)', fontWeight: 400, lineHeight: 1.1, margin: '0 0 20px' }}>
+          <div style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', color: ACCENT, textTransform: 'uppercase', marginBottom: '16px' }}>For clubs</div>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(30px, 4vw, 44px)', fontWeight: 400, lineHeight: 1.1, margin: '0 0 20px' }}>
             More than a roster.<br />A home for your gym.
           </h2>
-          <p style={{ fontFamily: MKT_SANS, fontSize: '15px', lineHeight: 1.65, color: MKT_INK_MUTED, marginBottom: '28px', maxWidth: '440px' }}>
+          <p style={{ fontFamily: DISPLAY, fontSize: '15px', lineHeight: 1.65, color: MUTED, marginBottom: '28px', maxWidth: '440px' }}>
             Create your Verein. Manage your boxers. Build your cards. Keep your club in control.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {bullets.map(([icon, label]) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '9999px', border: `1px solid ${MKT_LINE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {MKT_BULLET_ICONS[icon]}
+                <div style={{ width: '32px', height: '32px', borderRadius: '9999px', border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {BULLET_ICONS[icon]}
                 </div>
-                <span style={{ fontFamily: MKT_SANS, fontSize: '15px', color: MKT_INK }}>{label}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: '15px', color: TEXT }}>{label}</span>
               </div>
             ))}
           </div>
         </div>
         <div className="mkt-clubphoto" style={{ position: 'relative' }}>
           <img src={IMAGES.ring} alt="" style={{ display: 'block', width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: '28px', filter: 'grayscale(100%) contrast(1.05)', backgroundColor: '#1a1a1a' }} />
-          <div className="mkt-overlay" style={{ backgroundColor: MKT_LILAC_SOFT, padding: '20px' }}>
-            <div style={{ fontFamily: MKT_SERIF, fontSize: '22px', color: MKT_INK, marginBottom: '8px' }}>Verein anlegen</div>
-            <p style={{ fontFamily: MKT_SANS, fontSize: '13px', lineHeight: 1.5, color: MKT_INK_MUTED, margin: '0 0 16px' }}>
+          <div className="mkt-overlay" style={{ backgroundColor: ACCENT_SOFT, padding: '20px' }}>
+            <div style={{ fontFamily: FONT_DISPLAY, fontSize: '22px', color: TEXT, marginBottom: '8px' }}>Verein anlegen</div>
+            <p style={{ fontFamily: DISPLAY, fontSize: '13px', lineHeight: 1.5, color: MUTED, margin: '0 0 16px' }}>
               Starte deinen Club auf Pugna und lade dein Team ein.
             </p>
-            <button onClick={() => onOpenAuth('signup', 'club')} aria-label="Verein anlegen" style={{ width: '36px', height: '36px', borderRadius: '9999px', backgroundColor: MKT_LILAC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={MKT_INK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            <button onClick={() => onOpenAuth('signup', 'club')} aria-label="Verein anlegen" style={{ width: '36px', height: '36px', borderRadius: '9999px', backgroundColor: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
           </div>
         </div>
@@ -219,40 +152,40 @@ function MarketingForOrganizers({ onOpenAuth }: { onOpenAuth: OpenAuthFn }) {
     'Privat, sicher und datenschutzbewusst',
   ]
   return (
-    <section id="mkt-for-organizers" style={{ maxWidth: '1200px', margin: '0 auto', padding: '56px 24px 96px', borderTop: `1px solid ${MKT_LINE}` }}>
+    <section id="mkt-for-organizers" style={{ maxWidth: '1200px', margin: '0 auto', padding: '56px 24px 96px', borderTop: `1px solid ${BORDER}` }}>
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: '56px', alignItems: 'stretch' }}>
         <div>
-          <div style={{ fontFamily: MKT_SANS, fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', color: MKT_LILAC, textTransform: 'uppercase', marginBottom: '16px' }}>For organizers</div>
-          <h2 style={{ fontFamily: MKT_SERIF, fontSize: 'clamp(30px, 4vw, 44px)', fontWeight: 400, lineHeight: 1.1, margin: '0 0 20px' }}>
+          <div style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', color: ACCENT, textTransform: 'uppercase', marginBottom: '16px' }}>For organizers</div>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 'clamp(30px, 4vw, 44px)', fontWeight: 400, lineHeight: 1.1, margin: '0 0 20px' }}>
             Templates for events<br />that run themselves.
           </h2>
-          <p style={{ fontFamily: MKT_SANS, fontSize: '15px', lineHeight: 1.65, color: MKT_INK_MUTED, marginBottom: '28px', maxWidth: '440px' }}>
+          <p style={{ fontFamily: DISPLAY, fontSize: '15px', lineHeight: 1.65, color: MUTED, marginBottom: '28px', maxWidth: '440px' }}>
             From invitations to weigh-ins to fight cards. Use proven templates. Customize. Publish. Focus on the fights.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {checklist.map(label => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={MKT_INK} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                   <circle cx="12" cy="12" r="9" /><path d="M8.5 12.5l2.5 2.5 5-5" />
                 </svg>
-                <span style={{ fontFamily: MKT_SANS, fontSize: '15px', color: MKT_INK }}>{label}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: '15px', color: TEXT }}>{label}</span>
               </div>
             ))}
           </div>
         </div>
-        <div style={{ backgroundColor: MKT_LILAC_SOFT, borderRadius: '28px', padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '260px' }}>
+        <div style={{ backgroundColor: ACCENT_SOFT, borderRadius: '28px', padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '260px' }}>
           <div>
-            <h3 style={{ fontFamily: MKT_SERIF, fontSize: '32px', fontWeight: 400, color: MKT_INK, margin: '0 0 16px' }}>Event erstellen.</h3>
-            <p style={{ fontFamily: MKT_SANS, fontSize: '15px', lineHeight: 1.6, color: MKT_INK_MUTED, margin: 0, maxWidth: '320px' }}>
+            <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: '32px', fontWeight: 400, color: TEXT, margin: '0 0 16px' }}>Event erstellen.</h3>
+            <p style={{ fontFamily: DISPLAY, fontSize: '15px', lineHeight: 1.6, color: MUTED, margin: 0, maxWidth: '320px' }}>
               Wähle eine Vorlage, passe sie an und erstelle dein Event in Minuten.
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '28px' }}>
-            <button onClick={() => onOpenAuth('signup', 'organizer')} style={{ fontFamily: MKT_SANS, fontSize: '14px', fontWeight: 600, color: MKT_INK, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button onClick={() => onOpenAuth('signup', 'organizer')} style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 600, color: TEXT, display: 'flex', alignItems: 'center', gap: '8px' }}>
               Jetzt Event erstellen <span aria-hidden>→</span>
             </button>
-            <div style={{ width: '44px', height: '44px', borderRadius: '9999px', border: `1px solid ${MKT_INK}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={MKT_INK} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <div style={{ width: '44px', height: '44px', borderRadius: '9999px', border: `1px solid ${TEXT}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" />
               </svg>
             </div>
@@ -267,14 +200,14 @@ function MarketingForOrganizers({ onOpenAuth }: { onOpenAuth: OpenAuthFn }) {
 
 function MarketingFooter() {
   return (
-    <footer id="mkt-footer" style={{ borderTop: `1px solid ${MKT_LINE}` }}>
+    <footer id="mkt-footer" style={{ borderTop: `1px solid ${BORDER}` }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '28px 24px', display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontFamily: MKT_SANS, fontSize: '14px', color: MKT_INK }}>Pugna · Boxing first</div>
+        <div style={{ fontFamily: DISPLAY, fontSize: '14px', color: TEXT }}>Pugna · Boxing first</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
-          <span style={{ fontFamily: MKT_SANS, fontSize: '13px', color: MKT_INK_MUTED }}>Datenschutz</span>
-          <span style={{ fontFamily: MKT_SANS, fontSize: '13px', color: MKT_INK_MUTED }}>Nutzungsbedingungen</span>
-          <span style={{ fontFamily: MKT_SANS, fontSize: '13px', color: MKT_INK_MUTED }}>Kontakt</span>
-          <span style={{ fontFamily: MKT_SANS, fontSize: '13px', color: MKT_INK_MUTED }}>© 2026 Pugna</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>Datenschutz</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>Nutzungsbedingungen</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>Kontakt</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>© 2026 Pugna</span>
         </div>
       </div>
     </footer>
@@ -285,7 +218,7 @@ function MarketingFooter() {
 
 export function FeaturedFight({ nav }: { nav: NavFn }) {
   return (
-    <section style={{ padding: '80px 0', backgroundColor: '#000000' }}>
+    <section style={{ padding: '80px 0', backgroundColor: BG }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <SectionLabel text="Featured Fight" />
 
@@ -296,7 +229,11 @@ export function FeaturedFight({ nav }: { nav: NavFn }) {
           {/* Red top bar */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', backgroundColor: RED }} />
 
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '48px' }}>
+          {/* This whole block sits on a dark photo scrim (see the gradient above), not the
+              page canvas — text stays light regardless of the rest of the app's ink-on-canvas
+              theme, same as the marketing hero's own photo treatment does implicitly by not
+              overlaying text on its photo at all. */}
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '48px', color: '#fff' }}>
             <div style={{ maxWidth: '560px' }}>
               <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.25em', color: RED, textTransform: 'uppercase', marginBottom: '16px' }}>
                 Championship Night Berlin · 14 September 2026
@@ -305,43 +242,43 @@ export function FeaturedFight({ nav }: { nav: NavFn }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '24px' }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontFamily: DISPLAY, fontSize: '52px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>Konstantin<br />Braun</div>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase', marginTop: '4px' }}>GER · 12–2–0</div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', marginTop: '4px' }}>GER · 12–2–0</div>
                 </div>
                 <div style={{ textAlign: 'center', flexShrink: 0 }}>
                   <div style={{ fontFamily: DISPLAY, fontSize: '20px', fontWeight: 900, color: RED, letterSpacing: '0.15em' }}>VS</div>
-                  <div style={{ width: '1px', height: '40px', backgroundColor: BORDER, margin: '8px auto' }} />
-                  <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase' }}>Super Welterweight</div>
+                  <div style={{ width: '1px', height: '40px', backgroundColor: 'rgba(255,255,255,0.25)', margin: '8px auto' }} />
+                  <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase' }}>Super Welterweight</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontFamily: DISPLAY, fontSize: '52px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>Artur<br />Wisniewski</div>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase', marginTop: '4px' }}>POL · 15–1–0</div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', marginTop: '4px' }}>POL · 15–1–0</div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '28px' }}>
-                <Tag text="Boxing" />
-                <Tag text="69 KG" />
-                <Tag text="Professional" />
-                <Tag text="10 Rounds" />
+                <Tag text="Boxing" light />
+                <Tag text="69 KG" light />
+                <Tag text="Professional" light />
+                <Tag text="10 Rounds" light />
               </div>
 
-              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '28px' }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: 'rgba(255,255,255,0.65)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '28px' }}>
                 Mercedes-Benz Arena Berlin · Promoted by Elite Boxing GmbH
               </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
                   onClick={() => nav('/events')}
-                  style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 28px', transition: 'background-color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
+                  style={{ backgroundColor: RED, color: ON_ACCENT, fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 28px', transition: 'opacity 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
                 >
                   View Fight Card
                 </button>
                 <button
-                  style={{ backgroundColor: 'transparent', color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 28px', border: `1px solid ${BORDER}`, transition: 'border-color 0.15s' }}
+                  style={{ backgroundColor: 'transparent', color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 28px', border: '1px solid rgba(255,255,255,0.35)', transition: 'border-color 0.15s' }}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.35)')}
                 >
                   Get Tickets
                 </button>
@@ -384,7 +321,7 @@ export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: b
   }, [])
 
   return (
-    <section style={{ padding: '80px 0', backgroundColor: '#000000' }}>
+    <section style={{ padding: '80px 0', backgroundColor: BG }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '40px', gap: '24px', flexWrap: 'wrap' }}>
           <div>
@@ -406,7 +343,7 @@ export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: b
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder={t('events.searchPlaceholder')}
-              style={{ width: '100%', maxWidth: '520px', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff', padding: '13px 16px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none' }}
+              style={{ width: '100%', maxWidth: '520px', backgroundColor: CARD, border: `1px solid ${BORDER}`, color: TEXT, padding: '13px 16px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none' }}
             />
           </div>
         )}
@@ -420,7 +357,7 @@ export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: b
               style={{
                 fontFamily: DISPLAY, fontSize: '13px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
                 padding: '8px 16px', border: `1px solid ${active === d ? RED : BORDER}`,
-                backgroundColor: active === d ? RED : 'transparent', color: active === d ? '#fff' : MUTED,
+                backgroundColor: active === d ? RED : 'transparent', color: active === d ? TEXT : MUTED,
                 transition: 'all 0.15s',
               }}
             >
@@ -437,7 +374,7 @@ export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: b
           )}
           {filtered.map((ev, i) => (
             <div key={ev.id} style={{ backgroundColor: CARD, transition: 'background-color 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F2F0EA')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
             >
               <div style={{ position: 'relative', overflow: 'hidden', height: '180px', backgroundColor: '#111' }}>
@@ -446,7 +383,7 @@ export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: b
                   onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
                 />
                 <div style={{ position: 'absolute', bottom: '12px', left: '12px' }}>
-                  <span style={{ backgroundColor: RED, fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', color: '#fff', padding: '4px 10px', textTransform: 'uppercase' }}>{DISCIPLINE_LABELS[ev.discipline] ?? ev.discipline}</span>
+                  <span style={{ backgroundColor: RED, fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', color: TEXT, padding: '4px 10px', textTransform: 'uppercase' }}>{DISCIPLINE_LABELS[ev.discipline] ?? ev.discipline}</span>
                 </div>
               </div>
               <div style={{ padding: '20px' }}>
@@ -459,7 +396,7 @@ export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: b
                   <button
                     onClick={() => nav(`/events/${ev.id}`)}
                     style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', color: RED, textTransform: 'uppercase', transition: 'color 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                    onMouseEnter={e => (e.currentTarget.style.color = TEXT)}
                     onMouseLeave={e => (e.currentTarget.style.color = RED)}
                   >
                     {t('common.viewArrow')}
@@ -474,8 +411,8 @@ export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: b
           <div style={{ textAlign: 'center', marginTop: '48px' }}>
             <button
               onClick={() => nav('/events')}
-              style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 40px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
+              style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 40px', border: `1px solid ${BORDER}`, color: TEXT, backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = TEXT)}
               onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
             >
               {t('events.viewAllEvents')}
@@ -500,7 +437,7 @@ export function FighterDiscovery({ nav, standalone }: { nav: NavFn; standalone?:
   }, [])
 
   return (
-    <section style={{ padding: '80px 0', backgroundColor: '#060606' }}>
+    <section style={{ padding: '80px 0', backgroundColor: BG }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '80px', alignItems: 'start' }}>
           <div style={{ position: 'sticky', top: '80px' }}>
@@ -508,7 +445,7 @@ export function FighterDiscovery({ nav, standalone }: { nav: NavFn; standalone?:
             <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(36px, 4vw, 56px)', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1, marginBottom: '20px' }}>
               {t('fighters.heading1')}<br /><span style={{ color: RED }}>{t('fighters.heading2')}</span>
             </h2>
-            <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#888', marginBottom: '32px' }}>
+            <p style={{ fontSize: '14px', lineHeight: 1.7, color: MUTED, marginBottom: '32px' }}>
               {t('fighters.subtitle')}
             </p>
 
@@ -517,7 +454,7 @@ export function FighterDiscovery({ nav, standalone }: { nav: NavFn; standalone?:
               {[[t('fighters.filterSport'), t('events.discipline.boxing')], [t('fighters.filterWeight'), '70–80 KG'], [t('fighters.filterExperience'), 'Amateur'], [t('fighters.filterLocation'), 'Bayern']].map(([label, val]) => (
                 <div key={label} style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: '12px', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase' }}>{label}</span>
-                  <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 600, color: '#fff' }}>{val}</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 600, color: TEXT }}>{val}</span>
                 </div>
               ))}
             </div>
@@ -531,15 +468,15 @@ export function FighterDiscovery({ nav, standalone }: { nav: NavFn; standalone?:
             )}
             {fighters.map((f, i) => (
               <div key={f.id} style={{ backgroundColor: CARD, overflow: 'hidden' }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F2F0EA')}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
               >
                 <div style={{ position: 'relative', height: '260px', backgroundColor: '#111' }}>
                   <img src={FIGHTER_IMAGE_POOL[i % FIGHTER_IMAGE_POOL.length]} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', filter: 'grayscale(20%)' }} />
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%)' }} />
-                  <div style={{ position: 'absolute', bottom: '12px', left: '16px', right: '16px' }}>
+                  <div style={{ position: 'absolute', bottom: '12px', left: '16px', right: '16px', color: '#fff' }}>
                     <div style={{ fontFamily: DISPLAY, fontSize: '24px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>{f.name}</div>
-                    <div style={{ fontFamily: DISPLAY, fontSize: '12px', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase' }}>{f.club}</div>
+                    <div style={{ fontFamily: DISPLAY, fontSize: '12px', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>{f.club}</div>
                   </div>
                 </div>
                 <div style={{ padding: '16px', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -548,14 +485,14 @@ export function FighterDiscovery({ nav, standalone }: { nav: NavFn; standalone?:
                     <Tag text={f.weight} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                    <div style={{ fontFamily: DISPLAY, fontSize: '20px', fontWeight: 800, color: '#fff' }}>{f.record}</div>
+                    <div style={{ fontFamily: DISPLAY, fontSize: '20px', fontWeight: 800, color: TEXT }}>{f.record}</div>
                     <div style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{f.location}</div>
                   </div>
                 </div>
                 <div style={{ padding: '0 16px 16px' }}>
                   <button
                     onClick={() => nav(`/fighters/${f.id}`)}
-                    style={{ width: '100%', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
+                    style={{ width: '100%', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px', border: `1px solid ${BORDER}`, color: TEXT, backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = RED)}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
                   >
@@ -599,7 +536,7 @@ export function SparringSection({ nav, onOpenAuth, standalone }: { nav: NavFn; o
   }, [user])
 
   return (
-    <section style={{ padding: '80px 0', backgroundColor: '#060606', borderTop: `1px solid ${BORDER}` }}>
+    <section style={{ padding: '80px 0', backgroundColor: BG, borderTop: `1px solid ${BORDER}` }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px', flexWrap: 'wrap', gap: '24px' }}>
           <div>
@@ -608,7 +545,7 @@ export function SparringSection({ nav, onOpenAuth, standalone }: { nav: NavFn; o
               {t('sparring.heading1')}<br /><span style={{ color: RED }}>{t('sparring.heading2')}</span>
             </h2>
           </div>
-          <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#888', maxWidth: '320px' }}>
+          <p style={{ fontSize: '14px', lineHeight: 1.7, color: MUTED, maxWidth: '320px' }}>
             {t('sparring.subtitle')}
           </p>
         </div>
@@ -624,7 +561,7 @@ export function SparringSection({ nav, onOpenAuth, standalone }: { nav: NavFn; o
               const isOwn = ownClubId !== null && s.club_id === ownClubId
               return (
                 <div key={s.id} style={{ backgroundColor: CARD, padding: '24px' }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F2F0EA')}
                   onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
@@ -656,7 +593,7 @@ export function SparringSection({ nav, onOpenAuth, standalone }: { nav: NavFn; o
                     <button
                       disabled={remaining === 0}
                       onClick={() => (user ? setJoinTarget(s) : onOpenAuth('login', 'club'))}
-                      style={{ width: '100%', backgroundColor: 'transparent', color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px', border: `1px solid ${BORDER}`, transition: 'all 0.15s', opacity: remaining === 0 ? 0.5 : 1 }}
+                      style={{ width: '100%', backgroundColor: 'transparent', color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px', border: `1px solid ${BORDER}`, transition: 'all 0.15s', opacity: remaining === 0 ? 0.5 : 1 }}
                       onMouseEnter={e => { if (remaining > 0) { e.currentTarget.style.backgroundColor = RED; e.currentTarget.style.borderColor = RED } }}
                       onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = BORDER }}
                     >
@@ -672,8 +609,8 @@ export function SparringSection({ nav, onOpenAuth, standalone }: { nav: NavFn; o
         {!standalone && (
           <button
             onClick={() => nav('/sparring')}
-            style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 40px', border: `1px solid ${BORDER}`, color: '#fff', backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
+            style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 40px', border: `1px solid ${BORDER}`, color: TEXT, backgroundColor: 'transparent', transition: 'border-color 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = TEXT)}
             onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
           >
             {t('sparring.findSparring')}
@@ -700,7 +637,7 @@ function JoinSparringModal({ session, onCancel, onJoined }: { session: SparringS
   const [error, setError] = useState<string | null>(null)
 
   const fieldInputStyle: React.CSSProperties = {
-    width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff',
+    width: '100%', backgroundColor: CARD, border: `1px solid ${BORDER}`, color: TEXT,
     padding: '11px 14px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none',
   }
   const fieldLabelStyle: React.CSSProperties = {
@@ -748,7 +685,7 @@ function JoinSparringModal({ session, onCancel, onJoined }: { session: SparringS
           </div>
           {error && <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: RED }}>{error}</div>}
           <button type="submit" disabled={saving}
-            style={{ marginTop: '8px', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', opacity: saving ? 0.6 : 1 }}
+            style={{ marginTop: '8px', backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', opacity: saving ? 0.6 : 1 }}
           >
             {saving ? t('sparring.joining') : t('common.confirm')}
           </button>
@@ -798,12 +735,12 @@ export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Ope
   }
 
   const fieldInputStyle: React.CSSProperties = {
-    width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff',
+    width: '100%', backgroundColor: CARD, border: `1px solid ${BORDER}`, color: TEXT,
     padding: '11px 14px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none',
   }
 
   return (
-    <section style={{ padding: '80px 0', backgroundColor: '#000000', borderTop: `1px solid ${BORDER}` }}>
+    <section style={{ padding: '80px 0', backgroundColor: BG, borderTop: `1px solid ${BORDER}` }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
         <div style={{ marginBottom: '32px' }}>
           <SectionLabel text={t('clubs.label')} />
@@ -813,8 +750,8 @@ export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Ope
             </h2>
             <button
               onClick={() => onOpenAuth('signup', 'club')}
-              style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 28px', backgroundColor: 'transparent', color: '#fff', border: `1px solid ${BORDER}`, transition: 'border-color 0.15s', flexShrink: 0 }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
+              style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 28px', backgroundColor: 'transparent', color: TEXT, border: `1px solid ${BORDER}`, transition: 'border-color 0.15s', flexShrink: 0 }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = TEXT)}
               onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
             >
               {t('clubs.createProfile')}
@@ -842,7 +779,7 @@ export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Ope
           <button
             onClick={search}
             disabled={!areaCoords}
-            style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '11px 24px', opacity: areaCoords ? 1 : 0.5 }}
+            style={{ backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '11px 24px', opacity: areaCoords ? 1 : 0.5 }}
           >
             {t('clubs.search')}
           </button>
@@ -867,7 +804,7 @@ export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Ope
             {clubs.map((c, i) => (
               <div key={c.id} style={{ backgroundColor: CARD, overflow: 'hidden', cursor: 'pointer' }}
                 onClick={() => nav(`/clubs/${c.id}`)}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F2F0EA')}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
               >
                 <div style={{ position: 'relative', height: '160px', backgroundColor: '#111' }}>
@@ -891,7 +828,7 @@ export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Ope
                     <button
                       onClick={e => { e.stopPropagation(); nav(`/clubs/${c.id}`) }}
                       style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: RED, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-                      onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                      onMouseEnter={e => (e.currentTarget.style.color = TEXT)}
                       onMouseLeave={e => (e.currentTarget.style.color = RED)}
                     >
                       {t('common.viewArrow')}
@@ -917,9 +854,9 @@ export function Footer({ nav }: { nav: NavFn }) {
         {links.map(([label, target]) => (
           <button key={label}
             onClick={() => target && nav(target)}
-            style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 500, color: '#666', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.05em', transition: 'color 0.15s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#666')}
+            style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 500, color: MUTED, textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.05em', transition: 'color 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.color = TEXT)}
+            onMouseLeave={e => (e.currentTarget.style.color = MUTED)}
           >{label}</button>
         ))}
       </div>
@@ -927,7 +864,7 @@ export function Footer({ nav }: { nav: NavFn }) {
   )
 
   return (
-    <footer style={{ backgroundColor: '#060606', borderTop: `1px solid ${BORDER}` }}>
+    <footer style={{ backgroundColor: BG, borderTop: `1px solid ${BORDER}` }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '64px 32px 32px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '48px', marginBottom: '64px' }}>
           <div>
@@ -936,7 +873,7 @@ export function Footer({ nav }: { nav: NavFn }) {
             <div style={{ display: 'flex', gap: '16px' }}>
               {['instagram', 'twitter', 'youtube', 'tiktok'].map(s => (
                 <button key={s} style={{ width: '36px', height: '36px', border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, transition: 'all 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.color = '#fff' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = TEXT; e.currentTarget.style.color = TEXT }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = MUTED }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" strokeWidth="2" stroke="currentColor" fill="none"/></svg>
@@ -976,9 +913,16 @@ function SectionLabel({ text, centered }: { text: string; centered?: boolean }) 
   )
 }
 
-function Tag({ text }: { text: string }) {
+// `light` is for the rare case of a tag sitting on a dark photo scrim (see
+// FeaturedFight) rather than the page's own light canvas.
+function Tag({ text, light }: { text: string; light?: boolean }) {
   return (
-    <span style={{ fontFamily: DISPLAY, fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase', padding: '3px 8px', border: `1px solid #2a2a2a`, backgroundColor: '#0f0f0f' }}>
+    <span style={{
+      fontFamily: DISPLAY, fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px',
+      color: light ? 'rgba(255,255,255,0.85)' : MUTED,
+      border: `1px solid ${light ? 'rgba(255,255,255,0.3)' : BORDER}`,
+      backgroundColor: light ? 'rgba(255,255,255,0.08)' : CARD,
+    }}>
       {text}
     </span>
   )

@@ -17,37 +17,14 @@
 }
 
 @theme {
-  --font-display: 'Geist Sans', sans-serif;
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-body: 'Geist Sans', sans-serif;
   --font-mono: 'Geist Mono', monospace;
-
-  --color-pugna-dark: #000000;
-  --color-pugna-card: #111111;
-  --color-pugna-card2: #161616;
-  --color-pugna-border: #333333;
-  --color-pugna-border2: #282828;
-  --color-pugna-red: #0070f3;
-  --color-pugna-red-dim: #0761c4;
-  --color-pugna-muted: #555555;
-  --color-pugna-subtle: #888888;
-  --color-pugna-silver: #aaaaaa;
-
-  /* Liquid Glass tokens — additive only for now. Not yet applied to any
-     page: the full rollout happens in one pass once every net-new sprint
-     screen already exists, to avoid restyling twice. See the boxing-sprint
-     plan's Slice 10. Note --color-pugna-red above is actually blue (brand
-     legacy naming) — --color-live-red is the genuine red for LIVE-only use. */
-  --color-glass-surface: rgba(255, 255, 255, 0.06);
-  --color-glass-border: rgba(255, 255, 255, 0.14);
-  --color-glass-specular: rgba(255, 255, 255, 0.35);
-  --color-live-red: #ff453a;
-  --color-caution-amber: #ff9f0a;
-  --color-positive-green: #30d158;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #333333 transparent;
+  scrollbar-color: rgba(17, 17, 20, 0.3) transparent;
 }
 
 html {
@@ -55,8 +32,8 @@ html {
 }
 
 body {
-  background-color: #000000;
-  color: #ffffff;
+  background-color: #EFEDE8;
+  color: #111114;
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

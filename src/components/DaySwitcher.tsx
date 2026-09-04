@@ -1,7 +1,4 @@
-const RED = '#0070f3'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, ON_ACCENT, LINE as BORDER, MUTED, LIVE_RED, FONT_BODY as DISPLAY } from '../theme'
 
 export type EventDay = { id: number; day_index: number; date: string; label: string; status: 'scheduled' | 'live' | 'completed' }
 
@@ -19,10 +16,10 @@ export default function DaySwitcher({ days, selectedId, onSelect }: { days: Even
             style={{
               display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px',
               fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-              border: `1px solid ${active ? RED : BORDER}`, backgroundColor: active ? '#071a30' : 'transparent', color: active ? '#fff' : MUTED,
+              border: `1px solid ${active ? RED : BORDER}`, borderRadius: '9999px', backgroundColor: active ? RED : 'transparent', color: active ? ON_ACCENT : MUTED,
             }}
           >
-            {day.status === 'live' && <span style={{ width: '6px', height: '6px', borderRadius: '3px', backgroundColor: '#ff453a' }} />}
+            {day.status === 'live' && <span style={{ width: '6px', height: '6px', borderRadius: '3px', backgroundColor: LIVE_RED }} />}
             {day.label}
           </button>
         )

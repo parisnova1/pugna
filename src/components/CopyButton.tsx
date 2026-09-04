@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import { useLanguage } from '../i18n/LanguageContext'
-
-const RED = '#0070f3'
-const BORDER = '#333333'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, TEXT, LINE as BORDER, POSITIVE_GREEN, FONT_BODY as DISPLAY } from '../theme'
 
 export default function CopyButton({ text, label, style }: { text: string; label?: string; style?: React.CSSProperties }) {
   const { t } = useLanguage()
@@ -33,13 +30,13 @@ export default function CopyButton({ text, label, style }: { text: string; label
       onClick={copy}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: '8px',
-        border: `1px solid ${copied ? '#4caf50' : BORDER}`, color: copied ? '#4caf50' : '#fff',
+        border: `1px solid ${copied ? POSITIVE_GREEN : BORDER}`, color: copied ? POSITIVE_GREEN : TEXT,
         backgroundColor: 'transparent', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700,
-        letterSpacing: '0.08em', textTransform: 'uppercase', padding: '10px 18px', transition: 'all 0.15s',
+        letterSpacing: '0.08em', textTransform: 'uppercase', padding: '10px 18px', borderRadius: '9999px', transition: 'all 0.15s',
         ...style,
       }}
       onMouseEnter={e => { if (!copied) { e.currentTarget.style.borderColor = RED; e.currentTarget.style.color = RED } }}
-      onMouseLeave={e => { if (!copied) { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = '#fff' } }}
+      onMouseLeave={e => { if (!copied) { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT } }}
     >
       {copied ? (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>

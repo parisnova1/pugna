@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiFetch } from '../lib/api'
-
-const RED = '#0070f3'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, ON_ACCENT, CARD, LINE as BORDER, TEXT, MUTED, ACCENT_SOFT, FONT_BODY as DISPLAY } from '../theme'
 
 type NotificationRow = {
   id: number; type: string; title: string; body: string
@@ -34,24 +30,24 @@ export default function NotificationBell({ nav }: { nav: (path: string) => void 
       <button
         onClick={() => { setOpen(v => !v); if (!open) load() }}
         aria-label="Notifications"
-        style={{ position: 'relative', color: MUTED, transition: 'color 0.15s' }}
+        style={{ position: 'relative', color: 'rgba(255,255,255,0.55)', transition: 'color 0.15s' }}
         onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-        onMouseLeave={e => (e.currentTarget.style.color = MUTED)}
+        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
         {unreadCount > 0 && (
-          <span style={{ position: 'absolute', top: '-4px', right: '-6px', backgroundColor: RED, color: '#fff', borderRadius: '9999px', fontSize: '10px', fontFamily: DISPLAY, fontWeight: 700, minWidth: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>
+          <span style={{ position: 'absolute', top: '-4px', right: '-6px', backgroundColor: RED, color: ON_ACCENT, borderRadius: '9999px', fontSize: '10px', fontFamily: DISPLAY, fontWeight: 700, minWidth: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>
             {unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div style={{ position: 'absolute', right: 0, top: '32px', backgroundColor: '#0f0f0f', border: `1px solid ${BORDER}`, width: '340px', maxHeight: '420px', overflowY: 'auto', zIndex: 110 }}>
+        <div style={{ position: 'absolute', right: 0, top: '32px', backgroundColor: CARD, border: `1px solid ${BORDER}`, borderRadius: '16px', overflow: 'hidden', width: '340px', maxHeight: '420px', overflowY: 'auto', zIndex: 110 }}>
           <div style={{ padding: '12px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Notifications</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, color: TEXT, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Notifications</span>
             <button onClick={() => { setOpen(false); nav('/notification-settings') }} style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, textTransform: 'uppercase' }}>Settings</button>
           </div>
           {notifications.length === 0 ? (
@@ -61,9 +57,9 @@ export default function NotificationBell({ nav }: { nav: (path: string) => void 
               <button
                 key={n.id}
                 onClick={() => openNotification(n)}
-                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '12px 16px', borderBottom: `1px solid ${BORDER}`, backgroundColor: n.read_at ? 'transparent' : 'rgba(0,112,243,0.08)' }}
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '12px 16px', borderBottom: `1px solid ${BORDER}`, backgroundColor: n.read_at ? 'transparent' : ACCENT_SOFT }}
               >
-                <div style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, color: '#fff' }}>{n.title}</div>
+                <div style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, color: TEXT }}>{n.title}</div>
                 {!!n.body && <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, marginTop: '2px' }}>{n.body}</div>}
               </button>
             ))
