@@ -192,8 +192,8 @@ function MarketingForClubs({ onOpenAuth }: { onOpenAuth: OpenAuthFn }) {
             ))}
           </div>
         </div>
-        <div className="mkt-clubphoto" style={{ position: 'relative', borderRadius: '28px', overflow: 'hidden', aspectRatio: '4 / 3', backgroundColor: '#1a1a1a' }}>
-          <img src={IMAGES.ring} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(100%) contrast(1.05)' }} />
+        <div className="mkt-clubphoto" style={{ position: 'relative' }}>
+          <img src={IMAGES.ring} alt="" style={{ display: 'block', width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: '28px', filter: 'grayscale(100%) contrast(1.05)', backgroundColor: '#1a1a1a' }} />
           <div className="mkt-overlay" style={{ backgroundColor: MKT_LILAC_SOFT, padding: '20px' }}>
             <div style={{ fontFamily: MKT_SERIF, fontSize: '22px', color: MKT_INK, marginBottom: '8px' }}>Verein anlegen</div>
             <p style={{ fontFamily: MKT_SANS, fontSize: '13px', lineHeight: 1.5, color: MKT_INK_MUTED, margin: '0 0 16px' }}>
