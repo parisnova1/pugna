@@ -5,11 +5,7 @@ import { subscribeToEvent } from '../lib/ws'
 import BracketView, { type Bout } from '../components/Bracket'
 import DaySwitcher, { type EventDay } from '../components/DaySwitcher'
 
-const RED = '#0070f3'
-const CARD = '#0f0f0f'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, BG, ACCENT_SOFT, FONT_BODY as DISPLAY } from '../theme'
 
 type PublicEventDetail = {
   id: number
@@ -50,7 +46,7 @@ type PublicFighter = {
 function Header() {
   return (
     <header style={{ borderBottom: `1px solid ${BORDER}`, padding: '20px 24px' }}>
-      <div style={{ fontFamily: DISPLAY, fontSize: '24px', fontWeight: 900, letterSpacing: '0.12em', color: '#fff', textTransform: 'uppercase' }}>
+      <div style={{ fontFamily: DISPLAY, fontSize: '24px', fontWeight: 900, letterSpacing: '0.12em', color: TEXT, textTransform: 'uppercase' }}>
         PUGNA
       </div>
     </header>
@@ -59,7 +55,7 @@ function Header() {
 
 function CenteredMessage({ title, body }: { title: string; body: string }) {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#fff', fontFamily: "'Geist Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', backgroundColor: BG, color: TEXT, fontFamily: DISPLAY }}>
       <Header />
       <div style={{ maxWidth: '480px', margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
         <div style={{ fontFamily: DISPLAY, fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '12px' }}>{title}</div>
@@ -161,12 +157,12 @@ export default function PublicEvent({ token }: { token: string }) {
   // events — a simple ordered fight card has its own page at /events/:id.
   if (event.format === 'card') {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#fff', fontFamily: "'Geist Sans', sans-serif" }}>
+      <div style={{ minHeight: '100vh', backgroundColor: BG, color: TEXT, fontFamily: DISPLAY }}>
         <Header />
         <div style={{ maxWidth: '480px', margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
           <div style={{ fontFamily: DISPLAY, fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '12px' }}>{event.name}</div>
           <div style={{ fontFamily: DISPLAY, fontSize: '15px', color: MUTED, marginBottom: '24px' }}>View the fight card on the event page.</div>
-          <a href={`/events/${event.id}`} style={{ display: 'inline-block', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px 28px' }}>
+          <a href={`/events/${event.id}`} style={{ display: 'inline-block', backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px 28px' }}>
             Open Fight Card
           </a>
         </div>
@@ -177,7 +173,7 @@ export default function PublicEvent({ token }: { token: string }) {
   const currentClass = weightClasses.find(wc => wc.id === selected)
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#fff', fontFamily: "'Geist Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', backgroundColor: BG, color: TEXT, fontFamily: DISPLAY }}>
       <Header />
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 24px 80px' }}>
@@ -187,10 +183,10 @@ export default function PublicEvent({ token }: { token: string }) {
         </div>
 
         {liveBout && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'rgba(0,0,0,0.6)', border: `1px solid ${RED}`, padding: '12px 18px', margin: '16px 0', maxWidth: 'fit-content' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: ACCENT_SOFT, border: `1px solid ${RED}`, padding: '12px 18px', margin: '16px 0', maxWidth: 'fit-content' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: RED }} />
             <span style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.1em', color: RED, textTransform: 'uppercase' }}>Live Now</span>
-            <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, color: '#fff', textTransform: 'uppercase' }}>
+            <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, color: TEXT, textTransform: 'uppercase' }}>
               {liveBout.fighterRed?.name ?? '?'} <span style={{ color: MUTED }}>vs</span> {liveBout.fighterBlue?.name ?? '?'}
             </span>
           </div>
@@ -213,7 +209,7 @@ export default function PublicEvent({ token }: { token: string }) {
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', margin: '28px 0' }}>
               {weightClasses.map(wc => (
                 <button key={wc.id} onClick={() => setSelected(wc.id)}
-                  style={{ padding: '10px 16px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${selected === wc.id ? RED : BORDER}`, backgroundColor: selected === wc.id ? '#071a30' : 'transparent', color: selected === wc.id ? '#fff' : MUTED }}
+                  style={{ padding: '10px 16px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${selected === wc.id ? RED : BORDER}`, backgroundColor: selected === wc.id ? ACCENT_SOFT : 'transparent', color: selected === wc.id ? TEXT : MUTED }}
                 >
                   {wc.name}
                 </button>
@@ -226,7 +222,7 @@ export default function PublicEvent({ token }: { token: string }) {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {(fightersByClass[currentClass.id] ?? []).map(f => (
                     <div key={f.id} style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '8px 14px' }}>
-                      <span style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, color: '#fff' }}>{f.name}</span>
+                      <span style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, color: TEXT }}>{f.name}</span>
                       <span style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED }}> — {f.club}</span>
                     </div>
                   ))}
