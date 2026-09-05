@@ -21,9 +21,13 @@ import { BG, TEXT, MUTED, NAV_BG, ACCENT, ON_ACCENT, FONT_BODY } from './theme'
 export type NavFn = (path: string) => void
 
 const PUBLIC_EVENT_MATCH = /\/e\/([^/?#]+)/
+// /go/:code is the same guest lookup under a second canonical URL shape — the
+// backend has no separate "short code" concept yet, a code IS a qr_token
+// today, so this resolves identically to /e/:token rather than redirecting.
+const GO_CODE_MATCH = /\/go\/([^/?#]+)/
 
 export default function App() {
-  const publicToken = PUBLIC_EVENT_MATCH.exec(window.location.pathname)?.[1]
+  const publicToken = PUBLIC_EVENT_MATCH.exec(window.location.pathname)?.[1] ?? GO_CODE_MATCH.exec(window.location.pathname)?.[1]
   if (publicToken) {
     // Still no BrowserRouter/AppShell/global Header — this stays a standalone guest
     // page with no marketing chrome. It does need Language (DE/EN strings) and Auth
