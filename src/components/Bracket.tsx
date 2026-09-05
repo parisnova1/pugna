@@ -1,3 +1,4 @@
+import { useLanguage } from '../i18n/LanguageContext'
 import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, POSITIVE_GREEN, CAUTION_AMBER, ACCENT_SOFT, FONT_BODY as DISPLAY } from '../theme'
 
 const BORDER2 = 'rgba(17,17,20,0.22)'
@@ -28,10 +29,11 @@ function fighterLabel(id: number | null, lookup: FighterLookup, isFirstRound: bo
 }
 
 export default function Bracket({ bouts, fighters, onBoutClick }: { bouts: Bout[]; fighters: FighterLookup; onBoutClick?: (bout: Bout) => void }) {
+  const { t } = useLanguage()
   if (bouts.length === 0) {
     return (
       <div style={{ fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase', padding: '32px 0' }}>
-        No bracket generated yet.
+        {t('bracket.notGenerated')}
       </div>
     )
   }

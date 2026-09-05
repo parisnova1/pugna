@@ -17,11 +17,17 @@ const listPublicEvents = db.prepare(`
   ORDER BY events.id DESC
 `)
 
+// A fighter with no event yet (an organizer/club's own unassigned roster
+// entry) is fine to surface publicly, same as a fighter profile page always
+// has been — the gate only matters once a fighter is attached to an event,
+// and that event must itself be published (Open/Active), never Draft.
 const listPublicFighters = db.prepare(`
   SELECT fighters.id, fighters.name, fighters.club, fighters.weight, fighters.record,
          fighters.discipline, fighters.location, users.name AS organizer_name
   FROM fighters
   JOIN users ON users.id = fighters.organizer_id
+  LEFT JOIN events ON events.id = fighters.event_id
+  WHERE fighters.event_id IS NULL OR events.status IN ('Open', 'Active')
   ORDER BY fighters.id DESC
 `)
 
@@ -30,16 +36,20 @@ const getPublicFighterById = db.prepare(`
          fighters.discipline, fighters.location, users.name AS organizer_name
   FROM fighters
   JOIN users ON users.id = fighters.organizer_id
-  WHERE fighters.id = ?
+  LEFT JOIN events ON events.id = fighters.event_id
+  WHERE fighters.id = ? AND (fighters.event_id IS NULL OR events.status IN ('Open', 'Active'))
 `)
 
+// Filtered the same way as every other public list — an organizer reverting
+// an event to Draft after someone saved it should stop showing up for them,
+// not just for new visitors.
 const listSavedEvents = db.prepare(`
   SELECT events.id, events.name, events.date, events.location, events.discipline,
          events.fights, events.fighters, events.views, users.name AS organizer_name
   FROM event_saves
   JOIN events ON events.id = event_saves.event_id
   JOIN users ON users.id = events.organizer_id
-  WHERE event_saves.user_id = ?
+  WHERE event_saves.user_id = ? AND events.status IN ('Open', 'Active')
   ORDER BY event_saves.created_at DESC
 `)
 const getEventForSave = db.prepare('SELECT id FROM events WHERE id = ?')

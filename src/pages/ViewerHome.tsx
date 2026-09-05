@@ -6,7 +6,8 @@ import { apiFetch } from '../lib/api'
 import { formatDisplayDate } from '../lib/date'
 import QrScanner from '../components/QrScanner'
 import Spinner from '../components/Spinner'
-import { FeaturedFight, SparringSection, Footer } from './Home'
+import { useToast } from '../lib/toastContext'
+import { SparringSection, Footer } from './Home'
 
 import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, BG, ACCENT_SOFT, FONT_BODY as DISPLAY, POSITIVE_GREEN, CAUTION_AMBER } from '../theme'
 
@@ -213,6 +214,7 @@ function FighterWorklist({
 export default function ViewerHome({ nav }: { nav: NavFn }) {
   const { user, logout } = useAuth()
   const { t } = useLanguage()
+  const { showToast } = useToast()
   const [collapsed, setCollapsed] = useState(false)
   const [events, setEvents] = useState<PublicEvent[]>([])
   const [followedClubs, setFollowedClubs] = useState<FollowedClub[]>([])
@@ -238,8 +240,9 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
       apiFetch<{ fighters: FollowedFighter[] }>('/api/public/fighters/following'),
     ])
       .then(([e, c, s, f]) => { setEvents(e.events); setFollowedClubs(c.clubs); setSavedEvents(s.events); setFollowedFighters(f.fighters) })
-      .catch(() => {})
+      .catch(() => showToast(t('common.loadError')))
       .finally(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const refetchFighter = () => {
@@ -250,14 +253,14 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
       apiFetch<{ bouts: MyBout[] }>('/api/fighters/me/bouts'),
     ])
       .then(([f, n, b]) => { setMyFighter(f.fighter); setNominations(n.nominations); setMyBouts(b.bouts) })
-      .catch(() => {})
+      .catch(() => showToast(t('common.loadError')))
       .finally(() => setFighterLoading(false))
   }
 
   useEffect(() => {
     if (user?.role !== 'fighter') return
     refetchFighter()
-    apiFetch<{ clubs: ClubOption[] }>('/api/clubs').then(r => setClubOptions(r.clubs)).catch(() => {})
+    apiFetch<{ clubs: ClubOption[] }>('/api/clubs').then(r => setClubOptions(r.clubs)).catch(() => showToast(t('common.loadError')))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.role])
 
@@ -431,8 +434,6 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
           </div>
         </div>
       )}
-
-      <FeaturedFight nav={nav} />
 
       {/* Upcoming Near You */}
       <div style={{ marginBottom: '48px' }}>

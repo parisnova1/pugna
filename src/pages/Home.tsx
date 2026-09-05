@@ -8,6 +8,7 @@ import { formatDisplayDate } from '../lib/date'
 import LocationInput from '../components/LocationInput'
 import Spinner from '../components/Spinner'
 import Reveal from '../components/Reveal'
+import { useToast } from '../lib/toastContext'
 
 import { ACCENT as RED, ACCENT, ON_ACCENT, CARD, LINE as BORDER, MUTED, FONT_BODY as DISPLAY, FONT_DISPLAY, BG, TEXT, ACCENT_SOFT } from '../theme'
 
@@ -239,81 +240,6 @@ function MarketingFooter() {
 
 // ─── Featured Fight ───────────────────────────────────────────────────────────
 
-export function FeaturedFight({ nav }: { nav: NavFn }) {
-  return (
-    <section style={{ padding: '80px 0', backgroundColor: BG }}>
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
-        <SectionLabel text="Featured Fight" />
-
-        <div style={{ position: 'relative', overflow: 'hidden', backgroundColor: CARD, border: `1px solid ${BORDER}` }}>
-          <img src={IMAGES.fight1} alt="Championship Night Berlin" style={{ width: '100%', height: '480px', objectFit: 'cover', objectPosition: 'center 40%', display: 'block' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.4) 100%)' }} />
-
-          {/* Red top bar */}
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', backgroundColor: RED }} />
-
-          {/* This whole block sits on a dark photo scrim (see the gradient above), not the
-              page canvas — text stays light regardless of the rest of the app's ink-on-canvas
-              theme, same as the marketing hero's own photo treatment does implicitly by not
-              overlaying text on its photo at all. */}
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '48px', color: '#fff' }}>
-            <div style={{ maxWidth: '560px' }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.25em', color: RED, textTransform: 'uppercase', marginBottom: '16px' }}>
-                Championship Night Berlin · 14 September 2026
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '24px' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '52px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>Konstantin<br />Braun</div>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', marginTop: '4px' }}>GER · 12–2–0</div>
-                </div>
-                <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '20px', fontWeight: 900, color: RED, letterSpacing: '0.15em' }}>VS</div>
-                  <div style={{ width: '1px', height: '40px', backgroundColor: 'rgba(255,255,255,0.25)', margin: '8px auto' }} />
-                  <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase' }}>Super Welterweight</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '52px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>Artur<br />Wisniewski</div>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', marginTop: '4px' }}>POL · 15–1–0</div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '28px' }}>
-                <Tag text="Boxing" light />
-                <Tag text="69 KG" light />
-                <Tag text="Professional" light />
-                <Tag text="10 Rounds" light />
-              </div>
-
-              <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: 'rgba(255,255,255,0.65)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '28px' }}>
-                Mercedes-Benz Arena Berlin · Promoted by Elite Boxing GmbH
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onClick={() => nav('/events')}
-                  style={{ backgroundColor: RED, color: ON_ACCENT, fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 28px', transition: 'opacity 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-                >
-                  View Fight Card
-                </button>
-                <button
-                  style={{ backgroundColor: 'transparent', color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 28px', border: '1px solid rgba(255,255,255,0.35)', transition: 'border-color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = '#fff')}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.35)')}
-                >
-                  Get Tickets
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 // ─── Event Discovery ──────────────────────────────────────────────────────────
 
 const DISCIPLINES = ['All', 'Boxing', 'Kickboxing', 'Muay Thai', 'MMA', 'BJJ', 'Wrestling']
@@ -322,6 +248,7 @@ const EVENT_IMAGE_POOL = [IMAGES.fight2, IMAGES.ring, IMAGES.crowd, IMAGES.venue
 export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: boolean }) {
   const { user } = useAuth()
   const { t } = useLanguage()
+  const { showToast } = useToast()
   const DISCIPLINE_LABELS: Record<string, string> = {
     All: t('events.discipline.all'), Boxing: t('events.discipline.boxing'), Kickboxing: t('events.discipline.kickboxing'),
     'Muay Thai': t('events.discipline.muayThai'), MMA: t('events.discipline.mma'), BJJ: t('events.discipline.bjj'), Wrestling: t('events.discipline.wrestling'),
@@ -341,7 +268,8 @@ export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: b
     })
 
   useEffect(() => {
-    apiFetch<{ events: PublicEvent[] }>('/api/public/events').then(r => setEvents(r.events)).catch(() => {})
+    apiFetch<{ events: PublicEvent[] }>('/api/public/events').then(r => setEvents(r.events)).catch(() => showToast(t('common.loadError')))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -454,10 +382,12 @@ const FIGHTER_IMAGE_POOL = [IMAGES.fighter1, IMAGES.fighter2]
 
 export function FighterDiscovery({ nav, standalone }: { nav: NavFn; standalone?: boolean }) {
   const { t } = useLanguage()
+  const { showToast } = useToast()
   const [fighters, setFighters] = useState<PublicFighter[]>([])
 
   useEffect(() => {
-    apiFetch<{ fighters: PublicFighter[] }>('/api/public/fighters').then(r => setFighters(r.fighters)).catch(() => {})
+    apiFetch<{ fighters: PublicFighter[] }>('/api/public/fighters').then(r => setFighters(r.fighters)).catch(() => showToast(t('common.loadError')))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -546,11 +476,12 @@ function dayLabel(isoDate: string, t: ReturnType<typeof useLanguage>['t']): stri
 export function SparringSection({ nav, onOpenAuth, standalone }: { nav: NavFn; onOpenAuth: OpenAuthFn; standalone?: boolean }) {
   const { user } = useAuth()
   const { t } = useLanguage()
+  const { showToast } = useToast()
   const [sessions, setSessions] = useState<SparringSession[]>([])
   const [ownClubId, setOwnClubId] = useState<number | null>(null)
   const [joinTarget, setJoinTarget] = useState<SparringSession | null>(null)
 
-  const load = () => apiFetch<{ sessions: SparringSession[] }>('/api/sparring').then(r => setSessions(r.sessions)).catch(() => {})
+  const load = () => apiFetch<{ sessions: SparringSession[] }>('/api/sparring').then(r => setSessions(r.sessions)).catch(() => showToast(t('common.loadError')))
 
   useEffect(() => { load() }, [])
 
@@ -727,6 +658,7 @@ const RADIUS_OPTIONS = [10, 25, 50, 100, 200]
 
 export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }) {
   const { t } = useLanguage()
+  const { showToast } = useToast()
   const [clubs, setClubs] = useState<PublicClub[]>([])
   const [loading, setLoading] = useState(false)
   const [area, setArea] = useState('')
@@ -736,10 +668,10 @@ export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Ope
 
   const loadAll = () => {
     setLoading(true)
-    apiFetch<{ clubs: PublicClub[] }>('/api/clubs').then(r => setClubs(r.clubs)).catch(() => {}).finally(() => setLoading(false))
+    apiFetch<{ clubs: PublicClub[] }>('/api/clubs').then(r => setClubs(r.clubs)).catch(() => showToast(t('common.loadError'))).finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadAll() }, [])
+  useEffect(() => { loadAll() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const search = () => {
     if (!areaCoords) return
@@ -747,7 +679,7 @@ export function ClubDiscovery({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Ope
     setSearched(true)
     apiFetch<{ clubs: PublicClub[] }>(`/api/clubs?lat=${areaCoords.lat}&lng=${areaCoords.lng}&radiusKm=${radiusKm}`)
       .then(r => setClubs(r.clubs))
-      .catch(() => {})
+      .catch(() => showToast(t('common.loadError')))
       .finally(() => setLoading(false))
   }
 

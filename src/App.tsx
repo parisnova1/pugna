@@ -14,6 +14,7 @@ import { AuthProvider, useAuth, type Role } from './auth/AuthContext'
 import { LanguageProvider, useLanguage, type Lang } from './i18n/LanguageContext'
 import LoginModal from './components/LoginModal'
 import CookieBanner from './components/CookieBanner'
+import { ToastProvider } from './components/Toast'
 import NotificationBell from './components/NotificationBell'
 import NotificationSettings from './pages/NotificationSettings'
 import { BG, TEXT, MUTED, NAV_BG, ACCENT, ON_ACCENT, FONT_BODY } from './theme'
@@ -36,20 +37,24 @@ export default function App() {
     // mount here, unlike the full app shell.
     return (
       <LanguageProvider>
-        <AuthProvider>
-          <PublicEvent token={publicToken} />
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <PublicEvent token={publicToken} />
+          </AuthProvider>
+        </ToastProvider>
       </LanguageProvider>
     )
   }
 
   return (
     <LanguageProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <AppShell />
-        </BrowserRouter>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <AppShell />
+          </BrowserRouter>
+        </AuthProvider>
+      </ToastProvider>
     </LanguageProvider>
   )
 }
