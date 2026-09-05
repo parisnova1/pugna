@@ -1,22 +1,42 @@
-import { createContext, useContext } from 'react'
-
 export type ToastKind = 'error' | 'success'
+export type ToastItem = { id: number; message: string; kind: ToastKind }
 
-export type ToastContextValue = {
-  // Default kind is 'error' since that's by far the most common call —
-  // surfacing the many previously-silent apiFetch failures across the app.
-  showToast: (message: string, kind?: ToastKind) => void
+// A plain module-level store rather than React state living in
+// ToastProvider — callers can push a toast from anywhere (a promise
+// rejection, a plain function, outside any component) without needing a
+// hook, and the queue isn't tied to any one component instance's lifetime.
+// ToastProvider (Toast.tsx) subscribes via useSyncExternalStore to render it.
+let toasts: ToastItem[] = []
+let nextId = 0
+const listeners = new Set<() => void>()
+
+function emit() {
+  for (const l of listeners) l()
 }
 
-// Split from Toast.tsx's ToastProvider component on purpose: a module mixing
-// a component export with a hook export confuses Vite's Fast Refresh (it
-// can't establish a clean refresh boundary), which was causing spurious
-// mount/unmount cycles — and toasts silently disappearing — on every dev
-// edit to that file.
-export const ToastContext = createContext<ToastContextValue | null>(null)
+export function getToasts(): ToastItem[] {
+  return toasts
+}
 
+export function subscribeToasts(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
+export function dismissToast(id: number) {
+  toasts = toasts.filter(t => t.id !== id)
+  emit()
+}
+
+export function pushToast(message: string, kind: ToastKind = 'error') {
+  const id = nextId++
+  toasts = [...toasts, { id, message, kind }]
+  emit()
+  setTimeout(() => dismissToast(id), 5000)
+}
+
+// Thin hook wrapper so call sites read `const { showToast } = useToast()` —
+// no Context needed since pushToast has no per-instance state to isolate.
 export function useToast() {
-  const ctx = useContext(ToastContext)
-  if (!ctx) throw new Error('useToast must be used within ToastProvider')
-  return ctx
+  return { showToast: pushToast }
 }

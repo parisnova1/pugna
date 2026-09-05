@@ -1,27 +1,14 @@
-import { useCallback, useRef, useState, type ReactNode } from 'react'
-import { ToastContext, type ToastKind } from '../lib/toastContext'
+import { useSyncExternalStore } from 'react'
+import { getToasts, subscribeToasts, dismissToast } from '../lib/toastContext'
 import { BG, LIVE_RED, TEXT, FONT_BODY as DISPLAY } from '../theme'
 
-type ToastItem = { id: number; message: string; kind: ToastKind }
-
-const AUTO_DISMISS_MS = 5000
-
-export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<ToastItem[]>([])
-  const nextId = useRef(0)
-
-  const dismiss = useCallback((id: number) => {
-    setToasts(prev => prev.filter(t => t.id !== id))
-  }, [])
-
-  const showToast = useCallback((message: string, kind: ToastKind = 'error') => {
-    const id = nextId.current++
-    setToasts(prev => [...prev, { id, message, kind }])
-    setTimeout(() => dismiss(id), AUTO_DISMISS_MS)
-  }, [dismiss])
+// Renders whatever's in the module-level toast store (see lib/toastContext) —
+// no local state here on purpose, see that file's comment for why.
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const toasts = useSyncExternalStore(subscribeToasts, getToasts)
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <>
       {children}
       <div
         aria-live="polite"
@@ -34,7 +21,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map(t => (
           <div
             key={t.id}
-            onClick={() => dismiss(t.id)}
+            onClick={() => dismissToast(t.id)}
             style={{
               pointerEvents: 'auto', cursor: 'pointer', maxWidth: '420px',
               backgroundColor: BG, color: TEXT, borderLeft: `4px solid ${LIVE_RED}`,
@@ -47,6 +34,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           </div>
         ))}
       </div>
-    </ToastContext.Provider>
+    </>
   )
 }
