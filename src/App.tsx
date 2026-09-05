@@ -25,7 +25,18 @@ const PUBLIC_EVENT_MATCH = /\/e\/([^/?#]+)/
 export default function App() {
   const publicToken = PUBLIC_EVENT_MATCH.exec(window.location.pathname)?.[1]
   if (publicToken) {
-    return <PublicEvent token={publicToken} />
+    // Still no BrowserRouter/AppShell/global Header — this stays a standalone guest
+    // page with no marketing chrome. It does need Language (DE/EN strings) and Auth
+    // (so a logged-in viewer can save/follow, and a logged-out one gets the same
+    // login modal as everywhere else) — those two are cheap and side-effect-free to
+    // mount here, unlike the full app shell.
+    return (
+      <LanguageProvider>
+        <AuthProvider>
+          <PublicEvent token={publicToken} />
+        </AuthProvider>
+      </LanguageProvider>
+    )
   }
 
   return (
