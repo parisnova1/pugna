@@ -5,11 +5,8 @@ import { apiFetch } from '../lib/api'
 import { formatDisplayDate } from '../lib/date'
 import LocationInput from '../components/LocationInput'
 
-const RED = '#0070f3'
-const CARD = '#0f0f0f'
-const BORDER = '#333333'
-const MUTED = '#888888'
-const DISPLAY = "'Geist Sans', sans-serif"
+import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, BG, ACCENT_SOFT, POSITIVE_GREEN, FONT_BODY as DISPLAY } from '../theme'
+
 const DISCIPLINES = ['Boxing', 'Kickboxing', 'Muay Thai', 'MMA', 'BJJ', 'Wrestling']
 
 type DashView = 'overview' | 'events' | 'fighters' | 'matchmaking' | 'results' | 'analytics'
@@ -20,8 +17,8 @@ type EventFields = { name: string; date: string; location: string; venue: string
 type FighterFields = { name: string; club: string; weight: string; record: string; status: FighterRow['status']; discipline: string; location: string }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, color: '#fff',
-  padding: '11px 14px', fontFamily: "'Geist Sans', sans-serif", fontSize: '14px', outline: 'none',
+  width: '100%', backgroundColor: '#F7F5F0', border: `1px solid ${BORDER}`, color: TEXT,
+  padding: '11px 14px', fontFamily: DISPLAY, fontSize: '14px', outline: 'none',
 }
 const labelStyle: React.CSSProperties = {
   fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px',
@@ -50,9 +47,9 @@ function SubmitButton({ children, disabled }: { children: React.ReactNode; disab
     <button
       type="submit"
       disabled={disabled}
-      style={{ marginTop: '8px', width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', transition: 'background-color 0.15s', opacity: disabled ? 0.6 : 1 }}
-      onMouseEnter={e => { if (!disabled) e.currentTarget.style.backgroundColor = '#0058cc' }}
-      onMouseLeave={e => { if (!disabled) e.currentTarget.style.backgroundColor = RED }}
+      style={{ marginTop: '8px', width: '100%', backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '13px', transition: 'background-color 0.15s', opacity: disabled ? 0.6 : 1 }}
+      onMouseEnter={e => { if (!disabled) e.currentTarget.style.opacity = '0.85' }}
+      onMouseLeave={e => { if (!disabled) e.currentTarget.style.opacity = '1' }}
     >
       {children}
     </button>
@@ -124,7 +121,7 @@ export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
       {/* Sidebar */}
       <aside style={{
-        width: collapsed ? '76px' : '240px', flexShrink: 0, backgroundColor: '#060606', borderRight: `1px solid ${BORDER}`,
+        width: collapsed ? '76px' : '240px', flexShrink: 0, backgroundColor: BG, borderRight: `1px solid ${BORDER}`,
         padding: '20px 0', position: 'sticky', top: '64px', height: 'calc(100vh - 64px)', overflowY: 'auto', overflowX: 'hidden',
         display: 'flex', flexDirection: 'column', transition: 'width 0.2s ease',
       }}>
@@ -134,7 +131,7 @@ export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             style={{ color: MUTED, padding: '8px', transition: 'color 0.15s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+            onMouseEnter={e => (e.currentTarget.style.color = TEXT)}
             onMouseLeave={e => (e.currentTarget.style.color = MUTED)}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
@@ -158,11 +155,11 @@ export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
               style={{
                 display: 'flex', alignItems: 'center', gap: '12px', padding: collapsed ? '12px' : '12px 24px',
                 justifyContent: collapsed ? 'center' : 'flex-start',
-                backgroundColor: view === v ? '#0f0f0f' : 'transparent',
+                backgroundColor: view === v ? CARD : 'transparent',
                 borderLeft: collapsed ? '2px solid transparent' : (view === v ? `2px solid ${RED}` : '2px solid transparent'),
-                color: view === v ? '#fff' : MUTED, transition: 'all 0.15s', textAlign: 'left',
+                color: view === v ? TEXT : MUTED, transition: 'all 0.15s', textAlign: 'left',
               }}
-              onMouseEnter={e => { if (view !== v) { e.currentTarget.style.color = '#ddd'; e.currentTarget.style.backgroundColor = '#0a0a0a' } }}
+              onMouseEnter={e => { if (view !== v) { e.currentTarget.style.color = TEXT; e.currentTarget.style.backgroundColor = CARD } }}
               onMouseLeave={e => { if (view !== v) { e.currentTarget.style.color = MUTED; e.currentTarget.style.backgroundColor = 'transparent' } }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}><path d={icon} /></svg>
@@ -175,9 +172,9 @@ export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
           <button
             onClick={() => setEventModal({ id: null })}
             title={collapsed ? 'Create Event' : undefined}
-            style={{ width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: collapsed ? '12px 0' : '12px', transition: 'background-color 0.15s' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#0058cc')}
-            onMouseLeave={e => (e.currentTarget.style.backgroundColor = RED)}
+            style={{ width: '100%', backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: collapsed ? '12px 0' : '12px', transition: 'background-color 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
           >
             {collapsed ? '+' : '+ Create Event'}
           </button>
@@ -190,7 +187,7 @@ export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
             onClick={() => { logout(); nav('/') }}
             title={collapsed ? 'Log Out' : undefined}
             style={{ width: '100%', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED, padding: collapsed ? '10px 0' : '10px', border: `1px solid ${BORDER}`, transition: 'color 0.15s, border-color 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#fff' }}
+            onMouseEnter={e => { e.currentTarget.style.color = TEXT; e.currentTarget.style.borderColor = TEXT }}
             onMouseLeave={e => { e.currentTarget.style.color = MUTED; e.currentTarget.style.borderColor = BORDER }}
           >
             {collapsed ? (
@@ -201,9 +198,9 @@ export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
       </aside>
 
       {/* Main content */}
-      <main style={{ flex: 1, minWidth: 0, padding: '40px 48px', backgroundColor: '#000000' }}>
+      <main style={{ flex: 1, minWidth: 0, padding: '40px 48px', backgroundColor: BG }}>
         {loadError && (
-          <div style={{ backgroundColor: '#071a30', border: `1px solid ${RED}`, color: '#8ec5ff', fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.04em', padding: '14px 18px', marginBottom: '24px' }}>
+          <div style={{ backgroundColor: ACCENT_SOFT, border: `1px solid ${RED}`, color: TEXT, fontFamily: DISPLAY, fontSize: '13px', letterSpacing: '0.04em', padding: '14px 18px', marginBottom: '24px' }}>
             {loadError} — is the API server running on port 4000?
           </div>
         )}
@@ -311,7 +308,7 @@ function EventModal({ initial, onCancel, onSave }: { initial: EventRow | null; o
             <div style={{ display: 'flex', gap: '2px' }}>
               {([['card', 'Fight Card'], ['bracket', 'Tournament Bracket']] as const).map(([v, label]) => (
                 <button key={v} type="button" onClick={() => setFormat(v)}
-                  style={{ flex: 1, padding: '12px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${format === v ? RED : BORDER}`, backgroundColor: format === v ? '#071a30' : 'transparent', color: format === v ? '#fff' : MUTED }}
+                  style={{ flex: 1, padding: '12px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${format === v ? RED : BORDER}`, backgroundColor: format === v ? ACCENT_SOFT : 'transparent', color: format === v ? TEXT : MUTED }}
                 >
                   {label}
                 </button>
@@ -409,7 +406,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string;
   return (
     <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px', borderTop: accent ? `2px solid ${RED}` : `1px solid ${BORDER}` }}>
       <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.18em', color: MUTED, textTransform: 'uppercase', marginBottom: '8px' }}>{label}</div>
-      <div style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, lineHeight: 1, color: accent ? RED : '#fff' }}>{value}</div>
+      <div style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, lineHeight: 1, color: accent ? RED : TEXT }}>{value}</div>
       {sub && <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>{sub}</div>}
     </div>
   )
@@ -461,7 +458,7 @@ function OverviewView({ events, fighters, onEdit }: { events: EventRow[]; fighte
               <div style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fighters</div>
             </div>
             <div>
-              <span style={{ fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '4px 10px', border: `1px solid ${e.status === 'Active' ? '#4caf50' : BORDER}`, color: e.status === 'Active' ? '#4caf50' : MUTED }}>
+              <span style={{ fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '4px 10px', border: `1px solid ${e.status === 'Active' ? POSITIVE_GREEN : BORDER}`, color: e.status === 'Active' ? POSITIVE_GREEN : MUTED }}>
                 {e.status}
               </span>
             </div>
@@ -480,7 +477,7 @@ function OverviewView({ events, fighters, onEdit }: { events: EventRow[]; fighte
           { msg: 'New ticket sale: 48 tickets sold this week', time: '2d ago' },
         ].map((a, i) => (
           <div key={i} style={{ backgroundColor: CARD, padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '24px' }}>
-            <div style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 500, color: '#ccc', letterSpacing: '0.02em' }}>{a.msg}</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 500, color: MUTED, letterSpacing: '0.02em' }}>{a.msg}</div>
             <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>{a.time}</div>
           </div>
         ))}
@@ -494,7 +491,7 @@ function EventsView({ events, onCreate, onEdit, onManage, onDuplicate, onDelete 
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <h1 style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, textTransform: 'uppercase' }}>My Events</h1>
-        <button onClick={onCreate} style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px 24px' }}>
+        <button onClick={onCreate} style={{ backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px 24px' }}>
           + Create Event
         </button>
       </div>
@@ -515,7 +512,7 @@ function EventsView({ events, onCreate, onEdit, onManage, onDuplicate, onDelete 
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
                   <div style={{ fontFamily: DISPLAY, fontSize: '22px', fontWeight: 900, textTransform: 'uppercase' }}>{e.name}</div>
-                  <span style={{ fontFamily: DISPLAY, fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '3px 8px', border: `1px solid ${e.status === 'Active' ? '#4caf50' : e.status === 'Open' ? RED : BORDER}`, color: e.status === 'Active' ? '#4caf50' : e.status === 'Open' ? RED : MUTED }}>
+                  <span style={{ fontFamily: DISPLAY, fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '3px 8px', border: `1px solid ${e.status === 'Active' ? POSITIVE_GREEN : e.status === 'Open' ? RED : BORDER}`, color: e.status === 'Active' ? POSITIVE_GREEN : e.status === 'Open' ? RED : MUTED }}>
                     {e.status}
                   </span>
                 </div>
@@ -530,7 +527,7 @@ function EventsView({ events, onCreate, onEdit, onManage, onDuplicate, onDelete 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
                 <button onClick={e2 => { e2.stopPropagation(); onEdit(e.id) }} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Edit</button>
                 <button onClick={e2 => { e2.stopPropagation(); onDuplicate(e.id) }} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Duplicate</button>
-                <button onClick={e2 => { e2.stopPropagation(); onDelete(e.id) }} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: '#e5484d', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Delete</button>
+                <button onClick={e2 => { e2.stopPropagation(); onDelete(e.id) }} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: '#D92D20', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Delete</button>
                 <button onClick={e2 => { e2.stopPropagation(); onManage(e.id) }} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: RED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Manage →</button>
               </div>
             </div>
@@ -556,19 +553,19 @@ function FightersView({ fighters, onAddFighter }: { fighters: FighterRow[]; onAd
         <div style={{ display: 'flex', gap: '2px' }}>
           {(['All', 'Matched', 'Unmatched'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 16px', border: `1px solid ${filter === f ? RED : BORDER}`, color: filter === f ? '#fff' : MUTED, backgroundColor: filter === f ? '#071a30' : 'transparent' }}
+              style={{ fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 16px', border: `1px solid ${filter === f ? RED : BORDER}`, color: filter === f ? TEXT : MUTED, backgroundColor: filter === f ? ACCENT_SOFT : 'transparent' }}
             >
               {f}
             </button>
           ))}
-          <button onClick={onAddFighter} style={{ backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 20px', marginLeft: '10px' }}>
+          <button onClick={onAddFighter} style={{ backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 20px', marginLeft: '10px' }}>
             Add Fighter
           </button>
         </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER }}>
-        <div style={{ backgroundColor: '#060606', padding: '10px 20px', display: 'grid', gridTemplateColumns: '1fr 160px 80px 100px 100px', gap: '16px', alignItems: 'center' }}>
+        <div style={{ backgroundColor: BG, padding: '10px 20px', display: 'grid', gridTemplateColumns: '1fr 160px 80px 100px 100px', gap: '16px', alignItems: 'center' }}>
           {['Fighter', 'Club', 'Weight', 'Record', 'Status'].map(h => (
             <div key={h} style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase' }}>{h}</div>
           ))}
@@ -579,11 +576,11 @@ function FightersView({ fighters, onAddFighter }: { fighters: FighterRow[]; onAd
           </div>
         ) : filtered.map((f, i) => (
           <div key={f.id} style={{ backgroundColor: CARD, padding: '14px 20px', display: 'grid', gridTemplateColumns: '1fr 160px 80px 100px 100px', gap: '16px', alignItems: 'center' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#141414')}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#F2F0EA')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = CARD)}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '36px', height: '36px', overflow: 'hidden', flexShrink: 0, backgroundColor: '#1a1a1a' }}>
+              <div style={{ width: '36px', height: '36px', overflow: 'hidden', flexShrink: 0, backgroundColor: '#E5E2DA' }}>
                 <img src={imgs[i % 2]} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', filter: 'grayscale(30%)' }} />
               </div>
               <div style={{ fontFamily: DISPLAY, fontSize: '17px', fontWeight: 800, textTransform: 'uppercase' }}>{f.name}</div>
@@ -591,7 +588,7 @@ function FightersView({ fighters, onAddFighter }: { fighters: FighterRow[]; onAd
             <div style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{f.club}</div>
             <div style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700 }}>{f.weight}</div>
             <div style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700 }}>{f.record}</div>
-            <span style={{ fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 10px', border: `1px solid ${f.status === 'Matched' ? '#4caf50' : '#c9a227'}`, color: f.status === 'Matched' ? '#4caf50' : '#c9a227', display: 'inline-block' }}>
+            <span style={{ fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 10px', border: `1px solid ${f.status === 'Matched' ? POSITIVE_GREEN : '#B8860B'}`, color: f.status === 'Matched' ? POSITIVE_GREEN : '#B8860B', display: 'inline-block' }}>
               {f.status}
             </span>
           </div>
@@ -619,14 +616,14 @@ function MatchmakingView() {
           </div>
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {[['Sport', 'Boxing'], ['Weight', '75 KG'], ['Level', 'Amateur'], ['Fights', '5–10'], ['Distance', '≤ 150 km'], ['Availability', '23 Aug 2026']].map(([k, v]) => (
-              <div key={k} style={{ backgroundColor: '#0a0a0a', border: `1px solid ${BORDER}`, padding: '10px 14px', display: 'flex', justifyContent: 'space-between' }}>
+              <div key={k} style={{ backgroundColor: '#F7F5F0', border: `1px solid ${BORDER}`, padding: '10px 14px', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{k}</span>
                 <span style={{ fontFamily: DISPLAY, fontSize: '14px', fontWeight: 700 }}>{v}</span>
               </div>
             ))}
           </div>
           <div style={{ padding: '0 20px 20px' }}>
-            <button style={{ width: '100%', backgroundColor: RED, color: '#fff', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px' }}>
+            <button style={{ width: '100%', backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px' }}>
               Find Matches
             </button>
           </div>
@@ -644,10 +641,10 @@ function MatchmakingView() {
             ].map((m, i) => (
               <div key={i} style={{ backgroundColor: CARD, padding: '20px', display: 'grid', gridTemplateColumns: '80px 1fr auto', gap: '20px', alignItems: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: DISPLAY, fontSize: '32px', fontWeight: 900, color: i === 0 ? RED : '#fff', lineHeight: 1 }}>{m.match}%</div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '32px', fontWeight: 900, color: i === 0 ? RED : TEXT, lineHeight: 1 }}>{m.match}%</div>
                   <div style={{ fontFamily: DISPLAY, fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Match</div>
                   {/* Bar */}
-                  <div style={{ height: '3px', backgroundColor: '#1a1a1a', marginTop: '6px' }}>
+                  <div style={{ height: '3px', backgroundColor: '#E5E2DA', marginTop: '6px' }}>
                     <div style={{ height: '100%', width: `${m.match}%`, backgroundColor: i === 0 ? RED : MUTED }} />
                   </div>
                 </div>
@@ -658,14 +655,14 @@ function MatchmakingView() {
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     {[`${m.fights} fights`, `Age ${m.age}`].map(t => (
-                      <span key={t} style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, padding: '2px 8px', border: `1px solid #2a2a2a`, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t}</span>
+                      <span key={t} style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, padding: '2px 8px', border: `1px solid ${BORDER}`, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t}</span>
                     ))}
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <button
                     onClick={() => setMatched(i)}
-                    style={{ backgroundColor: matched === i ? '#4caf50' : RED, color: '#fff', fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 20px', transition: 'background-color 0.15s', whiteSpace: 'nowrap' }}
+                    style={{ backgroundColor: matched === i ? POSITIVE_GREEN : RED, color: TEXT, fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 20px', transition: 'background-color 0.15s', whiteSpace: 'nowrap' }}
                   >
                     {matched === i ? 'Selected ✓' : 'Select Fighter'}
                   </button>
@@ -706,8 +703,8 @@ function AnalyticsView({ events }: { events: EventRow[] }) {
         ].map((s, i) => (
           <div key={i} style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px', borderTop: i === 0 ? `2px solid ${RED}` : `1px solid ${BORDER}` }}>
             <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.15em', color: MUTED, textTransform: 'uppercase', marginBottom: '8px' }}>{s.label}</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, lineHeight: 1, color: i === 0 ? RED : '#fff' }}>{s.value}</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: '#4caf50', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>{s.change} vs last period</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: '40px', fontWeight: 900, lineHeight: 1, color: i === 0 ? RED : TEXT }}>{s.value}</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: POSITIVE_GREEN, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>{s.change} vs last period</div>
           </div>
         ))}
       </div>
@@ -719,9 +716,9 @@ function AnalyticsView({ events }: { events: EventRow[] }) {
           {months.map((m, i) => (
             <div key={m} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', flex: 1 }}>
               <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED }}>{views[i]}</div>
-              <div style={{ width: '100%', backgroundColor: i === 5 ? RED : '#333333', height: `${(views[i] / maxViews) * 120}px`, transition: 'height 0.3s' }}
-                onMouseEnter={e => { if (i !== 5) (e.currentTarget.style.backgroundColor = '#2a2a2a') }}
-                onMouseLeave={e => { if (i !== 5) (e.currentTarget.style.backgroundColor = '#333333') }}
+              <div style={{ width: '100%', backgroundColor: i === 5 ? RED : BORDER, height: `${(views[i] / maxViews) * 120}px`, transition: 'height 0.3s' }}
+                onMouseEnter={e => { if (i !== 5) (e.currentTarget.style.backgroundColor = '#D8D4CA') }}
+                onMouseLeave={e => { if (i !== 5) (e.currentTarget.style.backgroundColor = BORDER) }}
               />
               <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase' }}>{m}</div>
             </div>
