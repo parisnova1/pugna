@@ -1,5 +1,5 @@
 import { useLanguage } from '../i18n/LanguageContext'
-import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, POSITIVE_GREEN, CAUTION_AMBER, ACCENT_SOFT, FONT_BODY as DISPLAY } from '../theme'
+import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, POSITIVE_GREEN, CAUTION_AMBER, LIVE_RED, ACCENT_SOFT, FONT_BODY as DISPLAY } from '../theme'
 
 const BORDER2 = 'rgba(17,17,20,0.22)'
 
@@ -134,12 +134,12 @@ export default function Bracket({ bouts, fighters, onBoutClick }: { bouts: Bout[
                   )}
                   {!isBye && m.status === 'delayed' && (
                     <div style={{ position: 'absolute', right: -4, top: -10, backgroundColor: CARD, border: `1px solid ${CAUTION_AMBER}`, padding: '1px 6px', fontFamily: DISPLAY, fontSize: '10px', color: CAUTION_AMBER, textTransform: 'uppercase' }}>
-                      Delayed{m.delay_minutes ? ` +${m.delay_minutes}m` : ''}
+                      {t('bracket.delayed')}{m.delay_minutes ? ` +${m.delay_minutes}m` : ''}
                     </div>
                   )}
                   {!isBye && m.status === 'scratched' && (
-                    <div style={{ position: 'absolute', right: -4, top: -10, backgroundColor: CARD, border: `1px solid ${MUTED}`, padding: '1px 6px', fontFamily: DISPLAY, fontSize: '10px', color: MUTED, textTransform: 'uppercase' }}>
-                      Scratched
+                    <div style={{ position: 'absolute', right: -4, top: -10, backgroundColor: CARD, border: `1px solid ${LIVE_RED}`, padding: '1px 6px', fontFamily: DISPLAY, fontSize: '10px', color: LIVE_RED, textTransform: 'uppercase' }}>
+                      {t('bracket.scratched')}
                     </div>
                   )}
                 </div>
