@@ -118,4 +118,18 @@ function seedTemplatePacksIfEmpty() {
     .filter(c => clubShowNames.has(c.name))
     .map((c, i) => ({ ...c, sortOrder: i }))
   seedPackIfMissing('boxing.amateur.club-show', 'Boxing', 'club-show', 'Club Show (8 bouts)', clubShowClasses)
+
+  // World Boxing's own division set — organizers running under World Boxing
+  // rules (the body that ran Olympic qualification for Paris 2024) rather
+  // than IBA's need a pack that isn't just relabeled IBA elite. Real
+  // men's/women's Olympic-cycle weight categories, gender-specific rather
+  // than mixed since the two lists genuinely differ (7 men's / 6 women's).
+  const ROUND_DEFAULTS_ADULT = { roundsCount: 3, roundMinutes: 3, restMinutes: 1 }
+  const worldBoxingMen = ['51 KG', '57 KG', '63.5 KG', '71 KG', '80 KG', '92 KG', '92+ KG']
+  const worldBoxingWomen = ['50 KG', '54 KG', '57 KG', '60 KG', '66 KG', '75 KG']
+  const worldBoxingClasses = [
+    ...worldBoxingMen.map((name, i) => ({ name, gender: 'male', ...ROUND_DEFAULTS_ADULT, sortOrder: i })),
+    ...worldBoxingWomen.map((name, i) => ({ name, gender: 'female', ...ROUND_DEFAULTS_ADULT, sortOrder: worldBoxingMen.length + i })),
+  ]
+  seedPackIfMissing('boxing.olympic.world-boxing', 'Boxing', 'olympic', 'World Boxing (Olympic)', worldBoxingClasses)
 }
