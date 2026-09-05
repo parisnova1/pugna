@@ -407,3 +407,23 @@ if (!sparringColumns.includes('accepting_requests')) {
 // spots keeps its NOT NULL constraint (SQLite can't drop it without a table
 // rebuild) — 0 is repurposed to mean "unlimited" so the field can go optional
 // at the application layer without a migration.
+
+// Night-of organizer live-console support (product brief Phase 2). A bout's
+// `status` column stays free-text (always has been — see the base bouts
+// table above), so 'delayed' and 'scratched' need no schema change to be
+// legal values, only these two additive columns to carry their extra data.
+const boutLiveColumns = columnsOf('bouts')
+if (!boutLiveColumns.includes('delay_minutes')) {
+  // Null = not delayed. Only meaningful while status = 'delayed' — cleared
+  // by the same endpoint that reverts a bout back to 'scheduled'.
+  db.exec('ALTER TABLE bouts ADD COLUMN delay_minutes INTEGER')
+}
+
+const eventLiveColumns = columnsOf('events')
+if (!eventLiveColumns.includes('intermission_note')) {
+  // Null = not in intermission. Non-null (including '') = intermission is
+  // active; the text is an optional organizer note ("back in 10") shown to
+  // guests. A pointer/flag rather than an enum value on `status`, since
+  // intermission is orthogonal to the event's Draft/Open/Active lifecycle.
+  db.exec('ALTER TABLE events ADD COLUMN intermission_note TEXT')
+}

@@ -8,7 +8,7 @@ import BracketView, { type Bout } from '../components/Bracket'
 import DaySwitcher, { type EventDay } from '../components/DaySwitcher'
 import LoginModal from '../components/LoginModal'
 
-import { ACCENT as RED, ON_ACCENT, CARD, LINE as BORDER, MUTED, TEXT, BG, ACCENT_SOFT, FONT_BODY as DISPLAY } from '../theme'
+import { ACCENT as RED, ON_ACCENT, CARD, LINE as BORDER, MUTED, TEXT, BG, ACCENT_SOFT, CAUTION_AMBER, FONT_BODY as DISPLAY } from '../theme'
 
 type PublicEventDetail = {
   id: number
@@ -23,6 +23,7 @@ type PublicEventDetail = {
   qr_token: string
   current_bout_id: number | null
   livestream_url: string
+  intermission_note: string | null
 }
 
 type LiveBout = { id: number; weight_class_id: number; fighterRed: { name: string } | null; fighterBlue: { name: string } | null }
@@ -151,6 +152,14 @@ export default function PublicEvent({ token }: { token: string }) {
       if (msg.type === 'bout:result' && event.current_bout_id === msg.boutId) {
         setEvent(prev => (prev ? { ...prev, current_bout_id: null } : prev))
       }
+      if (msg.type === 'event:status') {
+        // The broadcast only carries a status string, not the intermission
+        // note text itself — refetch so a guest sees the organizer's actual
+        // note rather than just "something changed".
+        apiFetch<{ event: PublicEventDetail }>(`/api/public/events/${token}`)
+          .then(r => setEvent(r.event))
+          .catch(() => {})
+      }
     })
     return unsubscribe
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -263,6 +272,14 @@ export default function PublicEvent({ token }: { token: string }) {
           </div>
         </div>
 
+        {event.intermission_note !== null && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'rgba(255,159,10,0.12)', border: `1px solid ${CAUTION_AMBER}`, padding: '12px 18px', margin: '16px 0', maxWidth: 'fit-content' }}>
+            <span style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.1em', color: CAUTION_AMBER, textTransform: 'uppercase' }}>{t('publicEvent.intermission')}</span>
+            {event.intermission_note && (
+              <span style={{ fontFamily: DISPLAY, fontSize: '13px', color: TEXT }}>{event.intermission_note}</span>
+            )}
+          </div>
+        )}
         {liveBout && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: ACCENT_SOFT, border: `1px solid ${RED}`, padding: '12px 18px', margin: '16px 0', maxWidth: 'fit-content' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: RED }} />

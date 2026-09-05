@@ -139,7 +139,7 @@ router.get('/fighters/:id', (req, res) => {
 const EVENT_COLUMNS = `
   events.id, events.name, events.date, events.location, events.venue, events.discipline, events.status,
   events.format, events.livestream_url, events.number_of_days, events.ring_count, events.qr_token,
-  events.fights, events.fighters, events.views, events.current_bout_id, users.name AS organizer_name
+  events.fights, events.fighters, events.views, events.current_bout_id, events.intermission_note, users.name AS organizer_name
 `
 const getEventById = db.prepare(`SELECT ${EVENT_COLUMNS} FROM events JOIN users ON users.id = events.organizer_id WHERE events.id = ?`)
 const getEventByToken = db.prepare(`SELECT ${EVENT_COLUMNS} FROM events JOIN users ON users.id = events.organizer_id WHERE events.qr_token = ?`)

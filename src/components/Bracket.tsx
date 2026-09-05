@@ -1,4 +1,4 @@
-import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, POSITIVE_GREEN, ACCENT_SOFT, FONT_BODY as DISPLAY } from '../theme'
+import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, POSITIVE_GREEN, CAUTION_AMBER, ACCENT_SOFT, FONT_BODY as DISPLAY } from '../theme'
 
 const BORDER2 = 'rgba(17,17,20,0.22)'
 
@@ -12,6 +12,7 @@ export type Bout = {
   winner_id: number | null
   method: string | null
   event_day_id?: number | null
+  delay_minutes?: number | null
 }
 
 type FighterLookup = Record<number, { name: string; club: string }>
@@ -86,7 +87,7 @@ export default function Bracket({ bouts, fighters, onBoutClick }: { bouts: Bout[
             {matches.map(m => {
               const y = centerY(r, m.slot) - MATCH_H / 2
               const isBye = m.fighter_red_id === null || m.fighter_blue_id === null
-              const isClickable = Boolean(onBoutClick) && m.status === 'scheduled' && !isBye
+              const isClickable = Boolean(onBoutClick) && m.status !== 'completed' && !isBye
               return (
                 <div
                   key={m.id}
@@ -127,6 +128,16 @@ export default function Bracket({ bouts, fighters, onBoutClick }: { bouts: Bout[
                   {!isBye && m.status === 'completed' && m.method && (
                     <div style={{ position: 'absolute', right: -4, top: -10, backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '1px 6px', fontFamily: DISPLAY, fontSize: '10px', color: MUTED, textTransform: 'uppercase' }}>
                       {m.method}
+                    </div>
+                  )}
+                  {!isBye && m.status === 'delayed' && (
+                    <div style={{ position: 'absolute', right: -4, top: -10, backgroundColor: CARD, border: `1px solid ${CAUTION_AMBER}`, padding: '1px 6px', fontFamily: DISPLAY, fontSize: '10px', color: CAUTION_AMBER, textTransform: 'uppercase' }}>
+                      Delayed{m.delay_minutes ? ` +${m.delay_minutes}m` : ''}
+                    </div>
+                  )}
+                  {!isBye && m.status === 'scratched' && (
+                    <div style={{ position: 'absolute', right: -4, top: -10, backgroundColor: CARD, border: `1px solid ${MUTED}`, padding: '1px 6px', fontFamily: DISPLAY, fontSize: '10px', color: MUTED, textTransform: 'uppercase' }}>
+                      Scratched
                     </div>
                   )}
                 </div>

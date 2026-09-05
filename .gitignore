@@ -14,3 +14,4 @@ logs/
 .claude-replay.*
 .tmp-*
 .vercel
+server/data/

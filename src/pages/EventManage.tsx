@@ -30,6 +30,7 @@ type EventDetail = {
   ring_count: number
   qr_token: string
   current_bout_id: number | null
+  intermission_note: string | null
 }
 
 type WeightClass = {
@@ -185,7 +186,7 @@ export default function EventManage({ nav: _nav }: { nav: NavFn }) {
           {tab === 'fighters' && (
             <FightersTab eventId={eventId} fighters={fighters} weightClasses={weightClasses} onChange={refreshAll} />
           )}
-          {tab === 'bracket' && <BracketTab eventId={eventId} currentBoutId={event.current_bout_id} numberOfDays={event.number_of_days} weightClasses={weightClasses} fighters={fighters} onChanged={refreshAll} />}
+          {tab === 'bracket' && <BracketTab eventId={eventId} currentBoutId={event.current_bout_id} intermissionNote={event.intermission_note} numberOfDays={event.number_of_days} weightClasses={weightClasses} fighters={fighters} onChanged={refreshAll} />}
           {tab === 'fightcard' && <FightCardTab eventId={eventId} />}
         </>
       )}
@@ -857,7 +858,7 @@ function AddFighterModal({ weightClasses, onCancel, onSave }: {
 
 // ── Bracket ──────────────────────────────────────────────────────────────
 
-function BracketTab({ eventId, currentBoutId, numberOfDays, weightClasses, fighters, onChanged }: { eventId: string; currentBoutId: number | null; numberOfDays: number; weightClasses: WeightClass[]; fighters: EventFighter[]; onChanged: () => void }) {
+function BracketTab({ eventId, currentBoutId, intermissionNote, numberOfDays, weightClasses, fighters, onChanged }: { eventId: string; currentBoutId: number | null; intermissionNote: string | null; numberOfDays: number; weightClasses: WeightClass[]; fighters: EventFighter[]; onChanged: () => void }) {
   const [selected, setSelected] = useState<number | null>(weightClasses[0]?.id ?? null)
   const [bouts, setBouts] = useState<Bout[]>([])
   const [loading, setLoading] = useState(false)
@@ -868,10 +869,46 @@ function BracketTab({ eventId, currentBoutId, numberOfDays, weightClasses, fight
   const [days, setDays] = useState<EventDay[]>([])
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [daysBusy, setDaysBusy] = useState(false)
+  const [boutStatusBusyId, setBoutStatusBusyId] = useState<number | null>(null)
+  const [intermissionBusy, setIntermissionBusy] = useState(false)
 
   const setLive = async (boutId: number | null) => {
     setLiveBusy(true)
     try { await apiFetch(`/api/events/${eventId}/current-bout`, { method: 'PATCH', body: JSON.stringify({ boutId }) }); onChanged() } finally { setLiveBusy(false) }
+  }
+
+  const setBoutLiveStatus = async (boutId: number, status: 'scheduled' | 'delayed' | 'scratched', delayMinutes?: number) => {
+    setBoutStatusBusyId(boutId)
+    try {
+      await apiFetch(`/api/bouts/${boutId}/status`, { method: 'PATCH', body: JSON.stringify({ status, delayMinutes }) })
+      if (selected) loadBracket(selected)
+    } finally {
+      setBoutStatusBusyId(null)
+    }
+  }
+
+  const delayBout = (bout: Bout) => {
+    const raw = window.prompt('Delay by how many minutes?', '15')
+    if (!raw) return
+    const minutes = Number(raw)
+    if (!Number.isInteger(minutes) || minutes <= 0) { window.alert('Enter a positive whole number of minutes.'); return }
+    setBoutLiveStatus(bout.id, 'delayed', minutes)
+  }
+
+  const toggleIntermission = async () => {
+    setIntermissionBusy(true)
+    try {
+      if (intermissionNote !== null) {
+        await apiFetch(`/api/events/${eventId}/intermission`, { method: 'DELETE' })
+      } else {
+        const note = window.prompt('Intermission note (optional, shown to guests):', '')
+        if (note === null) return
+        await apiFetch(`/api/events/${eventId}/intermission`, { method: 'POST', body: JSON.stringify({ note }) })
+      }
+      onChanged()
+    } finally {
+      setIntermissionBusy(false)
+    }
   }
 
   const fightersById = Object.fromEntries(fighters.map(f => [f.id, { name: f.name, club: f.club }]))
@@ -979,20 +1016,46 @@ function BracketTab({ eventId, currentBoutId, numberOfDays, weightClasses, fight
         </div>
       )}
 
-      {bouts.filter(b => b.status === 'scheduled').length > 0 && (
+      {bouts.filter(b => b.status !== 'completed').length > 0 && (
         <div style={{ marginTop: '32px' }}>
-          <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', marginBottom: '12px' }}>Live Control</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER, maxWidth: '640px' }}>
-            {bouts.filter(b => b.status === 'scheduled').map(b => {
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase' }}>Live Control</div>
+            <button onClick={toggleIntermission} disabled={intermissionBusy}
+              style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '6px 14px', border: `1px solid ${intermissionNote !== null ? '#ff9f0a' : BORDER}`, color: intermissionNote !== null ? '#ff9f0a' : MUTED, opacity: intermissionBusy ? 0.6 : 1 }}
+            >
+              {intermissionNote !== null ? 'End Intermission' : 'Start Intermission'}
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER, maxWidth: '760px' }}>
+            {bouts.filter(b => b.status !== 'completed').map(b => {
               const isLive = currentBoutId === b.id
+              const busy = boutStatusBusyId === b.id
               return (
-                <div key={b.id} style={{ backgroundColor: CARD, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={b.id} style={{ backgroundColor: CARD, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: '14px', color: '#fff', textTransform: 'uppercase' }}>
                     {fightersById[b.fighter_red_id ?? -1]?.name ?? '?'} vs {fightersById[b.fighter_blue_id ?? -1]?.name ?? '?'}
+                    {b.status === 'delayed' && <span style={{ color: '#ff9f0a' }}> · Delayed{b.delay_minutes ? ` +${b.delay_minutes}m` : ''}</span>}
+                    {b.status === 'scratched' && <span style={{ color: MUTED }}> · Scratched</span>}
                   </span>
-                  <button onClick={() => setLive(isLive ? null : b.id)} disabled={liveBusy} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: isLive ? RED : MUTED, textTransform: 'uppercase' }}>
-                    {isLive ? 'End Live' : 'Go Live'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '14px', flexShrink: 0 }}>
+                    <button onClick={() => setLive(isLive ? null : b.id)} disabled={liveBusy || b.status === 'scratched'} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: isLive ? RED : MUTED, textTransform: 'uppercase', opacity: b.status === 'scratched' ? 0.5 : 1 }}>
+                      {isLive ? 'End Live' : 'Go Live'}
+                    </button>
+                    {b.status !== 'scratched' && (
+                      <button onClick={() => delayBout(b)} disabled={busy} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase' }}>
+                        Delay
+                      </button>
+                    )}
+                    {b.status !== 'scratched' ? (
+                      <button onClick={() => setBoutLiveStatus(b.id, 'scratched')} disabled={busy} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase' }}>
+                        Scratch
+                      </button>
+                    ) : (
+                      <button onClick={() => setBoutLiveStatus(b.id, 'scheduled')} disabled={busy} style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase' }}>
+                        Reopen
+                      </button>
+                    )}
+                  </div>
                 </div>
               )
             })}

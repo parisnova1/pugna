@@ -3,7 +3,7 @@ import { db } from '../db.js'
 import { requireAuth } from '../auth.js'
 import { boxingTemplate, AGE_GROUPS } from '../weightClassTemplate.js'
 import { persistBracket, advanceWinner } from '../bracket.js'
-import { broadcastBracketUpdate, broadcastBoutResult, broadcastBoutLive } from '../ws.js'
+import { broadcastBracketUpdate, broadcastBoutResult, broadcastBoutLive, broadcastEventStatus } from '../ws.js'
 import { createNotification, notifyEventAudience } from '../notifications.js'
 
 const router = Router()
@@ -251,7 +251,10 @@ router.patch('/bouts/:id/result', (req, res) => {
   const event = getEventOwned.get(bout.event_id, req.userId)
   if (!event) return res.status(404).json({ error: 'Bout not found.' })
 
-  if (bout.status !== 'scheduled') return res.status(400).json({ error: 'A result has already been recorded for this bout.' })
+  // A delayed or scratched bout can still be finalized directly (e.g. the
+  // organizer scratches a no-show and immediately records a Walkover) —
+  // only an already-completed bout is locked.
+  if (bout.status === 'completed') return res.status(400).json({ error: 'A result has already been recorded for this bout.' })
   if (!bout.fighter_red_id || !bout.fighter_blue_id) {
     return res.status(400).json({ error: 'Both fighters must be set before recording a result.' })
   }
@@ -301,6 +304,43 @@ router.patch('/bouts/:id/result', (req, res) => {
   res.json({ bout: getBout.get(bout.id) })
 })
 
+// ── Night-of status (delay / scratch) ───────────────────────────────────
+// Distinct from /result: this never assigns a winner or touches the
+// bracket — it's for the organizer flagging a bout's state on the night
+// (running late, fighter didn't show) without finalizing it. A scratched
+// bout can still be finalized via /result afterwards (e.g. Walkover), or
+// reverted back to 'scheduled' here once a replacement is sorted out —
+// that revert is the "open swap" path from the product brief; the actual
+// fighter substitution still goes through the existing roster/weight-class
+// tools, not this endpoint.
+const BOUT_LIVE_STATUSES = new Set(['scheduled', 'delayed', 'scratched'])
+const setBoutStatus = db.prepare('UPDATE bouts SET status = ?, delay_minutes = ? WHERE id = ?')
+
+router.patch('/bouts/:id/status', (req, res) => {
+  const bout = getBout.get(req.params.id)
+  if (!bout) return res.status(404).json({ error: 'Bout not found.' })
+
+  const event = getEventOwned.get(bout.event_id, req.userId)
+  if (!event) return res.status(404).json({ error: 'Bout not found.' })
+
+  if (bout.status === 'completed') return res.status(400).json({ error: 'This bout already has a result.' })
+
+  const { status, delayMinutes } = req.body || {}
+  if (!BOUT_LIVE_STATUSES.has(status)) return res.status(400).json({ error: 'Invalid status.' })
+  if (status === 'delayed' && (!Number.isInteger(delayMinutes) || delayMinutes <= 0)) {
+    return res.status(400).json({ error: 'Delay minutes must be a positive whole number.' })
+  }
+
+  setBoutStatus.run(status, status === 'delayed' ? delayMinutes : null, bout.id)
+
+  // Reuses the same message the bracket-generation/result flows already
+  // broadcast — every client already refetches this class's bouts on it,
+  // so the new status/delay_minutes show up with no new message type.
+  broadcastBracketUpdate(event.qr_token, bout.weight_class_id)
+
+  res.json({ bout: getBout.get(bout.id) })
+})
+
 // ── Live pinning ─────────────────────────────────────────────────────────
 // Lets an organizer mark which bout is "on now" for the event's Live page
 // and public audience view. Purely a pointer — doesn't touch bout.status,
@@ -334,6 +374,33 @@ router.patch('/events/:id/current-bout', (req, res) => {
   }
 
   res.json({ currentBoutId: boutId || null })
+})
+
+// ── Intermission ─────────────────────────────────────────────────────────
+// A pointer independent of current_bout_id/status — nothing is "on now"
+// during an intermission, but the event itself is still live, so this
+// can't just be modeled as clearing current-bout (that already means
+// "nothing pinned yet" before the first bout too, which isn't the same
+// guest-facing message as "we're on a break").
+const setIntermission = db.prepare('UPDATE events SET intermission_note = ? WHERE id = ?')
+
+router.post('/events/:id/intermission', (req, res) => {
+  const event = getEventOwned.get(req.params.id, req.userId)
+  if (!event) return res.status(404).json({ error: 'Event not found.' })
+
+  const note = typeof req.body?.note === 'string' ? req.body.note.trim() : ''
+  setIntermission.run(note, event.id)
+  broadcastEventStatus(event.qr_token, 'intermission')
+  res.json({ intermissionNote: note })
+})
+
+router.delete('/events/:id/intermission', (req, res) => {
+  const event = getEventOwned.get(req.params.id, req.userId)
+  if (!event) return res.status(404).json({ error: 'Event not found.' })
+
+  setIntermission.run(null, event.id)
+  broadcastEventStatus(event.qr_token, event.status)
+  res.json({ intermissionNote: null })
 })
 
 export default router
