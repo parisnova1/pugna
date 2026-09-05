@@ -168,12 +168,12 @@ router.post('/events/:eventId/fighters', (req, res) => {
   if (!event) return
 
   const { name, club, weight, record, weightClassId, discipline, location } = req.body || {}
-  if (!name?.trim() || !club?.trim() || !weight?.trim()) {
-    return res.status(400).json({ error: 'Name, club and weight are required.' })
+  if (!name?.trim() || !weight?.trim()) {
+    return res.status(400).json({ error: 'Name and weight are required.' })
   }
 
   const info = insertEventFighter.run(
-    req.userId, event.id, weightClassId || null, name.trim(), club.trim(), weight.trim(),
+    req.userId, event.id, weightClassId || null, name.trim(), club?.trim() || '—', weight.trim(),
     record?.trim() || '0–0', discipline || event.discipline, location?.trim() || event.location,
   )
   res.status(201).json({ fighter: getEventFighter.get(info.lastInsertRowid, event.id) })

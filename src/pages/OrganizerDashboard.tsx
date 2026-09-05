@@ -81,6 +81,9 @@ export default function OrganizerDashboard({ nav }: { nav: NavFn }) {
     const { event } = await apiFetch<{ event: EventRow }>('/api/events', { method: 'POST', body: JSON.stringify(fields) })
     setEvents(prev => [event, ...prev])
     setEventModal(null)
+    // Straight into the builder, same as Duplicate — the whole point of a
+    // fast create is not making the organizer go find the row afterward.
+    nav(`/organizer/events/${event.id}/manage`)
   }
 
   const updateEvent = async (id: number, fields: EventFields) => {

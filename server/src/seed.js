@@ -5,7 +5,7 @@ import { boxingTemplate } from './weightClassTemplate.js'
 
 const countEvents = db.prepare('SELECT COUNT(*) AS n FROM events')
 const countClubs = db.prepare('SELECT COUNT(*) AS n FROM clubs')
-const countTemplatePacks = db.prepare('SELECT COUNT(*) AS n FROM template_packs')
+const getTemplatePackBySlug = db.prepare('SELECT id FROM template_packs WHERE slug = ?')
 const insertTemplatePack = db.prepare('INSERT INTO template_packs (slug, discipline, division, name) VALUES (?, ?, ?, ?)')
 const insertTemplatePackClass = db.prepare(`
   INSERT INTO template_pack_classes (pack_id, name, gender, rounds_count, round_minutes, rest_minutes, sort_order)
@@ -85,25 +85,37 @@ function seedClubsIfEmpty() {
   console.log('Seeded demo clubs.')
 }
 
-// Runs independently, same reasoning as seedClubsIfEmpty — a database that
-// predates template packs should still get the one built-in pack. Generated
-// from the existing boxingTemplate() rather than hand-duplicating weight
-// labels, so this stays in sync with the manual /weight-classes/template
-// endpoint's class list.
-function seedTemplatePacksIfEmpty() {
-  if (countTemplatePacks.get().n > 0) return
+function seedPackIfMissing(slug, discipline, division, name, classes) {
+  if (getTemplatePackBySlug.get(slug)) return
 
-  const packId = insertTemplatePack.run(
-    'boxing.amateur.elite.iba-2024',
-    'Boxing',
-    'elite',
-    'IBA 2024 Elite'
-  ).lastInsertRowid
-
-  const classes = boxingTemplate({ ageGroup: 'adult', gender: 'mixed' })
+  const packId = insertTemplatePack.run(slug, discipline, division, name).lastInsertRowid
   for (const c of classes) {
     insertTemplatePackClass.run(packId, c.name, c.gender, c.roundsCount, c.roundMinutes, c.restMinutes, c.sortOrder)
   }
+  console.log(`Seeded ${slug} template pack.`)
+}
 
-  console.log('Seeded boxing.amateur.elite.iba-2024 template pack.')
+// Checked per-slug (not "any pack exists") so a database that predates a
+// given pack — including one that already has an older pack seeded — still
+// picks up new ones added here on the next server start.
+function seedTemplatePacksIfEmpty() {
+  seedPackIfMissing(
+    'boxing.amateur.elite.iba-2024', 'Boxing', 'elite', 'IBA 2024 Elite',
+    // Generated from the existing boxingTemplate() rather than
+    // hand-duplicating weight labels, so this stays in sync with the manual
+    // /weight-classes/template endpoint's class list.
+    boxingTemplate({ ageGroup: 'adult', gender: 'mixed' }),
+  )
+
+  // Phase 4 "fast card creation": a lightweight subset of the full elite
+  // division for a typical single-day club show, rather than making an
+  // organizer either hand-pick every weight class or take all 13 elite
+  // divisions from the pack above. ~8 classes -> up to 8 bouts if each
+  // fills, matching the brief's own "Club show 8–12 bouts" example.
+  const full = boxingTemplate({ ageGroup: 'adult', gender: 'mixed' })
+  const clubShowNames = new Set(['54 KG', '60 KG', '63.5 KG', '67 KG', '71 KG', '75 KG', '80 KG', '86 KG'])
+  const clubShowClasses = full
+    .filter(c => clubShowNames.has(c.name))
+    .map((c, i) => ({ ...c, sortOrder: i }))
+  seedPackIfMissing('boxing.amateur.club-show', 'Boxing', 'club-show', 'Club Show (8 bouts)', clubShowClasses)
 }

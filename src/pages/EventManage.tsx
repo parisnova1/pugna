@@ -196,6 +196,8 @@ export default function EventManage({ nav: _nav }: { nav: NavFn }) {
 
 // ── Setup ────────────────────────────────────────────────────────────────
 
+const STATUSES = ['Draft', 'Open', 'Active'] as const
+
 function SetupTab({ event, onSaved }: { event: EventDetail; onSaved: (e: EventDetail) => void }) {
   const [tournamentType, setTournamentType] = useState<'day' | 'multi-day'>(event.number_of_days > 1 ? 'multi-day' : 'day')
   const [numberOfDays, setNumberOfDays] = useState(event.number_of_days)
@@ -204,6 +206,24 @@ function SetupTab({ event, onSaved }: { event: EventDetail; onSaved: (e: EventDe
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [statusSaving, setStatusSaving] = useState(false)
+
+  // No separate "Save" click for status — flipping Draft→Open is the one
+  // action that matters most for speed (brief's Phase 4 "Publish" step), so
+  // it applies immediately, same place the QR/slug already lives.
+  const setStatus = async (status: typeof STATUSES[number]) => {
+    if (status === event.status) return
+    setStatusSaving(true)
+    try {
+      const { event: updated } = await apiFetch<{ event: EventDetail }>(`/api/events/${event.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      })
+      onSaved(updated)
+    } finally {
+      setStatusSaving(false)
+    }
+  }
 
   // Bracket events point at the live, real-time audience page (/e/:token);
   // card events have no bracket to update live, so their QR is just the
@@ -281,6 +301,22 @@ function SetupTab({ event, onSaved }: { event: EventDetail; onSaved: (e: EventDe
           </button>
         </>
       )}
+
+      <div style={{ marginTop: '40px', paddingTop: '28px', borderTop: `1px solid ${BORDER}` }}>
+        <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '14px' }}>Status</div>
+        <div style={{ display: 'flex', gap: '2px', marginBottom: '10px' }}>
+          {STATUSES.map(s => (
+            <button key={s} onClick={() => setStatus(s)} disabled={statusSaving}
+              style={{ flex: 1, padding: '13px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', border: `1px solid ${event.status === s ? RED : BORDER}`, backgroundColor: event.status === s ? '#071a30' : 'transparent', color: event.status === s ? '#fff' : MUTED, opacity: statusSaving ? 0.6 : 1 }}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+        <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED }}>
+          {event.status === 'Draft' ? 'Only you can see this event. Open it to accept nominations and share the link below.' : event.status === 'Open' ? 'Live to fans and accepting nominations. Set Active once fights are underway.' : 'Live and running — the audience page shows real-time updates.'}
+        </div>
+      </div>
 
       <div style={{ marginTop: '40px', paddingTop: '28px', borderTop: `1px solid ${BORDER}` }}>
         <div style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.2em', color: RED, textTransform: 'uppercase', marginBottom: '12px' }}>Public Link</div>
@@ -809,7 +845,7 @@ function AddFighterModal({ weightClasses, onCancel, onSave }: {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !club.trim() || !weight.trim()) { setError('Fill in name, club and weight.'); return }
+    if (!name.trim() || !weight.trim()) { setError('Fill in name and weight.'); return }
     setError(null)
     setSaving(true)
     try {
@@ -829,8 +865,8 @@ function AddFighterModal({ weightClasses, onCancel, onSave }: {
           <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder="Marcus Müller" />
         </div>
         <div>
-          <label style={labelStyle}>Club</label>
-          <input style={inputStyle} value={club} onChange={e => setClub(e.target.value)} placeholder="Boxclub Nürnberg" />
+          <label style={labelStyle}>Club (optional)</label>
+          <input style={inputStyle} value={club} onChange={e => setClub(e.target.value)} placeholder="Boxclub Nürnberg — leave blank for a guest" />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
           <div>
@@ -871,6 +907,7 @@ function BracketTab({ eventId, currentBoutId, intermissionNote, numberOfDays, we
   const [daysBusy, setDaysBusy] = useState(false)
   const [boutStatusBusyId, setBoutStatusBusyId] = useState<number | null>(null)
   const [intermissionBusy, setIntermissionBusy] = useState(false)
+  const [generatingAll, setGeneratingAll] = useState(false)
 
   const setLive = async (boutId: number | null) => {
     setLiveBusy(true)
@@ -954,6 +991,26 @@ function BracketTab({ eventId, currentBoutId, intermissionNote, numberOfDays, we
     }
   }
 
+  // Speed path for the common case (single-day event, several classes each
+  // already filled): one click instead of selecting and generating each
+  // class in turn. Reuses the exact same per-class endpoint the manual
+  // Generate/Regenerate button calls — no new bracket math.
+  const eligibleForAll = weightClasses.filter(wc => wc.fighterCount >= 2)
+  const generateAll = async () => {
+    setGeneratingAll(true)
+    setError(null)
+    try {
+      for (const wc of eligibleForAll) {
+        await apiFetch(`/api/weight-classes/${wc.id}/bracket`, { method: 'POST', body: JSON.stringify({ dayId: selectedDay }) })
+      }
+      if (selected) loadBracket(selected)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not generate all brackets.')
+    } finally {
+      setGeneratingAll(false)
+    }
+  }
+
   const currentClass = weightClasses.find(wc => wc.id === selected)
 
   if (weightClasses.length === 0) {
@@ -979,14 +1036,23 @@ function BracketTab({ eventId, currentBoutId, intermissionNote, numberOfDays, we
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '28px' }}>
-        {weightClasses.map(wc => (
-          <button key={wc.id} onClick={() => setSelected(wc.id)}
-            style={{ padding: '10px 16px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${selected === wc.id ? RED : BORDER}`, backgroundColor: selected === wc.id ? '#071a30' : 'transparent', color: selected === wc.id ? '#fff' : MUTED }}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '28px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {weightClasses.map(wc => (
+            <button key={wc.id} onClick={() => setSelected(wc.id)}
+              style={{ padding: '10px 16px', fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', border: `1px solid ${selected === wc.id ? RED : BORDER}`, backgroundColor: selected === wc.id ? '#071a30' : 'transparent', color: selected === wc.id ? '#fff' : MUTED }}
+            >
+              {wc.name} <span style={{ color: MUTED }}>({wc.fighterCount})</span>
+            </button>
+          ))}
+        </div>
+        {eligibleForAll.length > 1 && (
+          <button onClick={generateAll} disabled={generatingAll}
+            style={{ border: `1px solid ${BORDER}`, color: '#fff', fontFamily: DISPLAY, fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '10px 16px', opacity: generatingAll ? 0.6 : 1, whiteSpace: 'nowrap' }}
           >
-            {wc.name} <span style={{ color: MUTED }}>({wc.fighterCount})</span>
+            {generatingAll ? 'Generating…' : `Generate All (${eligibleForAll.length})`}
           </button>
-        ))}
+        )}
       </div>
 
       {currentClass && (
