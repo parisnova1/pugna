@@ -27,7 +27,7 @@ const GOOGLE_AUDIENCES = [
   process.env.GOOGLE_CLIENT_ID_ANDROID,
 ].filter(Boolean)
 
-const ROLES = new Set(['organizer', 'club', 'viewer'])
+const ROLES = new Set(['organizer', 'club', 'viewer', 'fighter'])
 
 function publicUser(row) {
   return { id: row.id, name: row.name, email: row.email, role: row.role, home_location: row.home_location || '' }

@@ -427,3 +427,13 @@ if (!eventLiveColumns.includes('intermission_note')) {
   // intermission is orthogonal to the event's Draft/Open/Active lifecycle.
   db.exec('ALTER TABLE events ADD COLUMN intermission_note TEXT')
 }
+
+// Phase 3 — a fighter account's own read/accept-or-decline of a nomination
+// their club made for them. Deliberately separate from `nominations.status`
+// (the organizer's accept/reject onto the card) so this stays a soft signal
+// that never blocks or reorders the existing club/organizer nomination
+// lifecycle. Null = fighter hasn't responded yet.
+const nominationColumns = columnsOf('nominations')
+if (!nominationColumns.includes('fighter_response')) {
+  db.exec('ALTER TABLE nominations ADD COLUMN fighter_response TEXT')
+}

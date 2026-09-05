@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { apiFetch, getToken, setToken } from '../lib/api'
 
-export type Role = 'organizer' | 'club' | 'viewer'
+export type Role = 'organizer' | 'club' | 'viewer' | 'fighter'
 export type User = { id: number; name: string; email: string; role: Role; home_location: string }
 
 type AuthContextValue = {

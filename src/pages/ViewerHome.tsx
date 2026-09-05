@@ -8,7 +8,7 @@ import QrScanner from '../components/QrScanner'
 import Spinner from '../components/Spinner'
 import { FeaturedFight, SparringSection, Footer } from './Home'
 
-import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, BG, ACCENT_SOFT, FONT_BODY as DISPLAY } from '../theme'
+import { ACCENT as RED, CARD, LINE as BORDER, MUTED, TEXT, BG, ACCENT_SOFT, FONT_BODY as DISPLAY, POSITIVE_GREEN, CAUTION_AMBER } from '../theme'
 
 // Falls back to the platform's Bayern-first go-to-market region for viewers
 // who haven't set a home city (or signed up before this field existed).
@@ -17,6 +17,17 @@ const FALLBACK_REGION = 'Bayern'
 type PublicEvent = { id: number; name: string; date: string; location: string; discipline: string; organizer_name: string; fights: number }
 type FollowedClub = { id: number; name: string; location: string }
 type FollowedFighter = { id: number; name: string; club: string; weight: string }
+
+type MyFighter = { id: number; name: string; weight: string; discipline: string; club: string; club_id: number | null } | null
+type ClubOption = { id: number; name: string }
+type MyNomination = {
+  id: number; status: 'pending' | 'accepted' | 'rejected'; fighter_response: 'accepted' | 'declined' | null
+  event_id: number; event_name: string; weight_class_name: string
+}
+type MyBout = {
+  id: number; event_id: number; event_name: string; event_date: string; weight_class_name: string
+  round: number; status: string
+}
 
 function extractEventIdentifier(raw: string): string {
   const trimmed = raw.trim()
@@ -48,6 +59,148 @@ function EmptyState({ message, ctaLabel, onClick }: { message: string; ctaLabel:
   )
 }
 
+function FighterWorklist({
+  fighter, fighterName, clubOptions, nominations, bouts, loading, onChanged, nav,
+}: {
+  fighter: MyFighter; fighterName: string; clubOptions: ClubOption[]; nominations: MyNomination[]; bouts: MyBout[]
+  loading: boolean; onChanged: () => void; nav: NavFn
+}) {
+  const { t } = useLanguage()
+  const [clubId, setClubId] = useState<string>(fighter?.club_id ? String(fighter.club_id) : '')
+  const [weight, setWeight] = useState(fighter?.weight ?? '')
+  const [saving, setSaving] = useState(false)
+  const [respondingId, setRespondingId] = useState<number | null>(null)
+  const [editingClub, setEditingClub] = useState(false)
+
+  const saveProfile = async () => {
+    if (!clubId || !weight.trim()) return
+    setSaving(true)
+    try {
+      if (fighter) {
+        await apiFetch(`/api/fighters/${fighter.id}`, { method: 'PATCH', body: JSON.stringify({ clubId: Number(clubId), weight: weight.trim() }) })
+      } else {
+        await apiFetch('/api/fighters', { method: 'POST', body: JSON.stringify({ name: fighterName, weight: weight.trim(), clubId: Number(clubId) }) })
+      }
+      setEditingClub(false)
+      onChanged()
+    } catch {
+      // best-effort — the form stays open so the fighter can retry
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const respond = async (nominationId: number, response: 'accepted' | 'declined') => {
+    setRespondingId(nominationId)
+    try {
+      await apiFetch(`/api/nominations/${nominationId}/fighter-response`, { method: 'PATCH', body: JSON.stringify({ response }) })
+      onChanged()
+    } catch {
+      // ignore — list just won't reflect the response, fighter can retry
+    } finally {
+      setRespondingId(null)
+    }
+  }
+
+  if (loading) {
+    return <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontFamily: DISPLAY, fontSize: '14px', color: MUTED, textTransform: 'uppercase', marginBottom: '40px' }}><Spinner size={14} /> {t('common.loading')}</div>
+  }
+
+  const showClubForm = !fighter || editingClub
+
+  return (
+    <div style={{ marginBottom: '48px' }}>
+      {/* Profile */}
+      <div style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, padding: '24px', marginBottom: '24px' }}>
+        <h2 style={{ fontFamily: DISPLAY, fontSize: '18px', fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '16px' }}>{t('fighterHome.profileTitle')}</h2>
+
+        {!fighter && <p style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED, marginBottom: '16px', lineHeight: 1.5 }}>{t('fighterHome.noClubYet')}</p>}
+
+        {!showClubForm && fighter ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+            <div><div style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('fighterHome.club')}</div><div style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700 }}>{fighter.club}</div></div>
+            <div><div style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('fighterHome.weightLabel')}</div><div style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700 }}>{fighter.weight}</div></div>
+            <div><div style={{ fontFamily: DISPLAY, fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('fighterHome.sport')}</div><div style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 700 }}>{fighter.discipline}</div></div>
+            <button onClick={() => setEditingClub(true)} style={{ fontFamily: DISPLAY, fontSize: '12px', color: RED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginLeft: 'auto' }}>{t('fighterHome.changeClub')}</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ flex: '1 1 220px' }}>
+              <label style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.08em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>{t('fighterHome.chooseClub')}</label>
+              <select value={clubId} onChange={e => setClubId(e.target.value)} style={{ width: '100%', backgroundColor: '#F7F5F0', border: `1px solid ${BORDER}`, color: TEXT, padding: '11px 12px', fontFamily: DISPLAY, fontSize: '14px' }}>
+                <option value="">—</option>
+                {clubOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: '0 1 160px' }}>
+              <label style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.08em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>{t('fighterHome.weightLabel')}</label>
+              <input value={weight} onChange={e => setWeight(e.target.value)} placeholder={t('fighterHome.weightPlaceholder')} style={{ width: '100%', backgroundColor: '#F7F5F0', border: `1px solid ${BORDER}`, color: TEXT, padding: '11px 12px', fontFamily: DISPLAY, fontSize: '14px' }} />
+            </div>
+            <button
+              onClick={saveProfile}
+              disabled={saving || !clubId || !weight.trim()}
+              style={{ backgroundColor: RED, color: TEXT, fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '12px 22px', opacity: saving || !clubId || !weight.trim() ? 0.6 : 1 }}
+            >
+              {t('fighterHome.saveProfile')}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Nominations */}
+      <div style={{ marginBottom: '24px' }}>
+        <h2 style={{ fontFamily: DISPLAY, fontSize: '18px', fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '16px' }}>{t('fighterHome.nominationsTitle')}</h2>
+        {nominations.length === 0 ? (
+          <p style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>{t('fighterHome.noNominations')}</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER }}>
+            {nominations.map(nom => (
+              <div key={nom.id} style={{ backgroundColor: CARD, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: '200px', cursor: 'pointer' }} onClick={() => nav(`/events/${nom.event_id}`)}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 800 }}>{nom.event_name}</div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED }}>{nom.weight_class_name}</div>
+                </div>
+                <div style={{ fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: nom.status === 'accepted' ? POSITIVE_GREEN : nom.status === 'rejected' ? MUTED : CAUTION_AMBER }}>
+                  {nom.status === 'accepted' ? t('fighterHome.statusAccepted') : nom.status === 'rejected' ? t('fighterHome.statusRejected') : t('fighterHome.statusPending')}
+                </div>
+                {nom.fighter_response ? (
+                  <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED, textTransform: 'uppercase' }}>
+                    {nom.fighter_response === 'accepted' ? t('fighterHome.responseAccepted') : t('fighterHome.responseDeclined')}
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => respond(nom.id, 'accepted')} disabled={respondingId === nom.id} style={{ backgroundColor: POSITIVE_GREEN, color: '#fff', fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '8px 16px' }}>{t('fighterHome.accept')}</button>
+                    <button onClick={() => respond(nom.id, 'declined')} disabled={respondingId === nom.id} style={{ border: `1px solid ${BORDER}`, color: TEXT, fontFamily: DISPLAY, fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '8px 16px' }}>{t('fighterHome.decline')}</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Upcoming bouts */}
+      <div>
+        <h2 style={{ fontFamily: DISPLAY, fontSize: '18px', fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '16px' }}>{t('fighterHome.upcomingBoutsTitle')}</h2>
+        {bouts.length === 0 ? (
+          <p style={{ fontFamily: DISPLAY, fontSize: '13px', color: MUTED }}>{t('fighterHome.noUpcomingBouts')}</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', backgroundColor: BORDER }}>
+            {bouts.map(b => (
+              <div key={b.id} style={{ backgroundColor: CARD, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer' }} onClick={() => nav(`/events/${b.event_id}`)}>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '15px', fontWeight: 800 }}>{b.event_name}</div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: '12px', color: MUTED }}>{formatDisplayDate(b.event_date)} · {b.weight_class_name}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function ViewerHome({ nav }: { nav: NavFn }) {
   const { user, logout } = useAuth()
   const { t } = useLanguage()
@@ -61,6 +214,12 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
   const [scannerOpen, setScannerOpen] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
 
+  const [myFighter, setMyFighter] = useState<MyFighter>(null)
+  const [nominations, setNominations] = useState<MyNomination[]>([])
+  const [myBouts, setMyBouts] = useState<MyBout[]>([])
+  const [clubOptions, setClubOptions] = useState<ClubOption[]>([])
+  const [fighterLoading, setFighterLoading] = useState(true)
+
   useEffect(() => {
     setLoading(true)
     Promise.all([
@@ -73,6 +232,25 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  const refetchFighter = () => {
+    setFighterLoading(true)
+    Promise.all([
+      apiFetch<{ fighter: MyFighter }>('/api/fighters/me'),
+      apiFetch<{ nominations: MyNomination[] }>('/api/fighters/me/nominations'),
+      apiFetch<{ bouts: MyBout[] }>('/api/fighters/me/bouts'),
+    ])
+      .then(([f, n, b]) => { setMyFighter(f.fighter); setNominations(n.nominations); setMyBouts(b.bouts) })
+      .catch(() => {})
+      .finally(() => setFighterLoading(false))
+  }
+
+  useEffect(() => {
+    if (user?.role !== 'fighter') return
+    refetchFighter()
+    apiFetch<{ clubs: ClubOption[] }>('/api/clubs').then(r => setClubOptions(r.clubs)).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.role])
 
   const handleDecode = async (raw: string) => {
     const identifier = extractEventIdentifier(raw)
@@ -164,6 +342,19 @@ export default function ViewerHome({ nav }: { nav: NavFn }) {
         </h1>
         <p style={{ color: MUTED, marginTop: '10px', fontSize: '15px' }}>{t('viewerHome.subtitle')}</p>
       </div>
+
+      {user.role === 'fighter' && (
+        <FighterWorklist
+          fighter={myFighter}
+          fighterName={user.name}
+          clubOptions={clubOptions}
+          nominations={nominations}
+          bouts={myBouts}
+          loading={fighterLoading}
+          onChanged={refetchFighter}
+          nav={nav}
+        />
+      )}
 
       {/* Discovery entry points */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '40px' }}>

@@ -84,7 +84,7 @@ function AppShell() {
       <div style={{ paddingTop: '64px' }}>
       <Routes>
         <Route path="/" element={<Home nav={nav} onOpenAuth={openAuth} />} />
-        <Route path="/home" element={<RequireRole role="viewer"><ViewerHome nav={nav} /></RequireRole>} />
+        <Route path="/home" element={<RequireRole role={['viewer', 'fighter']}><ViewerHome nav={nav} /></RequireRole>} />
         <Route path="/events" element={<EventDiscovery nav={nav} standalone />} />
         <Route path="/events/:eventId" element={<EventDetail nav={nav} />} />
         <Route path="/fighters/:fighterId" element={<FighterProfile nav={nav} />} />
@@ -115,25 +115,26 @@ function AppShell() {
 // Gates a route behind a specific account role. Renders the login modal
 // in place (URL stays put) when logged out, so the real content appears
 // immediately after a successful login — no redirect flash.
-function RequireRole({ role, children }: { role: Role; children: React.ReactNode }) {
+function RequireRole({ role, children }: { role: Role | Role[]; children: React.ReactNode }) {
   const { user, ready } = useAuth()
   const { t } = useLanguage()
   const navigate = useNavigate()
+  const allowed = Array.isArray(role) ? role : [role]
 
   if (!ready) return null
 
   if (!user) {
-    return <LoginModal initialMode="login" initialRole={role} onClose={() => navigate('/')} />
+    return <LoginModal initialMode="login" initialRole={allowed[0]} onClose={() => navigate('/')} />
   }
 
-  if (user.role !== role) {
+  if (!allowed.includes(user.role)) {
     return (
       <div style={{ maxWidth: '480px', margin: '120px auto', padding: '0 24px', textAlign: 'center' }}>
         <div style={{ fontFamily: FONT_BODY, fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '12px' }}>
           {t('accessRestricted.title')}
         </div>
         <div style={{ fontFamily: FONT_BODY, fontSize: '14px', color: MUTED, marginBottom: '28px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-          {t('accessRestricted.body', { role: t(`role.${role}`) })}
+          {t('accessRestricted.body', { role: t(`role.${allowed[0]}`) })}
         </div>
         <button
           onClick={() => navigate('/')}

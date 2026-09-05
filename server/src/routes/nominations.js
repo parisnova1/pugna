@@ -23,6 +23,17 @@ const insertNomination = db.prepare(`
   VALUES (?, ?, ?, ?, ?)
 `)
 const getNomination = db.prepare('SELECT * FROM nominations WHERE id = ?')
+const getMyFighter = db.prepare('SELECT * FROM fighters WHERE organizer_id = ? ORDER BY id DESC LIMIT 1')
+const listNominationsForFighter = db.prepare(`
+  SELECT nominations.*, events.name AS event_name, weight_classes.name AS weight_class_name, fighters.name AS fighter_name
+  FROM nominations
+  JOIN events ON events.id = nominations.event_id
+  JOIN weight_classes ON weight_classes.id = nominations.weight_class_id
+  JOIN fighters ON fighters.id = nominations.fighter_id
+  WHERE nominations.fighter_id = ?
+  ORDER BY nominations.created_at DESC
+`)
+const setNominationFighterResponse = db.prepare('UPDATE nominations SET fighter_response = ? WHERE id = ?')
 const listNominationsForClub = db.prepare(`
   SELECT nominations.*, events.name AS event_name, weight_classes.name AS weight_class_name, fighters.name AS fighter_name
   FROM nominations
@@ -64,6 +75,42 @@ function requireClub(req, res) {
   }
   return club
 }
+
+function requireFighter(req, res) {
+  const user = getUserById.get(req.userId)
+  if (!user || user.role !== 'fighter') {
+    res.status(403).json({ error: 'Only fighter accounts can access this.' })
+    return null
+  }
+  return user
+}
+
+// ── Fighter side ────────────────────────────────────────────────────────
+
+router.get('/fighters/me/nominations', (req, res) => {
+  if (!requireFighter(req, res)) return
+  const myFighter = getMyFighter.get(req.userId)
+  if (!myFighter) return res.json({ nominations: [] })
+  res.json({ nominations: listNominationsForFighter.all(myFighter.id) })
+})
+
+router.patch('/nominations/:id/fighter-response', (req, res) => {
+  if (!requireFighter(req, res)) return
+
+  const { response } = req.body || {}
+  if (response !== 'accepted' && response !== 'declined') {
+    return res.status(400).json({ error: "response must be 'accepted' or 'declined'." })
+  }
+
+  const nomination = getNomination.get(req.params.id)
+  const myFighter = getMyFighter.get(req.userId)
+  if (!nomination || !myFighter || nomination.fighter_id !== myFighter.id) {
+    return res.status(404).json({ error: 'Nomination not found.' })
+  }
+
+  setNominationFighterResponse.run(response, nomination.id)
+  res.json({ nomination: getNomination.get(nomination.id) })
+})
 
 // ── Club side ────────────────────────────────────────────────────────────
 

@@ -87,7 +87,7 @@ export default function LoginModal({ initialMode = 'login', initialRole = 'viewe
               <input style={inputStyle} type="text" value={name} onChange={e => setName(e.target.value)} placeholder={role === 'club' ? t('login.clubNamePlaceholder') : t('login.namePlaceholder')} autoComplete="name" />
             </div>
           )}
-          {mode === 'signup' && role === 'viewer' && (
+          {mode === 'signup' && (role === 'viewer' || role === 'fighter') && (
             <div>
               <label style={{ fontFamily: DISPLAY, fontSize: '11px', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>{t('login.homeLocation')}</label>
               <input style={inputStyle} type="text" value={homeLocation} onChange={e => setHomeLocation(e.target.value)} placeholder={t('login.homeLocationPlaceholder')} autoComplete="address-level2" />

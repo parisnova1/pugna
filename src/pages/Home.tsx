@@ -36,7 +36,7 @@ type OpenAuthFn = (mode: 'login' | 'signup', role?: Role) => void
 export default function Home({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }) {
   return (
     <main style={{ backgroundColor: BG, color: TEXT, minHeight: '100vh' }}>
-      <MarketingHero />
+      <MarketingHero nav={nav} onOpenAuth={onOpenAuth} />
       <Reveal><MarketingForClubs onOpenAuth={onOpenAuth} /></Reveal>
       <Reveal><MarketingForOrganizers onOpenAuth={onOpenAuth} /></Reveal>
       <MarketingFooter />
@@ -46,7 +46,13 @@ export default function Home({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: Open
 
 // ─── Marketing hero — one thesis, one photo ────────────────────────────────
 
-function MarketingHero() {
+function MarketingHero({ nav, onOpenAuth }: { nav: NavFn; onOpenAuth: OpenAuthFn }) {
+  const ctas: Array<{ label: string; onClick: () => void; primary?: boolean }> = [
+    { label: 'Find events', onClick: () => nav('/events'), primary: true },
+    { label: 'Create a card', onClick: () => onOpenAuth('signup', 'organizer') },
+    { label: 'Register club', onClick: () => onOpenAuth('signup', 'club') },
+    { label: "I'm a fighter", onClick: () => onOpenAuth('signup', 'fighter') },
+  ]
   return (
     <section style={{ maxWidth: '1200px', margin: '0 auto', padding: '56px 24px 96px' }}>
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: '56px', alignItems: 'center' }}>
@@ -56,10 +62,27 @@ function MarketingHero() {
           </h1>
           <div style={{ width: '56px', height: '3px', backgroundColor: ACCENT, margin: '28px 0' }} />
           <p style={{ fontFamily: DISPLAY, fontSize: '17px', lineHeight: 1.6, color: MUTED, maxWidth: '420px', margin: '0 0 28px' }}>
-            Pugna is the private network for amateur boxing. Create events. Fill cards. Keep control.
+            Pugna is the private network for amateur combat sports. Create events. Fill cards. Keep control.
           </p>
-          <div style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 600, letterSpacing: '0.2em', color: TEXT, textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: DISPLAY, fontSize: '12px', fontWeight: 600, letterSpacing: '0.2em', color: TEXT, textTransform: 'uppercase', marginBottom: '32px' }}>
             Boxing first
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+            {ctas.map(cta => (
+              <button
+                key={cta.label}
+                onClick={cta.onClick}
+                style={{
+                  fontFamily: DISPLAY, fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
+                  padding: '13px 22px', borderRadius: '9999px',
+                  backgroundColor: cta.primary ? ACCENT : 'transparent',
+                  color: cta.primary ? ON_ACCENT : TEXT,
+                  border: cta.primary ? 'none' : `1px solid ${BORDER}`,
+                }}
+              >
+                {cta.label}
+              </button>
+            ))}
           </div>
         </div>
         <div style={{ position: 'relative', borderRadius: '28px', overflow: 'hidden', aspectRatio: '4 / 5', backgroundColor: '#1a1a1a' }}>
@@ -297,6 +320,7 @@ const DISCIPLINES = ['All', 'Boxing', 'Kickboxing', 'Muay Thai', 'MMA', 'BJJ', '
 const EVENT_IMAGE_POOL = [IMAGES.fight2, IMAGES.ring, IMAGES.crowd, IMAGES.venue, IMAGES.fight1, IMAGES.sparring]
 
 export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: boolean }) {
+  const { user } = useAuth()
   const { t } = useLanguage()
   const DISCIPLINE_LABELS: Record<string, string> = {
     All: t('events.discipline.all'), Boxing: t('events.discipline.boxing'), Kickboxing: t('events.discipline.kickboxing'),
@@ -332,7 +356,7 @@ export function EventDiscovery({ nav, standalone }: { nav: NavFn; standalone?: b
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', border: `1px solid ${BORDER}`, padding: '10px 16px', color: MUTED }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span style={{ fontFamily: DISPLAY, fontSize: '14px', letterSpacing: '0.08em' }}>Nürnberg, Germany</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: '14px', letterSpacing: '0.08em' }}>{user?.home_location || t('events.nearYouBadge')}</span>
           </div>
         </div>
 
