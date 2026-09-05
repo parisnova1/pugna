@@ -76,10 +76,11 @@ router.post('/', (req, res) => {
   const { name, club, weight, record, status, discipline, location, clubId } = req.body || {}
   const user = getUserRole.get(req.userId)
   const resolvedClubId = resolveClubId(user?.role, req.userId, clubId)
-  // A fighter joining a club takes that club's name as their `club` text field
-  // (the legacy free-text column every other query still reads); everyone
-  // else must type it.
-  const clubText = resolvedClubId && user?.role === 'fighter' ? getClubById.get(resolvedClubId).name : club
+  // A fighter joining a club, or a club adding to its own roster, takes the
+  // resolved club's real name as the `club` text field (the legacy free-text
+  // column every other query still reads) rather than trusting client input
+  // for it — only an organizer's own manual/walkup entry types it freely.
+  const clubText = resolvedClubId && (user?.role === 'fighter' || user?.role === 'club') ? getClubById.get(resolvedClubId).name : club
 
   if (!name?.trim() || !clubText?.trim() || !weight?.trim()) {
     return res.status(400).json({ error: 'Name, club and weight are required.' })
