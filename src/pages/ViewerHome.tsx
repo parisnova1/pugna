@@ -72,6 +72,15 @@ function FighterWorklist({
   const [respondingId, setRespondingId] = useState<number | null>(null)
   const [editingClub, setEditingClub] = useState(false)
 
+  // `fighter` arrives asynchronously (starts null while /api/fighters/me is
+  // still loading) — sync the form fields once the real profile lands,
+  // rather than only reading it at first mount.
+  useEffect(() => {
+    if (!fighter) return
+    setClubId(fighter.club_id ? String(fighter.club_id) : '')
+    setWeight(fighter.weight)
+  }, [fighter])
+
   const saveProfile = async () => {
     if (!clubId || !weight.trim()) return
     setSaving(true)
